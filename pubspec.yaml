@@ -1,0 +1,36 @@
+name: jetleaf_lang
+description: A modern, high-performance framework for building scalable backend applications in Dart
+version: 1.0.0
+
+homepage: https://jetleaf.hapnium.com
+repository: https://github.com/jetleaf/jetleaf_lang
+
+topics:
+- IO
+- Collections
+- Primitives
+- Optional Types
+- Math
+- Date/Time
+- Regex
+
+keywords:
+- IO
+- Collections
+- Primitives
+- Optional Types
+- Math
+- Date/Time
+- Regex
+
+environment:
+  sdk: 3.8.1
+
+dependencies:
+  analyzer: ^8.0.0
+  meta: ^1.17.0
+  path: ^1.9.1
+
+dev_dependencies:
+  test: ^1.21.0
+  lints: ^6.0.0
