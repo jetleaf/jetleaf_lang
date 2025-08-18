@@ -1299,7 +1299,7 @@ abstract class Class<T> extends SourceElement {
   /// final listClass = Class.forType<List<String>>();
   /// ```
   /// {@endtemplate}
-  static Class<Type> forType<Type>(Type type, [ProtectionDomain? domain]) => _Class<Type>(type.toString(), domain ?? ProtectionDomain.current());
+  static Class<C> forType<C>(C type, [ProtectionDomain? domain]) => _Class<C>(type.toString(), domain ?? ProtectionDomain.current());
 
   /// Creates a Class instance by name.
   ///

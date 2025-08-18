@@ -299,12 +299,12 @@
       "name": "jetleaf_lang",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.8"
+      "languageVersion": "3.9"
     }
   ],
   "generator": "pub",
-  "generatorVersion": "3.8.1",
+  "generatorVersion": "3.9.0",
   "flutterRoot": "file:///Users/mac/Development/flutter",
-  "flutterVersion": "3.32.5",
+  "flutterVersion": "3.35.1",
   "pubCache": "file:///Users/mac/.pub-cache"
 }

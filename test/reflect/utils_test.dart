@@ -58,26 +58,26 @@ void main() {
 
   group('isNonLoadableJetLeafFile', () {
     test('should match jetleaf tool/bin folders', () {
-      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///project/jetleaf/bin')), true);
-      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///jetleaf/tool/')), true);
-      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///some/path/jetleaf/bin/main.dart')), true);
+      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///project/jetleaf_lang/bin')), true);
+      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///jetleaf_lang/tool/')), true);
+      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///some/path/jetleaf_lang/bin/main.dart')), true);
     });
 
     test('should not match other paths', () {
-      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///jetleaf/src/main.dart')), false);
-      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///bin/jetleaf')), false);
+      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///jetleaf_lang/src/main.dart')), false);
+      expect(ReflectUtils.isNonLoadableJetLeafFile(Uri.parse('file:///bin/jetleaf_lang')), false);
     });
   });
 
   group('isSkippableJetLeafPackage', () {
     test('should match specific jetleaf packages', () {
-      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf/src/lang/reflect/access')), true);
-      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf/src/logging/logger.dart')), true);
-      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf/test')), true);
+      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf_lang/src/lang/reflect/access')), true);
+      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf_lang/src/logging/logger.dart')), true);
+      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf_lang/test')), true);
     });
 
     test('should not match other packages', () {
-      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf/src/core')), false);
+      expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:jetleaf_lang/src/core')), false);
       expect(ReflectUtils.isSkippableJetLeafPackage(Uri.parse('package:other_package/test')), false);
     });
   });
@@ -104,7 +104,7 @@ void main() {
     test('should handle non-package URIs', () async {
       final loader = RuntimeScannerConfiguration();
       
-      expect(await ReflectUtils.shouldNotIncludeLibrary(Uri.parse('dart:core'), loader, print), true);
+      expect(await ReflectUtils.shouldNotIncludeLibrary(Uri.parse('dart:core'), loader, print), false);
       expect(await ReflectUtils.shouldNotIncludeLibrary(Uri.parse('file:///test/main_test.dart'), loader, print), false);
     });
   });

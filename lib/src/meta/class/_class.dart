@@ -201,11 +201,11 @@ class _Class<T> implements Class<T> {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    if(other is Class && (other.getName() == this.getName() 
-      && other.getSimpleName() == this.getSimpleName()
-      && other.getQualifiedName() == this.getQualifiedName()
-      && other.getPackageUri() == this.getPackageUri()
-      && other.toString() == this.toString()
+    if(other is Class && (other.getName() == getName() 
+      && other.getSimpleName() == getSimpleName()
+      && other.getQualifiedName() == getQualifiedName()
+      && other.getPackageUri() == getPackageUri()
+      && other.toString() == toString()
     )) {
       return true;
     }

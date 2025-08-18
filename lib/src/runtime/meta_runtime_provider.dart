@@ -85,7 +85,7 @@ class _MetaRuntimeProvider extends RuntimeProvider {
     }
 
     int hierarchyCounter = 3; // start counting non-dart packages from 3
-    int? dartHierarchy = null;
+    int? dartHierarchy;
 
     for (var section in sections.entries) {
       var pkg = section.key;
