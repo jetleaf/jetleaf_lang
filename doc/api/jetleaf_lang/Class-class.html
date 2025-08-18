@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the Class class from the jetleaf_lang library, for the Dart programming language.">
+  <title>Class class - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li class="self-crumb">Class<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span> class</li>
+  </ol>
+  <div class="self-name">Class</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="jetleaf_lang&#47;jetleaf_lang-library-sidebar.html"
+    data-below-sidebar="jetleaf_lang&#47;Class-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">Class&lt;<wbr><span class="type-parameter">T</span>&gt;</span> class 
+    <a href="https://dart.dev/language/class-modifiers#abstract" class="feature feature-abstract" title="This type can not be directly constructed.">abstract</a>
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>Provides reflective access to Dart class types and their metadata.</p>
+<p>This interface enables runtime inspection and manipulation of class:</p>
+<ul>
+<li>Type information and hierarchy</li>
+<li>Constructors and instantiation</li>
+<li>Methods and fields</li>
+<li>Annotations and metadata</li>
+<li>Generic type parameters</li>
+</ul>
+<p>{@template class_interface_features}</p>
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li>Type-safe reflection operations</li>
+<li>Generic type parameter support</li>
+<li>Class hierarchy navigation</li>
+<li>Instance creation</li>
+<li>Member inspection</li>
+<li>Annotation access</li>
+</ul>
+<h2 id="implementation-notes">Implementation Notes</h2>
+<p>Concrete implementations typically wrap platform-specific reflection objects
+while providing this uniform interface.</p>
+<h2 id="example-usage">Example Usage</h2>
+<pre class="language-dart"><code class="language-dart">// Get class metadata
+final userClass = Class.forType&lt;User&gt;();
+
+// Create instances
+final user = userClass.newInstance({'name': 'Alice', 'age': 30});
+
+// Inspect fields
+final nameField = userClass.getField('name');
+print(nameField?.get(user)); // 'Alice'
+
+// Check type hierarchy
+if (userClass.isSubclassOf(Class.forType&lt;Person&gt;())) {
+  print('User is a Person subclass');
+}
+</code></pre>
+<p>Type Parameters:</p>
+<ul>
+<li><code>T</code>: The class type being reflected
+{@endtemplate}</li>
+</ul>
+</section>
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+
+        
+        
+
+
+        
+        
+  <dt>Annotations</dt>
+  <dd>
+    <ul class="annotation-list clazz-relationships">
+        <li>@<a href="../jetleaf_lang/Generic-class.html">Generic</a>(Class)</li>
+    </ul>
+  </dd>
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="Class.new" class="callable">
+          <span class="name"><a href="../jetleaf_lang/Class/Class.html">Class.new</a></span><span class="signature">([<span class="parameter" id="-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])</span>
+        </dt>
+        <dd>
+          Represents a reflected Dart class and all of its metadata, including
+fields, methods, constructors, superclasses, mixins, interfaces, and
+declaration-level modifiers (abstract, sealed, etc.).
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="checkAccess" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/checkAccess.html">checkAccess</a></span><span class="signature">(<wbr><span class="parameter" id="checkAccess-param-operation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">operation</span>, </span><span class="parameter" id="checkAccess-param-permission"><span class="type-annotation"><a href="../jetleaf_lang/DomainPermission.html">DomainPermission</a></span> <span class="parameter-name">permission</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Verifies access permissions before performing sensitive operations.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="componentType" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/componentType.html">componentType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the component type for collection-like generic classes.
+  
+
+</dd>
+
+        <dt id="getAllAnnotations" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllAnnotations.html">getAllAnnotations</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Annotation-class.html">Annotation</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Gets all annotations applied to this element.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getAllDeclaredInterfaceArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllDeclaredInterfaceArguments.html">getAllDeclaredInterfaceArguments</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from all declared interfaces.
+  
+
+</dd>
+
+        <dt id="getAllDeclaredInterfaces" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllDeclaredInterfaces.html">getAllDeclaredInterfaces</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all directly declared interfaces (non-transitive).
+  
+
+</dd>
+
+        <dt id="getAllDeclaredMixins" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllDeclaredMixins.html">getAllDeclaredMixins</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all directly declared mixins (non-transitive).
+  
+
+</dd>
+
+        <dt id="getAllDeclaredMixinsArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllDeclaredMixinsArguments.html">getAllDeclaredMixinsArguments</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from all declared mixins.
+  
+
+</dd>
+
+        <dt id="getAllInterfaceArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllInterfaceArguments.html">getAllInterfaceArguments</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from all implemented interfaces.
+  
+
+</dd>
+
+        <dt id="getAllInterfaces" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllInterfaces.html">getAllInterfaces</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all interfaces directly implemented by this class.
+  
+
+</dd>
+
+        <dt id="getAllMixins" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllMixins.html">getAllMixins</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all mixins applied to this class.
+  
+
+</dd>
+
+        <dt id="getAllMixinsArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getAllMixinsArguments.html">getAllMixinsArguments</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from all applied mixins.
+  
+
+</dd>
+
+        <dt id="getAnnotation" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/getAnnotation.html">getAnnotation</a></span><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; A?</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Gets a single annotation by type, if present.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getAnnotations" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/getAnnotations.html">getAnnotations</a></span><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Gets all annotations of a specific type.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getCanonicalName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getCanonicalName.html">getCanonicalName</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the canonical name with complete generic type information.
+  
+
+</dd>
+
+        <dt id="getConstructor" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getConstructor.html">getConstructor</a></span><span class="signature">(<wbr><span class="parameter" id="getConstructor-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Constructor-class.html">Constructor</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a constructor by its declared name.
+  
+
+</dd>
+
+        <dt id="getConstructorBySignature" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getConstructorBySignature.html">getConstructorBySignature</a></span><span class="signature">(<wbr><span class="parameter" id="getConstructorBySignature-param-paramTypes"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span> <span class="parameter-name">paramTypes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Constructor-class.html">Constructor</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a constructor by its parameter types.
+  
+
+</dd>
+
+        <dt id="getConstructors" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getConstructors.html">getConstructors</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Constructor-class.html">Constructor</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all constructors declared in this class.
+  
+
+</dd>
+
+        <dt id="getDeclaration" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaration.html">getDeclaration</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/TypeDeclaration-class.html">TypeDeclaration</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the type declaration metadata for this class.
+  
+
+</dd>
+
+        <dt id="getDeclaredInterface" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredInterface.html">getDeclaredInterface</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a specific declared interface (non-transitive).
+  
+
+</dd>
+
+        <dt id="getDeclaredInterfaceArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredInterfaceArguments.html">getDeclaredInterfaceArguments</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from a specific declared interface.
+  
+
+</dd>
+
+        <dt id="getDeclaredInterfaces" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredInterfaces.html">getDeclaredInterfaces</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets declared interfaces of specific type (non-transitive).
+  
+
+</dd>
+
+        <dt id="getDeclaredMembers" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredMembers.html">getDeclaredMembers</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all members (fields, methods, constructors) declared in this class.
+  
+
+</dd>
+
+        <dt id="getDeclaredMixin" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredMixin.html">getDeclaredMixin</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a specific declared mixin (non-transitive).
+  
+
+</dd>
+
+        <dt id="getDeclaredMixins" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredMixins.html">getDeclaredMixins</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets declared mixins of specific type (non-transitive).
+  
+
+</dd>
+
+        <dt id="getDeclaredMixinsArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredMixinsArguments.html">getDeclaredMixinsArguments</a></span><span class="signature">&lt;<wbr><span class="type-parameter">M</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from a specific declared mixin.
+  
+
+</dd>
+
+        <dt id="getDeclaredSuperClass" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDeclaredSuperClass.html">getDeclaredSuperClass</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the declared superclass without generic resolution.
+  
+
+</dd>
+
+        <dt id="getDefaultConstructor" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getDefaultConstructor.html">getDefaultConstructor</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Constructor-class.html">Constructor</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the default unnamed constructor for this class.
+  
+
+</dd>
+
+        <dt id="getEnumValues" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getEnumValues.html">getEnumValues</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/EnumField-class.html">EnumField</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all enum values if this is an enum class.
+  
+
+</dd>
+
+        <dt id="getField" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getField.html">getField</a></span><span class="signature">(<wbr><span class="parameter" id="getField-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Field-class.html">Field</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a field by its name.
+  
+
+</dd>
+
+        <dt id="getFields" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getFields.html">getFields</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Field-class.html">Field</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all fields declared in this class.
+  
+
+</dd>
+
+        <dt id="getInterface" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getInterface.html">getInterface</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a specific implemented interface.
+  
+
+</dd>
+
+        <dt id="getInterfaceArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getInterfaceArguments.html">getInterfaceArguments</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from a specific implemented interface.
+  
+
+</dd>
+
+        <dt id="getInterfaces" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getInterfaces.html">getInterfaces</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets implemented interfaces of specific type.
+  
+
+</dd>
+
+        <dt id="getMethod" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMethod.html">getMethod</a></span><span class="signature">(<wbr><span class="parameter" id="getMethod-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Method-class.html">Method</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a method by its name.
+  
+
+</dd>
+
+        <dt id="getMethodBySignature" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMethodBySignature.html">getMethodBySignature</a></span><span class="signature">(<wbr><span class="parameter" id="getMethodBySignature-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span>, </span><span class="parameter" id="getMethodBySignature-param-parameterTypes"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span> <span class="parameter-name">parameterTypes</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Method-class.html">Method</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a method by its name and parameter types.
+  
+
+</dd>
+
+        <dt id="getMethods" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMethods.html">getMethods</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Method-class.html">Method</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all methods declared in this class.
+  
+
+</dd>
+
+        <dt id="getMethodsByName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMethodsByName.html">getMethodsByName</a></span><span class="signature">(<wbr><span class="parameter" id="getMethodsByName-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Method-class.html">Method</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all methods with a specific name.
+  
+
+</dd>
+
+        <dt id="getMixin" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMixin.html">getMixin</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a specific mixin applied to this class.
+  
+
+</dd>
+
+        <dt id="getMixins" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMixins.html">getMixins</a></span><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">I</span>&gt;</span></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets mixins of specific type applied to this class.
+  
+
+</dd>
+
+        <dt id="getMixinsArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getMixinsArguments.html">getMixinsArguments</a></span><span class="signature">&lt;<wbr><span class="type-parameter">M</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets generic arguments from a specific applied mixin.
+  
+
+</dd>
+
+        <dt id="getName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getName.html">getName</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the display name of the class.
+  
+
+</dd>
+
+        <dt id="getOriginal" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getOriginal.html">getOriginal</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/Type-class.html">Type</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the underlying type requested by <a href="../jetleaf_lang/Class-class.html">Class</a>
+  
+
+</dd>
+
+        <dt id="getPackage" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getPackage.html">getPackage</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Package-class.html">Package</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the package metadata for this class.
+  
+
+</dd>
+
+        <dt id="getPackageUri" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getPackageUri.html">getPackageUri</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the package URI where this class is defined.
+  
+
+</dd>
+
+        <dt id="getProtectionDomain" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/getProtectionDomain.html">getProtectionDomain</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Gets the protection domain governing access to this element.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="getQualifiedName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getQualifiedName.html">getQualifiedName</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the fully qualified name including package and library.
+  
+
+</dd>
+
+        <dt id="getSimpleName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getSimpleName.html">getSimpleName</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the simple class name without package or generic information.
+  
+
+</dd>
+
+        <dt id="getSubClass" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getSubClass.html">getSubClass</a></span><span class="signature">&lt;<wbr><span class="type-parameter">S</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">S</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets a specific direct subclass by type.
+  
+
+</dd>
+
+        <dt id="getSubClasses" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getSubClasses.html">getSubClasses</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all direct subclasses of this class.
+  
+
+</dd>
+
+        <dt id="getSuperClass" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getSuperClass.html">getSuperClass</a></span><span class="signature">&lt;<wbr><span class="type-parameter">S</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">S</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the direct superclass with proper generic typing.
+  
+
+</dd>
+
+        <dt id="getSuperClassArguments" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getSuperClassArguments.html">getSuperClassArguments</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the generic arguments from the superclass declaration.
+  
+
+</dd>
+
+        <dt id="getType" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getType.html">getType</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/Type-class.html">Type</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the runtime type of this generic class.
+  
+
+</dd>
+
+        <dt id="getTypeParameters" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/getTypeParameters.html">getTypeParameters</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets all generic type parameters of this class.
+  
+
+</dd>
+
+        <dt id="hasAnnotation" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/Class/hasAnnotation.html">hasAnnotation</a></span><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Checks if this element has a specific annotation.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hasGenerics" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/hasGenerics.html">hasGenerics</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class has generic type parameters.
+  
+
+</dd>
+
+        <dt id="isAbstract" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isAbstract.html">isAbstract</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is abstract.
+  
+
+</dd>
+
+        <dt id="isArray" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isArray.html">isArray</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents an array type.
+  
+
+</dd>
+
+        <dt id="isAssignableFrom" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isAssignableFrom.html">isAssignableFrom</a></span><span class="signature">(<wbr><span class="parameter" id="isAssignableFrom-param-other"><span class="type-annotation"><a href="../jetleaf_lang/Class-class.html">Class</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks type assignability from another class.
+  
+
+</dd>
+
+        <dt id="isAssignableTo" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isAssignableTo.html">isAssignableTo</a></span><span class="signature">(<wbr><span class="parameter" id="isAssignableTo-param-other"><span class="type-annotation"><a href="../jetleaf_lang/Class-class.html">Class</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this type is assignable to another type.
+  
+
+</dd>
+
+        <dt id="isBase" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isBase.html">isBase</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is a base class (can be extended but not implemented).
+  
+
+</dd>
+
+        <dt id="isCanonical" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isCanonical.html">isCanonical</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if the display name matches the canonical name.
+  
+
+</dd>
+
+        <dt id="isEnum" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isEnum.html">isEnum</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is an enum declaration.
+  
+
+</dd>
+
+        <dt id="isFinal" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isFinal.html">isFinal</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is final (cannot be extended).
+  
+
+</dd>
+
+        <dt id="isInstance" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isInstance.html">isInstance</a></span><span class="signature">(<wbr><span class="parameter" id="isInstance-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">obj</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if an object is an instance of this class.
+  
+
+</dd>
+
+        <dt id="isInterface" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isInterface.html">isInterface</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is an interface (abstract with no concrete members).
+  
+
+</dd>
+
+        <dt id="isKeyValuePaired" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isKeyValuePaired.html">isKeyValuePaired</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents a key-value pair type.
+  
+
+</dd>
+
+        <dt id="isMixin" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isMixin.html">isMixin</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is a mixin declaration.
+  
+
+</dd>
+
+        <dt id="isPrimitive" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isPrimitive.html">isPrimitive</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents a primitive type.
+  
+
+</dd>
+
+        <dt id="isRecord" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isRecord.html">isRecord</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents a record type.
+  
+
+</dd>
+
+        <dt id="isSealed" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isSealed.html">isSealed</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class is sealed (exhaustive pattern matching).
+  
+
+</dd>
+
+        <dt id="isSubclassOf" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isSubclassOf.html">isSubclassOf</a></span><span class="signature">(<wbr><span class="parameter" id="isSubclassOf-param-other"><span class="type-annotation"><a href="../jetleaf_lang/Class-class.html">Class</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class directly extends another class.
+  
+
+</dd>
+
+        <dt id="isTypedef" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isTypedef.html">isTypedef</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents a typedef.
+  
+
+</dd>
+
+        <dt id="isTypeVariable" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/isTypeVariable.html">isTypeVariable</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks if this class represents a type variable.
+  
+
+</dd>
+
+        <dt id="keyType" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/keyType.html">keyType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">K</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">K</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Gets the key type for map-like generic classes.
+  
+
+</dd>
+
+        <dt id="newInstance" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/newInstance.html">newInstance</a></span><span class="signature">(<wbr>[<span class="parameter" id="newInstance-param-arguments"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span>?</span> <span class="parameter-name">arguments</span></span>])
+    <span class="returntype parameter">&#8594; T</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates an instance using the default constructor.
+  
+
+</dd>
+
+        <dt id="newInstanceWithConstructor" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/newInstanceWithConstructor.html">newInstanceWithConstructor</a></span><span class="signature">(<wbr><span class="parameter" id="newInstanceWithConstructor-param-constructorName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">constructorName</span>, [</span><span class="parameter" id="newInstanceWithConstructor-param-arguments"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>, <span class="type-parameter">dynamic</span>&gt;</span>?</span> <span class="parameter-name">arguments</span></span>])
+    <span class="returntype parameter">&#8594; T</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates an instance using a named constructor.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+  <section class="summary offset-anchor" id="static-methods">
+    <h2>Static Methods</h2>
+    <dl class="callables">
+        <dt id="declared" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/declared.html">declared</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="declared-param-declaration"><span class="type-annotation"><a href="../jetleaf_lang/TypeDeclaration-class.html">TypeDeclaration</a></span> <span class="parameter-name">declaration</span>, </span><span class="parameter" id="declared-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a></span> <span class="parameter-name">domain</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance from type declaration metadata.
+  
+
+</dd>
+
+        <dt id="forName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/forName.html">forName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forName-param-className"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">className</span>, [</span><span class="parameter" id="forName-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance by name.
+  
+
+</dd>
+
+        <dt id="forObject" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/forObject.html">forObject</a></span><span class="signature">(<wbr><span class="parameter" id="forObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">obj</span>, [</span><span class="parameter" id="forObject-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance for an object's runtime type.
+  
+
+</dd>
+
+        <dt id="forType" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/forType.html">forType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forType-param-type"><span class="type-annotation">C</span> <span class="parameter-name">type</span>, [</span><span class="parameter" id="forType-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance for a runtime type.
+  
+
+</dd>
+
+        <dt id="fromQualifiedName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/fromQualifiedName.html">fromQualifiedName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="fromQualifiedName-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">qualifiedName</span>, [</span><span class="parameter" id="fromQualifiedName-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance from a fully qualified name.
+  
+
+</dd>
+
+        <dt id="fromSimpleName" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/fromSimpleName.html">fromSimpleName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="fromSimpleName-param-simpleName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">simpleName</span>, [</span><span class="parameter" id="fromSimpleName-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance from a simple type name.
+  
+
+</dd>
+
+        <dt id="of" class="callable">
+  <span class="name"><a href="../jetleaf_lang/Class/of.html">of</a></span><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span><span class="signature">(<wbr>[<span class="parameter" id="of-param-domain"><span class="type-annotation"><a href="../jetleaf_lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Creates a Class instance for type T.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang</a></li>
+    <li class="self-crumb">Class<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span> class</li>
+</ol>
+
+    <h5>jetleaf_lang library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

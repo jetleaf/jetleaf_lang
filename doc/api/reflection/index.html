@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="reflection library API docs, for the Dart programming language.">
+  <title>reflection library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li class="self-crumb">reflection.dart</li>
+  </ol>
+  <div class="self-name">reflection</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar=""
+    data-below-sidebar="reflection&#47;reflection-library-sidebar.html">
+  
+    <div>
+      
+
+      <h1>
+        <span class="kind-library">reflection</span>
+        library 
+ 
+
+      </h1>
+    </div>
+
+    
+<section class="desc markdown">
+  <p>🧩 Reflection Library</p>
+<p>This library provides tools for reflection and runtime scanning.</p>
+<hr>
+<h3 id="-key-areas">🧩 Key Areas:</h3>
+<ul>
+<li>Reflection</li>
+<li>Runtime scanning</li>
+</ul>
+<p>@author Evaristus Adimonyemma
+@emailAddress <a href="mailto:evaristusadimonyemma@hapnium.com">evaristusadimonyemma@hapnium.com</a>
+@organization Hapnium</p>
+</section>
+
+
+    <section class="summary offset-anchor" id="classes">
+      <h2>Classes</h2>
+      <dl>
+          <dt id="ApplicationLibraryGenerator">
+  <span class="name "><a href="../reflection/ApplicationLibraryGenerator-class.html">ApplicationLibraryGenerator</a></span> 
+
+</dt>
+<dd>
+  Enhanced reflection generator that integrates analyzer capabilities directly
+into declaration classes for perfect generic type handling and accurate
+assignability checking.
+</dd>
+
+          <dt id="ApplicationRuntimeScanner">
+  <span class="name "><a href="../reflection/ApplicationRuntimeScanner-class.html">ApplicationRuntimeScanner</a></span> 
+
+</dt>
+<dd>
+  A default implementation of <a href="../reflection/RuntimeScanner-class.html">RuntimeScanner</a> that supports scanning,
+logging, and context tracking.
+</dd>
+
+          <dt id="LibraryGenerator">
+  <span class="name "><a href="../reflection/LibraryGenerator-class.html">LibraryGenerator</a></span> 
+
+</dt>
+<dd>
+  Enhanced reflection generator that creates both metadata and reflector classes.
+</dd>
+
+          <dt id="RuntimeScanner">
+  <span class="name "><a href="../reflection/RuntimeScanner-class.html">RuntimeScanner</a></span> 
+
+</dt>
+<dd>
+  Defines the contract for a reflection scanner that processes Dart source
+files, extracts metadata, and optionally persists output.
+</dd>
+
+          <dt id="RuntimeScannerConfiguration">
+  <span class="name "><a href="../reflection/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a></span> 
+
+</dt>
+<dd>
+  Configuration controller for reflection scanning operations in JetLeaf.
+</dd>
+
+          <dt id="RuntimeScannerSummary">
+  <span class="name "><a href="../reflection/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a></span> 
+
+</dt>
+<dd>
+  Represents a summary of the reflection scan process, containing
+diagnostics and metadata such as build time and scanning context.
+</dd>
+
+      </dl>
+    </section>
+
+
+
+
+
+
+
+
+    <section class="summary offset-anchor" id="typedefs">
+      <h2>Typedefs</h2>
+      <dl>
+          
+  <dt id="OnLogged" class="callable">
+    <span class="name"><a href="../reflection/OnLogged.html">OnLogged</a></span><span class="signature">
+      <span class="returntype parameter">= void Function<span class="signature">(<span class="parameter" id="param-message"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">message</span></span>)</span></span>
+    </span>
+    
+
+  </dt>
+  <dd>
+    Signature for logging callbacks used to report runtime scanning messages.
+    
+
+  </dd>
+
+      </dl>
+    </section>
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li class="self-crumb">reflection.dart</li>
+</ol>
+
+    <h5><span class="package-name">jetleaf_lang</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="../jetleaf_lang/">jetleaf_lang</a></li>
+      <li><a href="../mock/">mock</a></li>
+      <li><a href="../reflection/">reflection</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+    <h5>reflection library</h5>
+  </div><!--/sidebar-offcanvas-right-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.0.0
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
