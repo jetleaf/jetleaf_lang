@@ -572,3 +572,19 @@ class TypeResolutionException extends RuntimeException {
   /// {@endtemplate}
   TypeResolutionException(super.message);
 }
+
+/// {@template illegalArgumentException}
+/// Thrown when a method is passed an illegal or inappropriate argument.
+/// 
+/// This exception is thrown during reflection operations when the
+/// provided arguments don't match the expected types or when invalid
+/// values are passed to reflection methods.
+/// 
+/// {@endtemplate}
+class IllegalArgumentException extends RuntimeException {
+  /// {@macro illegalArgumentException}
+  IllegalArgumentException(super.message);
+  
+  @override
+  String toString() => 'IllegalArgumentException: $message';
+}
