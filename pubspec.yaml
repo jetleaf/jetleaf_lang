@@ -1,5 +1,5 @@
 name: jetleaf_lang
-description: A modern, high-performance framework for building scalable backend applications in Dart
+description: This library exposes extended Dart primitives, collections, optional types, I/O streams, date/time utilities, math types, regex, and more.
 version: 1.0.0
 
 homepage: https://jetleaf.hapnium.com
