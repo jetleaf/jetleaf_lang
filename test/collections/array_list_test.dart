@@ -13,7 +13,7 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import 'package:test/test.dart';
-import 'package:jetleaf_lang/jetleaf_lang.dart';
+import 'package:jetleaf_lang/lang.dart';
 
 void main() {
   group('ArrayList Tests', () {
