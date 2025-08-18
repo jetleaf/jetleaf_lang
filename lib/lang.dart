@@ -164,6 +164,7 @@ export 'src/meta/protection_domain/protection_domain.dart';
 export 'src/meta/parameterized_type_reference/parameterized_type_reference.dart';
 export 'src/meta/resolvable_type.dart';
 export 'src/meta/generic_type_parser.dart';
+export 'src/meta/meta.dart';
 
 export 'src/declaration/declaration.dart'
   hide PackageImplementation, StandardAnnotationDeclaration,
