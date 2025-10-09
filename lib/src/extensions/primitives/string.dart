@@ -169,6 +169,85 @@ extension StringExtensions on String {
     return textWithoutEmojis.isEmpty && RegexUtils.emoji.allMatches(this).length == 1;
   }
 
+  /// {@macro string_emoji_extensions}
+  ///
+  /// Returns `true` if this string contains at least one emoji character.
+  ///
+  /// Example:
+  /// ```dart
+  /// final text = "I love 🍕!";
+  /// print(text.containsEmoji); // true
+  /// ```
+  bool get containsEmoji => RegexUtils.targetedEmoji.hasMatch(this);
+
+  /// {@macro string_emoji_extensions}
+  ///
+  /// Returns a new string with all emojis removed, including any
+  /// **leading or trailing whitespace** around the emojis, to avoid
+  /// leftover gaps in the text.
+  ///
+  /// Example:
+  /// ```dart
+  /// final text = "I ❤️ Dart 🌟";
+  /// print(text.removeEmojis); // "I Dart"
+  /// ```
+  /// Remove emojis while preserving layout and box-drawing characters.
+  ///
+  /// Options:
+  /// - [collapseSpaces] (default true): collapse runs of 2+ whitespace into a single space (but preserve leading indentation).
+  /// - [replacement] (default ''): replace emojis with this string instead of removing. If you want fixed width marker, set e.g. '⍰'.
+  ///
+  /// Behavior details:
+  /// - Operates per-line (split on `\n`) so box drawing lines are preserved.
+  /// - Preserves leading whitespace (indentation) for each line.
+  /// - Trims trailing whitespace from each line (to avoid visible gaps).
+  /// - Collapses multiple internal spaces to a single space (configurable).
+  String removeEmojis({bool collapseSpaces = true, String replacement = '', RegExp? regex}) {
+    final emojiRegex = regex ?? RegexUtils.targetedEmoji;
+    if (!emojiRegex.hasMatch(this)) return this;
+
+    final lines = split('\n');
+    final buffer = StringBuffer();
+
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+
+      // 1) Replace emoji sequences with replacement
+      var replaced = line.replaceAll(emojiRegex, replacement);
+
+      // 2) Trim trailing whitespace (we don't want trailing gaps)
+      replaced = replaced.replaceFirst(RegExp(r'\s+$'), '');
+
+      // 3) Detect a prefix to preserve:
+      //    If the line begins with a non-alphanumeric "prefix" (common in boxed logs),
+      //    preserve up to and including the first whitespace after that prefix.
+      //    Examples preserved: "│ ", "┌── ", "> ", "- "
+      final prefixMatch = RegExp(r'^([^A-Za-z0-9][^\S\r\n]*[^A-Za-z0-9]?[\s])').firstMatch(replaced);
+      String prefix = '';
+      String core = replaced;
+      if (prefixMatch != null) {
+        prefix = prefixMatch.group(0) ?? '';
+        core = replaced.substring(prefix.length);
+      } else {
+        // Fall back: preserve leading whitespace (indentation)
+        final leadingWs = RegExp(r'^\s*').firstMatch(replaced)?.group(0) ?? '';
+        prefix = leadingWs;
+        core = replaced.substring(prefix.length);
+      }
+
+      // 4) Collapse internal multiple spaces if requested
+      final coreCollapsed = collapseSpaces ? core.replaceAll(RegExp(r'\s{2,}'), ' ') : core;
+
+      // 5) Reattach prefix and write line
+      buffer.writeln(prefix + coreCollapsed);
+    }
+
+    // Trim final newline added by writeln to match original line count
+    var result = buffer.toString();
+    if (result.endsWith('\n')) result = result.substring(0, result.length - 1);
+    return result;
+  }
+
   /// Checks if string is int or double.
   bool get isNum {
     if (isEmpty) {

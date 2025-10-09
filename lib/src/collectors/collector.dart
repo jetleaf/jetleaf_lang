@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template collector}
 /// A mutable reduction operation that accumulates input elements into a mutable

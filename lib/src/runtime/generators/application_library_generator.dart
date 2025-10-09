@@ -35,10 +35,13 @@ import 'package:analyzer/file_system/physical_file_system.dart';
 import '../../extensions/primitives/iterable.dart';
 import '../../constant.dart';
 import '../../declaration/declaration.dart';
-import '../../meta/annotations.dart';
-import '../../meta/generic_type_parser.dart';
-import '../dart_type_resolver.dart';
+import '../../annotations.dart';
+import '../utils/dart_type_resolver.dart';
+import '../utils/generic_type_parser.dart';
+import '../utils/utils.dart';
 import 'library_generator.dart';
+import 'tree_shaker.dart';
+import 'declaration_file_writer.dart';
 
 /// Enhanced reflection generator that integrates analyzer capabilities directly
 /// into declaration classes for perfect generic type handling and accurate
@@ -72,6 +75,12 @@ class ApplicationLibraryGenerator extends LibraryGenerator {
   final Set<String> _linkGenerationInProgress = {};
   final Map<String, LinkDeclaration?> _linkDeclarationCache = {};
 
+  /// Tree shaker instance for dependency analysis
+  TreeShaker? _treeShaker;
+  
+  /// Declaration file writer for organized output
+  DeclarationFileWriter? _fileWriter;
+
   ApplicationLibraryGenerator({
     required super.mirrorSystem,
     required super.forceLoadedMirrors,
@@ -89,27 +98,33 @@ class ApplicationLibraryGenerator extends LibraryGenerator {
     // Initialize analyzer
     await _initializeAnalyzer(dartFiles);
     
+    // Initialize tree shaker if needed
+    if (configuration.enableTreeShaking) {
+      _treeShaker = TreeShaker();
+    }
+    
     // Create package lookup
     for (final package in packages) {
-      _packageCache[package.name] = package;
+      _packageCache[package.getName()] = package;
     }
 
     final libraries = <LibraryDeclaration>[];
 
-    onInfo('Generating reflection metadata with analyzer integration...');
+    onInfo('Generating declaration metadata with analyzer integration...');
     
     for (final libraryMirror in loader) {
       final fileUri = libraryMirror.uri;
 
       try {
-        if(libraryMirror.uri.toString() == "dart:mirrors") {
+        final mustSkip = "jetleaf_lang/src/runtime/";
+        if(libraryMirror.uri.toString() == "dart:mirrors" || libraryMirror.uri.toString().startsWith("package:$mustSkip") || libraryMirror.uri.toString().contains(mustSkip)) {
           continue;
         }
 
         onInfo('Processing library: ${fileUri.toString()}');
         LibraryDeclaration? libDecl;
         
-        if (_isBuiltInDartLibrary(libraryMirror.uri)) {
+        if (_isBuiltInDartLibrary(fileUri)) {
           // Handle built-in Dart libraries (dart:core, dart:io, etc.)
           libDecl = await _generateBuiltInLibraryDeclaration(libraryMirror);
         } else {
@@ -137,6 +152,25 @@ class ApplicationLibraryGenerator extends LibraryGenerator {
       } catch (e, stackTrace) {
         onError('Error processing library ${fileUri.toString()}: $e\n$stackTrace');
       }
+    }
+
+    // Apply tree-shaking if enabled
+    Set<String> usedClasses = {};
+    if (configuration.enableTreeShaking && _treeShaker != null) {
+      final userPackageNames = packages
+          .where((p) => p.getIsRootPackage())
+          .map((p) => p.getName())
+          .toSet();
+      
+      usedClasses = _treeShaker!.shake(libraries, userPackageNames);
+      onInfo('Tree-shaking enabled: ${usedClasses.length} classes marked as used');
+    }
+
+    // Write declarations to files if configured
+    if (configuration.writeDeclarationsToFiles) {
+      _fileWriter = DeclarationFileWriter(configuration.outputPath);
+      await _fileWriter!.writeDeclarations(libraries, usedClasses, configuration.enableTreeShaking);
+      onInfo('Declarations written to ${configuration.outputPath}/classes/');
     }
 
     // Check for unresolved generic classes
@@ -273,7 +307,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: null, // Built-in classes don't have analyzer elements
       dartType: null, // Built-in classes don't have analyzer DartType
-      qualifiedName: _buildQualifiedName(className, libraryUri),
+      qualifiedName: _buildQualifiedName(className, (classMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       isNullable: false,
       typeArguments: await _extractTypeArgumentsAsLinks(classMirror.typeVariables, null, package, libraryUri),
@@ -342,7 +376,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: null, // Built-in enums don't have analyzer elements
       dartType: null, // Built-in enums don't have analyzer DartType
-      qualifiedName: _buildQualifiedName(enumName, libraryUri),
+      qualifiedName: _buildQualifiedName(enumName, (enumMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       values: values,
       isNullable: false,
@@ -365,11 +399,12 @@ These classes may need manual type resolution or have complex generic constraint
             name: enumFieldName,
             type: runtimeType,
             libraryDeclaration: _libraryCache[libraryUri]!,
+            annotations: await _extractAnnotations(declaration.metadata, package),
             value: fieldMirror.reflectee,
-            declaration: reflectedEnum,
             isPublic: !_isInternal(enumFieldName),
             isSynthetic: _isSynthetic(enumFieldName),
-            position: enumMirror.declarations.values.toList().indexOf(declaration)
+            position: enumMirror.declarations.values.toList().indexOf(declaration),
+            isNullable: _isNullable(fieldName: enumFieldName, sourceCode: await _readSourceCode(sourceUri))
           ));
         }
       }
@@ -410,7 +445,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: null, // Built-in typedefs don't have analyzer elements
       dartType: null, // Built-in typedefs don't have analyzer DartType
-      qualifiedName: _buildQualifiedName(typedefName, libraryUri),
+      qualifiedName: _buildQualifiedName(typedefName, (typedefMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       aliasedType: await generateType(typedefMirror.referent, package, libraryUri),
       isNullable: false,
@@ -429,15 +464,26 @@ These classes may need manual type resolution or have complex generic constraint
   Future<MethodDeclaration> _generateBuiltInTopLevelMethod(mirrors.MethodMirror methodMirror, Package package, String libraryUri, Uri sourceUri) async {
     final methodName = mirrors.MirrorSystem.getName(methodMirror.simpleName);
 
-    return StandardMethodDeclaration(
+    final mirrorType = methodMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardMethodDeclaration(
       name: methodName,
       element: null, // Built-in methods don't have analyzer elements
       dartType: null, // Built-in methods don't have analyzer DartType
-      type: methodMirror.runtimeType,
+      type: runtimeType,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      returnType: await generateType(methodMirror.returnType, package, libraryUri),
+      returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri),
       annotations: await _extractAnnotations(methodMirror.metadata, package),
-      parameters: await _extractParameters(methodMirror.parameters, null, package, libraryUri),
       sourceLocation: sourceUri,
       isStatic: true,
       isAbstract: false,
@@ -448,20 +494,42 @@ These classes may need manual type resolution or have complex generic constraint
       isFactory: false,
       isConst: false,
     );
+
+    result.parameters = await _extractParameters(
+      methodMirror.parameters, 
+      null,
+      package, 
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate built-in top-level field
   Future<FieldDeclaration> _generateBuiltInTopLevelField(mirrors.VariableMirror fieldMirror, Package package, String libraryUri, Uri sourceUri) async {
     final fieldName = mirrors.MirrorSystem.getName(fieldMirror.simpleName);
 
+    final mirrorType = fieldMirror.type;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, fieldName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
     return StandardFieldDeclaration(
       name: fieldName,
-      type: fieldMirror.runtimeType,
+      type: runtimeType,
       element: null, // Built-in fields don't have analyzer elements
       dartType: null, // Built-in fields don't have analyzer DartType
       libraryDeclaration: _libraryCache[libraryUri]!,
       parentClass: null,
-      typeDeclaration: await generateType(fieldMirror.type, package, libraryUri),
+      linkDeclaration: await _getLinkDeclaration(fieldMirror.type, package, libraryUri),
       annotations: await _extractAnnotations(fieldMirror.metadata, package),
       sourceLocation: sourceUri,
       isFinal: fieldMirror.isFinal,
@@ -471,6 +539,7 @@ These classes may need manual type resolution or have complex generic constraint
       isAbstract: false,
       isPublic: !_isInternal(fieldName),
       isSynthetic: _isSynthetic(fieldName),
+      isNullable: _isNullable(fieldName: fieldName, sourceCode: await _readSourceCode(sourceUri))
     );
   }
 
@@ -478,61 +547,142 @@ These classes may need manual type resolution or have complex generic constraint
   Future<ConstructorDeclaration> _generateBuiltInConstructor(mirrors.MethodMirror constructorMirror, Package package, String libraryUri, Uri sourceUri, String className, ClassDeclaration parentClass) async {
     final constructorName = mirrors.MirrorSystem.getName(constructorMirror.constructorName);
 
-    return StandardConstructorDeclaration(
+    final mirrorType = constructorMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, constructorName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardConstructorDeclaration(
       name: constructorName.isEmpty ? '' : constructorName,
-      type: constructorMirror.runtimeType,
+      type: runtimeType,
       element: null, // Built-in constructors don't have analyzer elements
       dartType: null, // Built-in constructors don't have analyzer DartType
       libraryDeclaration: _libraryCache[libraryUri]!,
-      parentClass: parentClass,
+      parentClass: StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
+      ),
       annotations: await _extractAnnotations(constructorMirror.metadata, package),
-      parameters: await _extractParameters(constructorMirror.parameters, null, package, libraryUri),
       sourceLocation: sourceUri,
       isFactory: constructorMirror.isFactoryConstructor,
       isConst: constructorMirror.isConstConstructor,
       isPublic: !_isInternal(constructorName),
       isSynthetic: _isSynthetic(constructorName),
     );
+
+    result.parameters = await _extractParameters(
+      constructorMirror.parameters, 
+      null,
+      package, 
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate built-in method
   Future<MethodDeclaration> _generateBuiltInMethod(mirrors.MethodMirror methodMirror, Package package, String libraryUri, Uri sourceUri, String className, ClassDeclaration? parentClass) async {
     final methodName = mirrors.MirrorSystem.getName(methodMirror.simpleName);
 
-    return StandardMethodDeclaration(
+    final mirrorType = methodMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardMethodDeclaration(
       name: methodName,
       element: null, // Built-in methods don't have analyzer elements
       dartType: null, // Built-in methods don't have analyzer DartType
-      type: methodMirror.runtimeType,
+      type: runtimeType,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      returnType: await generateType(methodMirror.returnType, package, libraryUri),
+      returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri),
       annotations: await _extractAnnotations(methodMirror.metadata, package),
-      parameters: await _extractParameters(methodMirror.parameters, null, package, libraryUri),
       sourceLocation: sourceUri,
       isStatic: methodMirror.isStatic,
       isAbstract: methodMirror.isAbstract,
       isGetter: methodMirror.isGetter,
       isSetter: methodMirror.isSetter,
-      parentClass: parentClass,
+      parentClass: parentClass != null ? StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
+      ) : null,
       isFactory: methodMirror.isFactoryConstructor,
       isConst: methodMirror.isConstConstructor,
       isPublic: !_isInternal(methodName),
       isSynthetic: _isSynthetic(methodName),
     );
+
+    result.parameters = await _extractParameters(
+      methodMirror.parameters, 
+      null,
+      package, 
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate built-in field
   Future<FieldDeclaration> _generateBuiltInField(mirrors.VariableMirror fieldMirror, Package package, String libraryUri, Uri sourceUri, String className, ClassDeclaration? parentClass) async {
     final fieldName = mirrors.MirrorSystem.getName(fieldMirror.simpleName);
 
+    final mirrorType = fieldMirror.type;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, fieldName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
     return StandardFieldDeclaration(
       name: fieldName,
-      type: fieldMirror.runtimeType,
+      type: runtimeType,
       element: null, // Built-in fields don't have analyzer elements
       dartType: null, // Built-in fields don't have analyzer DartType
       libraryDeclaration: _libraryCache[libraryUri]!,
-      parentClass: parentClass,
-      typeDeclaration: await generateType(fieldMirror.type, package, libraryUri),
+      parentClass: parentClass != null ? StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
+      ) : null,
+      linkDeclaration: await _getLinkDeclaration(fieldMirror.type, package, libraryUri),
       annotations: await _extractAnnotations(fieldMirror.metadata, package),
       sourceLocation: sourceUri,
       isFinal: fieldMirror.isFinal,
@@ -542,6 +692,7 @@ These classes may need manual type resolution or have complex generic constraint
       isAbstract: false,
       isPublic: !_isInternal(fieldName),
       isSynthetic: _isSynthetic(fieldName),
+      isNullable: _isNullable(fieldName: fieldName, sourceCode: await _readSourceCode(sourceUri))
     );
   }
 
@@ -714,7 +865,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: classElement,
       dartType: dartType,
-      qualifiedName: _buildQualifiedName(className, libraryUri),
+      qualifiedName: _buildQualifiedName(className, (classMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       isNullable: false,
       typeArguments: await _extractTypeArgumentsAsLinks(classMirror.typeVariables, classElement?.typeParameters, package, libraryUri),
@@ -788,7 +939,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: mixinElement,
       dartType: dartType,
-      qualifiedName: _buildQualifiedName(mixinName, libraryUri),
+      qualifiedName: _buildQualifiedName(mixinName, (mixinMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       isNullable: false,
       typeArguments: await _extractTypeArgumentsAsLinks(mixinMirror.typeVariables, mixinElement?.typeParameters, package, libraryUri),
@@ -847,7 +998,7 @@ These classes may need manual type resolution or have complex generic constraint
       dartType: dartType,
       isPublic: !_isInternal(enumName),
       isSynthetic: _isSynthetic(enumName),
-      qualifiedName: _buildQualifiedName(enumName, libraryUri),
+      qualifiedName: _buildQualifiedName(enumName, (enumMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       values: values,
       isNullable: false,
@@ -869,10 +1020,10 @@ These classes may need manual type resolution or have complex generic constraint
             type: runtimeType,
             libraryDeclaration: _libraryCache[libraryUri]!,
             value: fieldMirror.reflectee,
-            declaration: reflectedEnum,
             isPublic: !_isInternal(enumFieldName),
             isSynthetic: _isSynthetic(enumFieldName),
-            position: enumMirror.declarations.values.toList().indexOf(declaration)
+            position: enumMirror.declarations.values.toList().indexOf(declaration),
+            isNullable: _isNullable(fieldName: enumFieldName, sourceCode: await _readSourceCode(sourceUri))
           ));
         }
       }
@@ -914,7 +1065,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: runtimeType,
       element: typedefElement,
       dartType: dartType,
-      qualifiedName: _buildQualifiedName(typedefName, libraryUri),
+      qualifiedName: _buildQualifiedName(typedefName, (typedefMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       parentLibrary: _libraryCache[libraryUri]!,
       aliasedType: await generateType(typedefMirror.referent, package, libraryUri),
       isNullable: false,
@@ -1049,9 +1200,6 @@ These classes may need manual type resolution or have complex generic constraint
         }
       }
 
-      // Build qualified name pointing to the real class location
-      final qualifiedName = '$realPackageUri.${element.name}';
-
       // Determine variance and upper bound for type parameters (with cycle protection)
       TypeVariance variance = TypeVariance.invariant;
       LinkDeclaration? upperBound;
@@ -1075,13 +1223,13 @@ These classes may need manual type resolution or have complex generic constraint
         type: actualRuntimeType,
         pointerType: baseRuntimeType,
         typeArguments: typeArguments,
-        qualifiedName: qualifiedName,
+        qualifiedName: _buildQualifiedName(dartType.getDisplayString(), realPackageUri),
         canonicalUri: Uri.tryParse(realPackageUri),
         referenceUri: Uri.tryParse(libraryUri),
         variance: variance,
         upperBound: upperBound,
         isPublic: !_isInternal(dartType.getDisplayString()),
-      isSynthetic: _isSynthetic(dartType.getDisplayString()),
+        isSynthetic: _isSynthetic(dartType.getDisplayString()),
       );
 
       // Cache the result
@@ -1128,13 +1276,14 @@ These classes may need manual type resolution or have complex generic constraint
 
     // Mark as in progress
     _linkGenerationInProgress.add(typeKey);
+
+    final realPackageUri = typeMirror.location?.sourceUri.toString();
+    if (realPackageUri == null) {
+      return null;
+    }
   
     try {
-      // Find the real class in the runtime system
-      final realClassUri = await _findRealClassUriFromMirror(typeMirror);
-      final realPackageUri = realClassUri ?? libraryUri;
       // Get the actual runtime type (parameterized if applicable)
-
       Type actualRuntimeType;
       Type baseRuntimeType;
       
@@ -1193,9 +1342,6 @@ These classes may need manual type resolution or have complex generic constraint
         }
       }
 
-      // Build qualified name pointing to the real class location
-      final qualifiedName = '$realPackageUri.$typeName';
-
       // Handle type variable bounds and variance (with cycle protection)
       TypeVariance variance = TypeVariance.invariant;
       LinkDeclaration? upperBound;
@@ -1219,7 +1365,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: actualRuntimeType,
         pointerType: baseRuntimeType,
         typeArguments: typeArguments,
-        qualifiedName: qualifiedName,
+        qualifiedName: _buildQualifiedName(typeName, realPackageUri),
         canonicalUri: Uri.tryParse(realPackageUri),
         referenceUri: Uri.tryParse(libraryUri),
         variance: variance,
@@ -1235,6 +1381,24 @@ These classes may need manual type resolution or have complex generic constraint
       // Always remove from in-progress set
       _linkGenerationInProgress.remove(typeKey);
     }
+  }
+
+  Future<LinkDeclaration> _getLinkDeclaration(mirrors.TypeMirror typeMirror, Package package, String libraryUri, [DartType? dartType]) async {
+    LinkDeclaration? result;
+    if(dartType != null) {
+      result = await _generateLinkDeclarationFromDartType(dartType, package, libraryUri);
+    } else {
+      result = await _generateLinkDeclarationFromMirror(typeMirror, package, libraryUri);
+    }
+    
+    return result ?? await _generateLinkDeclarationFromMirror(typeMirror, package, libraryUri) ?? StandardLinkDeclaration(
+      name: 'Object',
+      type: Object,
+      pointerType: Object,
+      qualifiedName: _buildQualifiedName('Object', 'dart:core'),
+      isPublic: true,
+      isSynthetic: false,
+    );
   }
 
   /// Extract type arguments as LinkDeclarations with cycle detection
@@ -1291,7 +1455,7 @@ These classes may need manual type resolution or have complex generic constraint
           type: Object, // Type parameters are represented as Object at runtime
           pointerType: Object,
           typeArguments: [], // Type parameters don't have their own type arguments
-          qualifiedName: '$libraryUri.$typeVarName',
+          qualifiedName: _buildQualifiedName(typeVarName, libraryUri),
           canonicalUri: Uri.tryParse(libraryUri),
           referenceUri: Uri.tryParse(libraryUri),
           variance: variance,
@@ -1308,6 +1472,11 @@ These classes may need manual type resolution or have complex generic constraint
     }
   
     return typeArgs;
+  }
+
+  Future<String> _getPkgUri(mirrors.TypeMirror mirror, String packageName, String libraryUri) async {
+    final realClassUri = await _findRealClassUriFromMirror(mirror, packageName);
+    return mirror.location?.sourceUri.toString() ?? realClassUri ?? libraryUri;
   }
 
   /// Infer variance from DartType context
@@ -1377,22 +1546,100 @@ These classes may need manual type resolution or have complex generic constraint
   }
 
   /// Find the real class URI from mirror
-  Future<String?> _findRealClassUriFromMirror(mirrors.TypeMirror typeMirror) async {
-    final typeName = mirrors.MirrorSystem.getName(typeMirror.simpleName);
-    
-    // Search through mirror system
-    for (final libraryMirror in loader) {
-      for (final declaration in libraryMirror.declarations.values) {
-        if (declaration is mirrors.ClassMirror) {
-          final mirrorClassName = mirrors.MirrorSystem.getName(declaration.simpleName);
-          if (mirrorClassName == typeName) {
-            return libraryMirror.uri.toString();
+  Future<String?> _findRealClassUriFromMirror(mirrors.TypeMirror typeMirror, String? packageName) async {
+    // 1) If this is a class mirror, the declaring library is the authoritative source.
+    try {
+      if (typeMirror is mirrors.ClassMirror) {
+        final lib = typeMirror.owner as mirrors.LibraryMirror?;
+        if (lib != null) {
+          return lib.uri.toString();
+        }
+        // If parameterized originalDeclaration exists, prefer its owner.
+        final orig = typeMirror.originalDeclaration;
+        if (orig is mirrors.ClassMirror) {
+          final origLib = orig.owner as mirrors.LibraryMirror?;
+          if (origLib != null) {
+            return origLib.uri.toString();
+          }
+        }
+      }
+    } catch (_) {
+      // ignore and fall back to search
+    }
+
+    // 2) Fall back to scanning loaded libraries (mirrorSystem.libraries). Prefer root package.
+    final ms = mirrors.currentMirrorSystem();
+    final candidates = <String>[];
+    final nameToMatch = mirrors.MirrorSystem.getName(typeMirror.simpleName);
+
+    for (final lib in ms.libraries.values) {
+      final decl = lib.declarations[typeMirror.simpleName];
+      if (decl is mirrors.ClassMirror) {
+        // quick direct declaration match
+        candidates.add(lib.uri.toString());
+        continue;
+      }
+
+      // If not directly declared under that symbol, try a best-effort name match:
+      for (final d in lib.declarations.values) {
+        if (d is mirrors.ClassMirror) {
+          final dName = mirrors.MirrorSystem.getName(d.simpleName);
+          if (dName == nameToMatch) {
+            candidates.add(lib.uri.toString());
+            break;
           }
         }
       }
     }
 
-    return null;
+    if (candidates.isEmpty) return null;
+
+    // 3) Prefer candidate in root package, then non-sdk (not dart:) libraries, else first candidate.
+    if (packageName != null) {
+      final pkgPrefix = 'package:$packageName/';
+      final byRoot = candidates.firstWhere(
+        (uri) => uri.startsWith(pkgPrefix),
+        orElse: () => '',
+      );
+      if (byRoot.isNotEmpty) return byRoot;
+    }
+
+    // prefer non-dart: libraries (user or package libs)
+    final nonSdk = candidates.firstWhere((u) => !u.startsWith('dart:'), orElse: () => '');
+    if (nonSdk.isNotEmpty) return nonSdk;
+
+    // last fallback: first candidate
+    return candidates.first;
+    // final typeName = mirrors.MirrorSystem.getName(typeMirror.simpleName);
+    
+    // // Search through mirror system
+    // for (final libraryMirror in loader) {
+    //   for (final declaration in libraryMirror.declarations.values) {
+    //     if (declaration is mirrors.ClassMirror) {
+    //       final mirrorClassName = mirrors.MirrorSystem.getName(declaration.simpleName);
+
+    //       final typeMirrorType = typeMirror.hasReflectedType ? typeMirror.reflectedType : typeMirror.runtimeType;
+    //       final declarationType = declaration.hasReflectedType ? declaration.reflectedType : declaration.runtimeType;
+
+    //       // Try matching by type
+    //       if (typeMirrorType == declarationType) {
+    //         return libraryMirror.uri.toString();
+    //       }
+
+    //       // Try matching by symbol
+    //       if (typeMirror.simpleName == declaration.simpleName) {
+    //         return libraryMirror.uri.toString();
+    //       }
+
+    //       // Try matching by name
+    //       if (mirrorClassName == typeName) {
+    //         return libraryMirror.uri.toString();
+    //       }
+    //     }
+    //   }
+    // }
+
+    // return null;
   }
 
   /// Generate method declaration with analyzer support
@@ -1419,20 +1666,27 @@ These classes may need manual type resolution or have complex generic constraint
       }
     }
 
-    return StandardMethodDeclaration(
+    final dartType = (methodElement as ExecutableElement?)?.type;
+    final mirrorType = methodMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardMethodDeclaration(
       name: methodName,
       element: methodElement,
-      dartType: (methodElement as ExecutableElement?)?.type,
-      type: methodMirror.runtimeType,
+      dartType: dartType,
+      type: runtimeType,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      returnType: await generateType(methodMirror.returnType, package, libraryUri),
+      returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri, dartType),
       annotations: await _extractAnnotations(methodMirror.metadata, package),
-      parameters: await _extractParameters(
-        methodMirror.parameters, 
-        methodElement?.typeParameters,
-        package, 
-        libraryUri
-      ),
       isPublic: !_isInternal(methodName),
       isSynthetic: _isSynthetic(methodName),
       sourceLocation: sourceUri,
@@ -1440,10 +1694,29 @@ These classes may need manual type resolution or have complex generic constraint
       isAbstract: methodMirror.isAbstract,
       isGetter: methodMirror.isGetter,
       isSetter: methodMirror.isSetter,
-      parentClass: parentClass,
+      parentClass: parentClass != null ? StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
+      ) : null,
       isFactory: methodMirror.isFactoryConstructor,
       isConst: methodMirror.isConstConstructor,
     );
+
+    result.parameters = await _extractParameters(
+      methodMirror.parameters, 
+      methodElement?.typeParameters,
+      package, 
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate field declaration with analyzer support
@@ -1465,14 +1738,36 @@ These classes may need manual type resolution or have complex generic constraint
       fieldElement = parentElement.getField(fieldName);
     }
 
+    final dartType = fieldElement?.type;
+    final mirrorType = fieldMirror.type;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, fieldName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
     return StandardFieldDeclaration(
       name: fieldName,
-      type: fieldMirror.runtimeType,
+      type: runtimeType,
       element: fieldElement,
-      dartType: fieldElement?.type,
+      dartType: dartType,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      parentClass: parentClass,
-      typeDeclaration: await generateType(fieldMirror.type, package, libraryUri),
+      parentClass: parentClass != null ? StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
+      ) : null,
+      linkDeclaration: await _getLinkDeclaration(fieldMirror.type, package, libraryUri, dartType),
       annotations: await _extractAnnotations(fieldMirror.metadata, package),
       sourceLocation: sourceUri,
       isFinal: fieldMirror.isFinal,
@@ -1482,6 +1777,11 @@ These classes may need manual type resolution or have complex generic constraint
       isAbstract: false,
       isPublic: !_isInternal(fieldName),
       isSynthetic: _isSynthetic(fieldName),
+      isNullable: _isNullable(
+        fieldName: fieldName, 
+        sourceCode: sourceCode ?? await _readSourceCode(sourceUri),
+        fieldElement: fieldElement
+      )
     );
   }
 
@@ -1507,26 +1807,51 @@ These classes may need manual type resolution or have complex generic constraint
       }
     }
 
-    return StandardConstructorDeclaration(
+    final mirrorType = constructorMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, constructorName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardConstructorDeclaration(
       name: constructorName.isEmpty ? '' : constructorName,
-      type: constructorMirror.runtimeType,
+      type: runtimeType,
       element: constructorElement,
       dartType: constructorElement?.type,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      parentClass: parentClass,
-      annotations: await _extractAnnotations(constructorMirror.metadata, package),
-      parameters: await _extractParameters(
-        constructorMirror.parameters,
-        constructorElement?.typeParameters,
-        package,
-        libraryUri
+      parentClass: StandardLinkDeclaration(
+        name: parentClass.getName(),
+        type: parentClass.getType(),
+        pointerType: parentClass.getType(),
+        qualifiedName: parentClass.getQualifiedName(),
+        isPublic: parentClass.getIsPublic(),
+        canonicalUri: Uri.parse(parentClass.getPackageUri()),
+        referenceUri: Uri.parse(parentClass.getPackageUri()),
+        isSynthetic: parentClass.getIsSynthetic(),
       ),
+      annotations: await _extractAnnotations(constructorMirror.metadata, package),
       sourceLocation: sourceUri,
       isFactory: constructorMirror.isFactoryConstructor,
       isConst: constructorMirror.isConstConstructor,
       isPublic: !_isInternal(constructorName),
       isSynthetic: _isSynthetic(constructorName),
     );
+
+    result.parameters = await _extractParameters(
+      constructorMirror.parameters,
+      constructorElement?.typeParameters,
+      package,
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate top-level method with analyzer support
@@ -1537,6 +1862,7 @@ These classes may need manual type resolution or have complex generic constraint
     Uri sourceUri,
   ) async {
     final methodName = mirrors.MirrorSystem.getName(methodMirror.simpleName);
+    
     final libraryElement = await _getLibraryElement(Uri.parse(libraryUri));
     
     // Get top-level function element
@@ -1545,20 +1871,27 @@ These classes may need manual type resolution or have complex generic constraint
       functionElement = libraryElement.topLevelFunctions.firstWhereOrNull((f) => f.name == methodName);
     }
 
-    return StandardMethodDeclaration(
+    final dartType = functionElement?.type;
+    final mirrorType = methodMirror.returnType;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final result = StandardMethodDeclaration(
       name: methodName,
       element: functionElement,
-      dartType: functionElement?.type,
-      type: methodMirror.runtimeType,
+      dartType: dartType,
+      type: runtimeType,
       libraryDeclaration: _libraryCache[libraryUri]!,
-      returnType: await generateType(methodMirror.returnType, package, libraryUri),
+      returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri, dartType),
       annotations: await _extractAnnotations(methodMirror.metadata, package),
-      parameters: await _extractParameters(
-        methodMirror.parameters,
-        functionElement?.typeParameters,
-        package,
-        libraryUri
-      ),
       sourceLocation: sourceUri,
       isStatic: true,
       isAbstract: false,
@@ -1569,6 +1902,16 @@ These classes may need manual type resolution or have complex generic constraint
       isSynthetic: _isSynthetic(methodName),
       isConst: false,
     );
+
+    result.parameters = await _extractParameters(
+      methodMirror.parameters,
+      functionElement?.typeParameters,
+      package,
+      libraryUri,
+      result
+    );
+
+    return result;
   }
 
   /// Generate top-level field with analyzer support
@@ -1584,18 +1927,32 @@ These classes may need manual type resolution or have complex generic constraint
     // Get top-level variable element
     TopLevelVariableElement? variableElement;
     if (libraryElement != null) {
-      variableElement = libraryElement.topLevelVariables
-          .firstWhereOrNull((v) => v.name == fieldName);
+      variableElement = libraryElement.topLevelVariables.firstWhereOrNull((v) => v.name == fieldName);
     }
+
+    final dartType = variableElement?.type;
+    final mirrorType = fieldMirror.type;
+    Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(mirrorType.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, fieldName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final sourceCode = await _readSourceCode(sourceUri);
 
     return StandardFieldDeclaration(
       name: fieldName,
-      type: fieldMirror.runtimeType,
+      type: runtimeType,
       element: variableElement,
-      dartType: variableElement?.type,
+      dartType: dartType,
       libraryDeclaration: _libraryCache[libraryUri]!,
       parentClass: null,
-      typeDeclaration: await generateType(fieldMirror.type, package, libraryUri),
+      linkDeclaration: await _getLinkDeclaration(fieldMirror.type, package, libraryUri, dartType),
       annotations: await _extractAnnotations(fieldMirror.metadata, package),
       sourceLocation: sourceUri,
       isFinal: fieldMirror.isFinal,
@@ -1605,6 +1962,7 @@ These classes may need manual type resolution or have complex generic constraint
       isAbstract: false,
       isPublic: !_isInternal(fieldName),
       isSynthetic: _isSynthetic(fieldName),
+      isNullable: _isNullable(fieldName: fieldName, sourceCode: sourceCode)
     );
   }
 
@@ -1622,7 +1980,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: dynamic,
         element: null,
         dartType: null,
-        qualifiedName: 'dart:core.dynamic',
+        qualifiedName: _buildQualifiedName('dynamic', 'dart:core'),
         simpleName: 'dynamic',
         packageUri: 'dart:core',
         isNullable: false,
@@ -1638,7 +1996,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: VoidType,
         element: null,
         dartType: null,
-        qualifiedName: 'dart:core.void',
+        qualifiedName: _buildQualifiedName('void', 'dart:core'),
         simpleName: 'void',
         packageUri: 'dart:core',
         isNullable: false,
@@ -1676,7 +2034,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: runtimeType,
         element: typeElement,
         dartType: dartType,
-        qualifiedName: 'dart:core.$typeName',
+        qualifiedName: _buildQualifiedName(typeName, 'dart:core'),
         simpleName: typeName,
         packageUri: 'dart:core',
         isNullable: false,
@@ -1699,14 +2057,13 @@ These classes may need manual type resolution or have complex generic constraint
 
     // Determine type kind
     final kind = _determineTypeKind(typeMirror, dartType);
-    final qualifiedName = _buildQualifiedName(typeName, libraryUri);
 
     final declaration = StandardTypeDeclaration(
       name: typeName,
       type: runtimeType,
       element: typeElement,
       dartType: dartType,
-      qualifiedName: qualifiedName,
+      qualifiedName: _buildQualifiedName(typeName, libraryUri),
       simpleName: typeName,
       packageUri: libraryUri,
       isNullable: false,
@@ -1789,7 +2146,7 @@ These classes may need manual type resolution or have complex generic constraint
   // ============================================= TYPE EXTRACTION HELPERS =================================
 
   /// Extract parameters with analyzer support
-  Future<List<ParameterDeclaration>> _extractParameters(List<mirrors.ParameterMirror> mirrorParams, List<TypeParameterElement>? analyzerParams, Package package, String libraryUri) async {
+  Future<List<ParameterDeclaration>> _extractParameters(List<mirrors.ParameterMirror> mirrorParams, List<TypeParameterElement>? analyzerParams, Package package, String libraryUri, MemberDeclaration parentMember) async {
     final parameters = <ParameterDeclaration>[];
     
     for (int i = 0; i < mirrorParams.length; i++) {
@@ -1799,19 +2156,33 @@ These classes may need manual type resolution or have complex generic constraint
           : null;
       
       final paramName = mirrors.MirrorSystem.getName(mirrorParam.simpleName);
-      final paramType = await generateType(mirrorParam.type, package, libraryUri);
+      final dartType = analyzerParam?.bound;
+      final paramType = await _getLinkDeclaration(mirrorParam.type, package, libraryUri, dartType);
       
       // Safe access to default value
       dynamic defaultValue;
       if (mirrorParam.hasDefaultValue && mirrorParam.defaultValue != null && mirrorParam.defaultValue!.hasReflectee) {
         defaultValue = mirrorParam.defaultValue!.reflectee;
       }
+
+      final mirrorType = mirrorParam.type;
+      Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+      // Extract annotations and resolve type
+      if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+        final annotations = await _extractAnnotations(mirrorType.metadata, package);
+        final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, paramName);
+        if (resolvedType != null) {
+          runtimeType = resolvedType;
+        }
+      }
+      final annotations = await _extractAnnotations(mirrorParam.metadata, package);
       
       parameters.add(StandardParameterDeclaration(
         name: paramName,
         element: analyzerParam,
-        dartType: analyzerParam?.bound,
-        type: mirrorParam.runtimeType,
+        dartType: dartType,
+        type: runtimeType,
         libraryDeclaration: _libraryCache[libraryUri]!,
         typeDeclaration: paramType,
         isOptional: mirrorParam.isOptional,
@@ -1819,11 +2190,12 @@ These classes may need manual type resolution or have complex generic constraint
         hasDefaultValue: mirrorParam.hasDefaultValue,
         defaultValue: defaultValue,
         index: i,
+        memberDeclaration: parentMember,
         isPublic: !_isInternal(paramName),
         isSynthetic: _isSynthetic(paramName),
         parentLibrary: _libraryCache[libraryUri]!,
         sourceLocation: Uri.parse(libraryUri),
-        annotations: await _extractAnnotations(mirrorParam.metadata, package),
+        annotations: annotations,
       ));
     }
     
@@ -1854,7 +2226,7 @@ These classes may need manual type resolution or have complex generic constraint
       type: Object,
       element: analyzerElement,
       dartType: null,
-      qualifiedName: typeName,
+      qualifiedName: _buildQualifiedName(typeName, (typeVarMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
       isNullable: false,
       upperBound: upperBound,
       isPublic: !_isInternal(typeName),
@@ -1894,7 +2266,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: dynamic,
         element: dartType.element,
         dartType: dartType,
-        qualifiedName: 'dart:core.dynamic',
+        qualifiedName: _buildQualifiedName('dynamic', 'dart:core'),
         simpleName: 'dynamic',
         packageUri: 'dart:core',
         isNullable: dartType.nullabilitySuffix == NullabilitySuffix.question,
@@ -1910,7 +2282,7 @@ These classes may need manual type resolution or have complex generic constraint
         type: VoidType,
         element: dartType.element,
         dartType: dartType,
-        qualifiedName: 'dart:core.void',
+        qualifiedName: _buildQualifiedName('void', 'dart:core'),
         simpleName: 'void',
         packageUri: 'dart:core',
         isNullable: false,
@@ -1979,6 +2351,32 @@ These classes may need manual type resolution or have complex generic constraint
     
     int positionalIndex = 0;
     bool inNamedSection = false;
+
+    Type runtimeType = typeMirror.hasReflectedType ? typeMirror.reflectedType : typeMirror.runtimeType;
+
+    // Extract annotations and resolve type
+    if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+      final annotations = await _extractAnnotations(typeMirror.metadata, package);
+      final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, recordName);
+      if (resolvedType != null) {
+        runtimeType = resolvedType;
+      }
+    }
+
+    final record = StandardRecordDeclaration(
+      name: recordName,
+      type: runtimeType,
+      element: typeElement,
+      dartType: (typeElement as InterfaceElement?)?.thisType,
+      qualifiedName: _buildQualifiedName(recordName, (typeMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
+      parentLibrary: _libraryCache[libraryUri]!,
+      positionalFields: positionalFields,
+      namedFields: namedFields,
+      annotations: await _extractAnnotations(typeMirror.metadata, package),
+      sourceLocation: typeMirror.location?.sourceUri,
+      isPublic: !_isInternal(recordName),
+      isSynthetic: _isSynthetic(recordName),
+    );
     
     for (var part in parts) {
       part = part.trim();
@@ -2006,29 +2404,35 @@ These classes may need manual type resolution or have complex generic constraint
       }
 
       // Create field type
-      final fieldType = StandardTypeDeclaration(
+      // Resolve the actual type and URI for the field
+      Type? resolvedType = resolvePublicDartType('dart:core', fieldTypeName);
+      // resolvedType ??= _resolveTypeFromName(fieldTypeName);
+      
+      final actualType = resolvedType ?? Object;
+      final actualPackageUri = _getPackageUriForType(fieldTypeName, actualType);
+
+      // Create field type with proper resolution
+      final fieldType = StandardLinkDeclaration(
         name: fieldTypeName,
-        type: Object,
-        element: null,
-        dartType: null,
-        qualifiedName: 'dart:core.$fieldTypeName',
-        simpleName: fieldTypeName,
-        packageUri: 'dart:core',
-        isNullable: false,
-        kind: TypeKind.primitiveType,
+        type: actualType,
+        pointerType: actualType,
+        qualifiedName: _buildQualifiedName(fieldTypeName, actualPackageUri),
         isPublic: !_isInternal(fieldTypeName),
         isSynthetic: _isSynthetic(fieldTypeName),
+        canonicalUri: Uri.parse(actualPackageUri),
+        referenceUri: Uri.parse(actualPackageUri)
       );
 
       if (inNamedSection) {
         final field = StandardRecordFieldDeclaration(
           name: fieldName!,
           typeDeclaration: fieldType,
-          sourceLocation: typeMirror.location?.sourceUri,
-          type: Object,
+          sourceLocation: typeMirror.location?.sourceUri ?? Uri.parse(libraryUri),
+          type: actualType,
           libraryDeclaration: _libraryCache[libraryUri]!,
           isPublic: !_isInternal(fieldName),
           isSynthetic: _isSynthetic(fieldName),
+          isNullable: false
         );
         namedFields[fieldName] = field;
       } else {
@@ -2038,34 +2442,39 @@ These classes may need manual type resolution or have complex generic constraint
           name: name,
           position: positionalIndex,
           typeDeclaration: fieldType,
-          sourceLocation: typeMirror.location?.sourceUri,
-          type: Object,
+          sourceLocation: typeMirror.location?.sourceUri ?? Uri.parse(libraryUri),
+          type: actualType,
           libraryDeclaration: _libraryCache[libraryUri]!,
           isPublic: !_isInternal(name),
           isSynthetic: _isSynthetic(name),
+          isNullable: false
         );
         positionalFields.add(field);
         positionalIndex++;
       }
     }
 
-    return StandardRecordDeclaration(
-      name: recordName,
-      type: typeMirror.hasReflectedType ? typeMirror.reflectedType : typeMirror.runtimeType,
-      element: typeElement,
-      dartType: (typeElement as InterfaceElement?)?.thisType,
-      qualifiedName: recordName,
-      parentLibrary: _libraryCache[libraryUri]!,
-      positionalFields: positionalFields,
-      namedFields: namedFields,
-      annotations: [],
-      sourceLocation: typeMirror.location?.sourceUri,
-      isPublic: !_isInternal(recordName),
-      isSynthetic: _isSynthetic(recordName),
-    );
+    return record.copyWith(namedFields: namedFields, positionalFields: positionalFields);
   }
 
   // ============================================= UTILITY HELPERS =========================================
+
+  String _getPackageUriForType(String typeName, Type actualType) {
+    // Check if it's a built-in Dart type
+    if (_isPrimitiveType(actualType) || 
+        actualType == List || actualType == Map || actualType == Set || 
+        actualType == Iterable || actualType == Future || actualType == Stream) {
+      return 'dart:core';
+    }
+    
+    // For async types
+    if (actualType == Future || actualType == Stream) {
+      return 'dart:async';
+    }
+    
+    // Default fallback
+    return 'dart:core';
+  }
 
   /// Read source code with caching
   Future<String> _readSourceCode(Uri uri) async {
@@ -2077,20 +2486,10 @@ These classes may need manual type resolution or have complex generic constraint
       final filePath = (await resolveUri(uri) ?? uri).toFilePath();
       String fileContent = await File(filePath).readAsString();
       _sourceCache[uri.toString()] = fileContent;
-      return _stripComments(fileContent);
+      return RuntimeUtils.stripComments(fileContent);
     } catch (_) {
       return "";
     }
-  }
-
-  /// Strip comments from source code
-  String _stripComments(String code) {
-    final commentPattern = RegExp(
-      r'(//.*?$)|(/\*\*?[\s\S]*?\*/)|(^///.*?$)',
-      multiLine: true,
-      dotAll: true,
-    );
-    return code.replaceAll(commentPattern, '');
   }
 
   /// Extract annotations with enhanced field support and proper type resolution
@@ -2101,19 +2500,27 @@ These classes may need manual type resolution or have complex generic constraint
       try {
         // Create LinkDeclaration for the annotation type
         final annotationType = annotation.type;
-        final type = annotationType.hasReflectedType ? annotationType.reflectedType : annotationType.runtimeType;
+        Type type = annotationType.hasReflectedType ? annotationType.reflectedType : annotationType.runtimeType;
         final annotationName = mirrors.MirrorSystem.getName(annotationType.simpleName);
+
+        // Extract annotations and resolve type
+        if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+          final annotations = await _extractAnnotations(annotationType.metadata, package);
+          final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, annotationName);
+          if (resolvedType != null) {
+            type = resolvedType;
+          }
+        }
         
         // Find the real annotation class URI
-        final realClassUri = await _findRealClassUriFromMirror(annotationType);
-        final realPackageUri = realClassUri ?? annotationType.location?.sourceUri.toString() ?? 'dart:core';
+        final realClassUri = await _getPkgUri(annotationType, package.getName(), 'dart:core');
         
         final linkDeclaration = StandardLinkDeclaration(
           name: annotationName,
           type: type,
           pointerType: type,
           typeArguments: [],
-          qualifiedName: '$realPackageUri.$annotationName',
+          qualifiedName: _buildQualifiedName(annotationName, realClassUri),
           isPublic: !_isInternal(annotationName),
           isSynthetic: _isSynthetic(annotationName),
         );
@@ -2121,17 +2528,14 @@ These classes may need manual type resolution or have complex generic constraint
         final annotationFields = <String, AnnotationFieldDeclaration>{};
         final userProvidedValues = <String, dynamic>{};
 
-        // Extract fields from annotation class
+        // Extract fields from annotation class with improved error handling
         for (final declaration in annotationType.declarations.values) {
           if (declaration is mirrors.VariableMirror && !declaration.isStatic) {
             final fieldName = mirrors.MirrorSystem.getName(declaration.simpleName);
-            final fieldType = await generateType(
-              declaration.type,
-              package,
-              declaration.type.location?.sourceUri.toString() ?? 'dart:core'
-            );
+            final libraryUri = declaration.type.location?.sourceUri.toString() ?? 'dart:core';
+            final fieldType = await _getLinkDeclaration(declaration.type, package, libraryUri);
 
-            // Get user-provided value with safety check
+            // Get user-provided value with improved safety check
             dynamic userValue;
             bool hasUserValue = false;
             try {
@@ -2141,25 +2545,30 @@ These classes may need manual type resolution or have complex generic constraint
                 hasUserValue = true;
                 userProvidedValues[fieldName] = userValue;
               }
-            } catch (_) {}
-
-            // Get default value from constructor
-            dynamic defaultValue;
-            bool hasDefaultValue = false;
-            for (final constructor in annotationType.declarations.values.whereType<mirrors.MethodMirror>()) {
-              if (constructor.isConstructor) {
-                for (final param in constructor.parameters) {
-                  final paramName = mirrors.MirrorSystem.getName(param.simpleName);
-                  if (paramName == fieldName && param.hasDefaultValue && param.defaultValue != null && param.defaultValue!.hasReflectee) {
-                    defaultValue = param.defaultValue!.reflectee;
-                    hasDefaultValue = true;
-                    break;
-                  }
-                }
-                if (hasDefaultValue) break;
-              }
+            } catch (e) {
+              // Field access failed, continue without user value
             }
 
+            // Get default value from constructor with improved handling
+            dynamic defaultValue;
+            bool hasDefaultValue = false;
+            try {
+              for (final constructor in annotationType.declarations.values.whereType<mirrors.MethodMirror>()) {
+                if (constructor.isConstructor) {
+                  for (final param in constructor.parameters) {
+                    final paramName = mirrors.MirrorSystem.getName(param.simpleName);
+                    if (paramName == fieldName && param.hasDefaultValue && param.defaultValue?.hasReflectee == true) {
+                      defaultValue = param.defaultValue!.reflectee;
+                      hasDefaultValue = true;
+                      break;
+                    }
+                  }
+                  if (hasDefaultValue) break;
+                }
+              }
+            } catch (e) {
+              // Default value extraction failed, continue without default
+            }
             annotationFields[fieldName] = StandardAnnotationFieldDeclaration(
               name: fieldName,
               typeDeclaration: fieldType,
@@ -2173,6 +2582,8 @@ These classes may need manual type resolution or have complex generic constraint
               isPublic: !_isInternal(fieldName),
               isSynthetic: _isSynthetic(fieldName),
               dartType: null,
+              position: annotationType.declarations.values.toList().indexOf(declaration),
+              isNullable: defaultValue == null && userValue == null
             );
           }
         }
@@ -2188,7 +2599,9 @@ These classes may need manual type resolution or have complex generic constraint
           isPublic: !_isInternal(annotationName),
           isSynthetic: _isSynthetic(annotationName),
         ));
-      } catch (_) { }
+      } catch (e) {
+        onWarning('Failed to extract annotation: $e');
+      }
     }
     
     return annotations;
@@ -2222,22 +2635,79 @@ These classes may need manual type resolution or have complex generic constraint
           type = resolvedType;
         }
       }
-
-      return type;
-    } else {
-      Type type = mirror.originalDeclaration.hasReflectedType ? mirror.originalDeclaration.reflectedType : mirror.originalDeclaration.runtimeType;
-      String name = mirrors.MirrorSystem.getName(mirror.simpleName);
       
-      if(GenericTypeParser.shouldCheckGeneric(type)) {
-        final annotations = await _extractAnnotations(mirror.metadata, package);
-        final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, name);
-        if (resolvedType != null) {
-          type = resolvedType;
-        }
-      }
-
       return type;
     }
+    
+    return mirror.hasReflectedType ? mirror.reflectedType : mirror.runtimeType;
+  }
+
+  Future<Type> _findRuntimeTypeFromDartType(DartType dartType, String libraryUri, Package package) async {
+    final cacheKey = '${dartType.element?.name}_${dartType.element?.library?.uri}_${dartType.getDisplayString()}';
+    if (_dartTypeToTypeCache.containsKey(cacheKey)) {
+      return _dartTypeToTypeCache[cacheKey]!;
+    }
+
+    // Handle built-in types first
+    if (dartType.isDartCoreBool) return bool;
+    if (dartType.isDartCoreDouble) return double;
+    if (dartType.isDartCoreInt) return int;
+    if (dartType.isDartCoreNum) return num;
+    if (dartType.isDartCoreString) return String;
+    if (dartType.isDartCoreList) return List;
+    if (dartType.isDartCoreMap) return Map;
+    if (dartType.isDartCoreSet) return Set;
+    if (dartType.isDartCoreIterable) return Iterable;
+    if (dartType.isDartAsyncFuture) return Future;
+    if (dartType.isDartAsyncStream) return Stream;
+    if (dartType is DynamicType) return dynamic;
+    if (dartType is VoidType) return VoidType;
+
+    // Try to resolve from dart type resolver
+    final elementName = dartType.element?.name;
+    final libraryUri = dartType.element?.library?.uri.toString();
+    
+    if (elementName != null && libraryUri != null) {
+      final resolvedType = resolvePublicDartType(libraryUri, elementName);
+      if (resolvedType != null) {
+        _dartTypeToTypeCache[cacheKey] = resolvedType;
+        return resolvedType;
+      }
+    }
+
+    // Try to find the type in our mirror system
+    if (elementName != null) {
+      // Look through all libraries to find a matching class
+      for (final libraryMirror in loader) {
+        for (final declaration in libraryMirror.declarations.values) {
+          if (declaration is mirrors.ClassMirror) {
+            final className = mirrors.MirrorSystem.getName(declaration.simpleName);
+            if (className == elementName) {
+              try {
+                final runtimeType = await _tryAndGetOriginalType(declaration, package);
+                _dartTypeToTypeCache[cacheKey] = runtimeType;
+                return runtimeType;
+              } catch (e) {
+                // Continue searching
+              }
+            }
+          }
+        }
+      }
+    }
+
+    Type fallbackType = Object;
+    if (dartType.element != null) {
+      // Try to create a synthetic type based on the element
+      try {
+        fallbackType = dartType.element!.runtimeType;
+      } catch (e) {
+        fallbackType = Object;
+      }
+    }
+    
+    _dartTypeToTypeCache[cacheKey] = fallbackType;
+    return fallbackType;
   }
 
   /// Find base runtime type from DartType (without type parameters)
@@ -2281,69 +2751,9 @@ These classes may need manual type resolution or have complex generic constraint
     return await _findRuntimeTypeFromDartType(dartType, libraryUri, package);
   }
 
-  /// Find runtime type from DartType by looking up in mirrors
-  Future<Type> _findRuntimeTypeFromDartType(DartType dartType, String libraryUri, Package package) async {
-    final cacheKey = '${dartType.element?.name}_${dartType.element?.library?.uri}_${dartType.getDisplayString()}';
-    if (_dartTypeToTypeCache.containsKey(cacheKey)) {
-      return _dartTypeToTypeCache[cacheKey]!;
-    }
-
-    // Handle built-in types
-    if (dartType.isDartCoreBool) return bool;
-    if (dartType.isDartCoreDouble) return double;
-    if (dartType.isDartCoreInt) return int;
-    if (dartType.isDartCoreNum) return num;
-    if (dartType.isDartCoreString) return String;
-    if (dartType.isDartCoreList) return List;
-    if (dartType.isDartCoreMap) return Map;
-    if (dartType.isDartCoreSet) return Set;
-    if (dartType.isDartCoreIterable) return Iterable;
-    if (dartType.isDartAsyncFuture) return Future;
-    if (dartType.isDartAsyncStream) return Stream;
-    if (dartType is DynamicType) return dynamic;
-    if (dartType is VoidType) return VoidType;
-
-    // Try to find the type in our mirror system
-    final elementName = dartType.element?.name;
-    if (elementName != null) {
-      // Look through all libraries to find a matching class
-      for (final libraryMirror in loader) {
-        for (final declaration in libraryMirror.declarations.values) {
-          if (declaration is mirrors.ClassMirror) {
-            final className = mirrors.MirrorSystem.getName(declaration.simpleName);
-            if (className == elementName) {
-              try {
-                // For parameterized types, try to find the specific instantiation
-                if (dartType is ParameterizedType && dartType.typeArguments.isNotEmpty) {
-                  // Try to find a matching parameterized version
-                  // This is complex and might not always work perfectly
-                  final runtimeType = await _tryAndGetOriginalType(declaration, package);
-                  _dartTypeToTypeCache[cacheKey] = runtimeType;
-                  return runtimeType;
-                } else {
-                  // For non-parameterized types
-                  final runtimeType = await _tryAndGetOriginalType(declaration, package);
-                  _dartTypeToTypeCache[cacheKey] = runtimeType;
-                  return runtimeType;
-                }
-              } catch (e) {
-                // Continue searching
-              }
-            }
-          }
-        }
-      }
-    }
-
-    // Fallback to Type if we can't find the specific type
-    final fallbackType = Type;
-    _dartTypeToTypeCache[cacheKey] = fallbackType;
-    return fallbackType;
-  }
-
   /// Build qualified name from library URI and type name
   String _buildQualifiedName(String typeName, String libraryUri) {
-    return '$libraryUri.$typeName';
+    return '$libraryUri.$typeName'.replaceAll("..", '.');
   }
 
   /// Checks if a URI represents a built-in Dart library
@@ -2356,9 +2766,11 @@ These classes may need manual type resolution or have complex generic constraint
     if (element == null) return 'unknown';
     
     final library = element.library;
-    if (library == null) return element.name ?? 'unknown';
+    if (library == null) {
+      return _buildQualifiedName(element.name ?? 'unknown', 'unknown');
+    }
     
-    return '${library.uri}.${element.name}';
+    return _buildQualifiedName(element.name ?? 'unknown', library.uri.toString());
   }
 
   /// Create default package
@@ -2377,8 +2789,8 @@ These classes may need manual type resolution or have complex generic constraint
   Package _createBuiltInPackage() {
     return PackageImplementation(
       name: Constant.DART_PACKAGE_NAME,
-      version: _packageCache.values.firstWhereOrNull((v) => v.isRootPackage)?.getLanguageVersion() ?? '3.0',
-      languageVersion: _packageCache.values.firstWhereOrNull((v) => v.isRootPackage)?.getLanguageVersion() ?? '3.0',
+      version: _packageCache.values.firstWhereOrNull((v) => v.getIsRootPackage())?.getLanguageVersion() ?? '3.0',
+      languageVersion: _packageCache.values.firstWhereOrNull((v) => v.getIsRootPackage())?.getLanguageVersion() ?? '3.0',
       isRootPackage: false,
       rootUri: 'dart:core',
       filePath: null,
@@ -2478,6 +2890,55 @@ These classes may need manual type resolution or have complex generic constraint
   }
 
   bool _isSynthetic(String name) => name.startsWith("__") || name.contains("&");
+
+  bool _isNullable({FieldElement? fieldElement, String? sourceCode, required String fieldName}) {
+    // if (fieldElement != null) {
+    //   final DartType t = fieldElement.type;
+    //   return t.nullabilitySuffix == NullabilitySuffix.question;
+    // }
+
+    // if (typeNode != null) {
+    //   if (typeNode is ast.NamedType) {
+    //     final DartType? resolved = typeNode.type;
+    //     if (resolved != null) {
+    //       return resolved.nullabilitySuffix == NullabilitySuffix.question;
+    //     }
+    //   }
+
+    //   // fallback: check if the annotation text contains '?'
+    //   return typeNode.toSource().contains('?');
+    // }
+
+    if (sourceCode == null) return false;
+    final code = RuntimeUtils.stripComments(sourceCode);
+
+    // Patterns WITHOUT inline (?m) flags; use multiLine: true below.
+    final List<RegExp> patterns = [
+      // field declarations: optional 'late/static/final/const', then a type that contains '?', then the name
+      RegExp(
+        r'\b(?:late\s+)?(?:static\s+)?(?:final\s+|const\s+)?[A-Za-z_$][A-Za-z0-9_$<>\?,\s]*\?\s+' +
+            RegExp.escape(fieldName) +
+            r'\b',
+        multiLine: true,
+      ),
+
+      // constructor or parameter with explicit nullable type: 'Foo? name' (positional or named)
+      RegExp(
+        r'\b[A-Za-z_$][A-Za-z0-9_$<>\?,\s]*\?\s+' + RegExp.escape(fieldName) + r'\b',
+        multiLine: true,
+      ),
+
+      // heuristic for 'this.name' in parameter lists where the param token includes a '?'
+      RegExp(
+        r'[(,][^)]{0,120}\b[A-Za-z_$][A-Za-z0-9_$<>\?,\s]*\?\s*(?:this\.)?' +
+            RegExp.escape(fieldName) +
+            r'\b',
+        multiLine: true,
+      ),
+    ];
+
+    return patterns.any((p) => p.hasMatch(code));
+  }
 
   /// Split record content string into components
   List<String> _splitRecordContent(String content) {

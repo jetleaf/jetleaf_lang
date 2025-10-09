@@ -13,7 +13,7 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template optional}
 /// A container object which may or may not contain a non-null value.
@@ -214,7 +214,7 @@ final class Optional<T> {
   /// Returns an empty [Optional].
   /// 
   /// {@macro optional}
-  static Optional<T> empty<T>() => Optional._(null);
+  static Optional<T> empty<T>() => Optional<T>._(null);
 
   /// Returns an [Optional] describing the given non-null value.
   /// 

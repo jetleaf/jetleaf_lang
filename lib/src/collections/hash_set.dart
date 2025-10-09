@@ -13,7 +13,7 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template custom_hash_set}
 /// A custom implementation of a hash set that implements the `Set<E>` interface.

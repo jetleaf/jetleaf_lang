@@ -1,95 +1,103 @@
-// ---------------------------------------------------------------------------
-// 🍃 JetLeaf Framework - https://jetleaf.hapnium.com
-//
-// Copyright © 2025 Hapnium & JetLeaf Contributors. All rights reserved.
-//
-// This source file is part of the JetLeaf Framework and is protected
-// under copyright law. You may not copy, modify, or distribute this file
-// except in compliance with the JetLeaf license.
-//
-// For licensing terms, see the LICENSE file in the root of this project.
-// ---------------------------------------------------------------------------
-// 
-// 🔧 Powered by Hapnium — the Dart backend engine 🍃
-
 import 'dart:io' as io;
 
-import 'package:meta/meta.dart';
+import 'core_print.dart' as dev;
+import 'enums/compilation_mode.dart';
+import 'properties/properties.dart';
 
-import 'compiled_design.dart';
-import 'abstract_system_interface.dart';
-import 'system_info.dart';
-
-/// {@template system_context}
-/// Internal system context used by JetLeaf to store and delegate
-/// environment details collected at startup.
+/// {@template system}
+/// Internal system facade for the JetLeaf framework.
 ///
-/// This acts as a proxy to a [AbstractSystemInterface] instance, allowing global access
-/// to system information like:
-/// 
-/// - Entrypoint path
-/// - Compilation mode
-/// - Dependency/configuration counts
-/// - Whether the app is running from a `.dill` file
+/// The [_System] class wraps a [Properties] implementation and delegates all
+/// environment-related method calls to it. It is the central access point
+/// for querying runtime information while also exposing system-level streams
+/// ([out], [err]) and process management ([exit]).
 ///
-/// The actual [AbstractSystemInterface] instance is injected via the [system] setter
-/// after detection. Accessing [System] before it is initialized will result in
-/// a runtime error.
+/// This class is not intended to be used directly by end-users. Instead,
+/// it acts as the internal bridge between JetLeaf's runtime environment
+/// and the underlying system.
 ///
-/// This class is marked `@internal` and is not intended for public use.
+/// ### Example
+/// ```dart
+/// final system = _System();
+/// system.setProperties(myProperties);
+///
+/// // Delegated calls
+/// if (system.isDevelopmentMode()) {
+///   print('Running in dev mode');
+/// }
+///
+/// // System streams
+/// system.out.writeln('Hello stdout');
+/// system.err.writeln('Hello stderr');
+///
+/// // Exit process
+/// system.exit(0);
+/// ```
 /// {@endtemplate}
-@internal
-class InternalSystemContext implements AbstractSystemInterface {
-  late AbstractSystemInterface _system;
+class _System implements Properties {
+  late Properties _properties;
 
-  /// {@macro system_context}
-  InternalSystemContext._();
-
-  /// Sets the backing [AbstractSystemInterface] implementation.
+  /// Replaces the current [Properties] implementation with a new one.
   ///
-  /// Must be called during framework bootstrap before accessing
-  /// any properties on [System].
-  set system(AbstractSystemInterface system) {
-    _system = system;
+  /// This must be called before any system queries are made.
+  void setProperties(Properties properties) {
+    _properties = properties;
   }
 
   @override
-  CompiledDesign get mode => _system.mode;
+  CompilationMode getCompilationMode() => _properties.getCompilationMode();
 
   @override
-  int get configurationCount => _system.configurationCount;
+  int getConfigurationCount() => _properties.getConfigurationCount();
 
   @override
-  int get dependencyCount => _system.dependencyCount;
+  int getDependencyCount() => _properties.getDependencyCount();
 
   @override
-  String get entrypoint => _system.entrypoint;
+  String getEntrypoint() => _properties.getEntrypoint();
 
   @override
-  bool get isIdeRun => _system.isIdeRun;
+  String getLaunchCommand() => _properties.getLaunchCommand();
 
   @override
-  bool get isRunningFromDill => _system.isRunningFromDill;
+  bool isDevelopmentMode() => _properties.isDevelopmentMode();
 
   @override
-  String get launchCommand => _system.launchCommand;
+  bool isIdeRunning() => _properties.isIdeRunning();
 
   @override
-  SystemInfo toSystemInfo() => _system.toSystemInfo();
+  bool isProductionMode() => _properties.isProductionMode();
 
   @override
-  bool get watch => _system.watch;
+  bool isRunningAot() => _properties.isRunningAot();
 
   @override
-  bool get isRunningWithAot => _system.isRunningWithAot;
+  bool isRunningFromDill() => _properties.isRunningFromDill();
 
   @override
-  bool get isRunningWithJit => _system.isRunningWithJit;
+  bool isRunningJit() => _properties.isRunningJit();
 
-  /// Returns [stdout], the standard output stream.
+  @override
+  bool isWatchModeEnabled() => _properties.isWatchModeEnabled();
+
+  /// {@template system_out}
+  /// Returns [stdout], the **standard output stream**.
+  ///
+  /// Example:
+  /// ```dart
+  /// system.out.writeln('Logging to stdout');
+  /// ```
+  /// {@endtemplate}
   io.Stdout get out => io.stdout;
 
-  /// Returns [stderr], the standard error stream.
+  /// {@template system_err}
+  /// Returns [stderr], the **standard error stream**.
+  ///
+  /// Example:
+  /// ```dart
+  /// system.err.writeln('Error occurred!');
+  /// ```
+  /// {@endtemplate}
   io.Stdout get err => io.stderr;
 
   /// Exit the Dart VM process immediately with the given exit code.
@@ -148,12 +156,20 @@ class InternalSystemContext implements AbstractSystemInterface {
 extension StdExtension on io.Stdout {
   /// Prints a string without a newline (like `System.out.print`)
   void print(String message) {
-    write(message);
+    try {
+      write(message);
+    } catch (_) {
+      dev.print(message);
+    }
   }
 
   /// Prints a string followed by a newline (like `System.out.println`)
   void println([Object? message = '']) {
-    writeln(message);
+    try {
+      writeln(message);
+    } catch (_) {
+      print(message.toString());
+    }
   }
 
   /// Prints a formatted string using Dart's string interpolation.
@@ -165,12 +181,16 @@ extension StdExtension on io.Stdout {
   /// ```
   void printf(String format, List<Object?> args) {
     String formatted = _format(format, args);
-    write(formatted);
+    print(formatted);
   }
 
   /// Prints to `stderr` with a newline.
   void printErr(Object? message) {
-    io.stderr.writeln(message);
+    try {
+      io.stderr.writeln(message);
+    } catch (_) {
+      print(message.toString());
+    }
   }
 
   /// Formats a Java-style printf string with %s and %d placeholders.
@@ -245,7 +265,7 @@ Map<String, String> _properties = {
 ///
 /// Useful in cross-platform utilities, diagnostics, and configuration loading.
 /// {@endtemplate}
-extension SystemExtension on InternalSystemContext {
+extension SystemExtension on _System {
   /// {@macro system_extension}
   ///
   /// Returns a map of all available system-related properties.
@@ -294,4 +314,4 @@ extension SystemExtension on InternalSystemContext {
 }
 
 /// {@macro system}
-final InternalSystemContext System = InternalSystemContext._();
+final _System System = _System();

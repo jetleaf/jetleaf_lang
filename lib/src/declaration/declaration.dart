@@ -12,15 +12,18 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'dart:convert';
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:analyzer/dart/element/element.dart' show Element;
 import 'package:analyzer/dart/element/type.dart' show DartType, ParameterizedType;
-import 'package:meta/meta.dart';
 
+import '../helpers/equals_and_hash_code.dart';
+import '../extensions/primitives/string.dart';
 import '../extensions/primitives/iterable.dart';
 import '../exceptions.dart';
-import '../runtime/meta_runtime_provider.dart';
+import '../runtime/runtime_provider/meta_runtime_provider.dart';
 
 part '_declaration.dart';
 
@@ -848,11 +851,21 @@ abstract class RecordFieldDeclaration extends SourceDeclaration {
   /// Returns the positional index of the field (starting at 0), or `null` if named.
   int? getPosition();
 
-  /// Returns the [TypeDeclaration] of the record field.
-  TypeDeclaration getTypeDeclaration();
+  /// Returns the [LinkDeclaration] of the record field.
+  LinkDeclaration getLinkDeclaration();
 
   /// Returns true if the field is named.
   bool getIsNamed();
+
+  /// Returns true if the field is nullable.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isNullable())); // [true]
+  /// ```
+  bool isNullable();
 
   /// Returns true if the field is positional.
   bool getIsPositional();
@@ -1043,28 +1056,104 @@ abstract class AnnotationFieldDeclaration extends EntityDeclaration {
   const AnnotationFieldDeclaration();
 
   /// Returns the type of the field.
-  TypeDeclaration getTypeDeclaration();
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.getTypeDeclaration().getName())); // ["value"]
+  /// ```
+  LinkDeclaration getLinkDeclaration();
 
   /// Returns the value of the field.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.getValue())); // ["value"]
+  /// ```
   dynamic getValue();
 
   /// Returns the default value of the field.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.getDefaultValue())); // ["value"]
+  /// ```
   dynamic getDefaultValue();
 
   /// Returns the user provided value of the field.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.getUserProvidedValue())); // ["value"]
+  /// ```
   dynamic getUserProvidedValue();
 
   /// Returns true if the field has a default value.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.hasDefaultValue())); // [true]
+  /// ```
   bool hasDefaultValue();
 
   /// Returns true if the field has a user provided value.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.hasUserProvidedValue())); // [true]
+  /// ```
   bool hasUserProvidedValue();
 
+  /// Returns true if the field is nullable.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isNullable())); // [true]
+  /// ```
+  bool isNullable();
+
   /// Returns true if the field is final.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isFinal())); // [true]
+  /// ```
   bool isFinal();
 
   /// Returns true if the field is const.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isConst())); // [true]
+  /// ```
   bool isConst();
+
+  /// Returns the position of the field in the source code.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.getPosition())); // [1]
+  /// ```
+  int getPosition();
 }
 
 /// {@template declaration}
@@ -1124,24 +1213,6 @@ abstract interface class SourceDeclaration extends EntityDeclaration {
   String getDebugIdentifier() => 'ReflectedDeclaration: ${getName()}';
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other.runtimeType != runtimeType) return false;
-    final otherDeclaration = other as SourceDeclaration;
-    return getName() == otherDeclaration.getName() &&
-        getParentLibrary() == otherDeclaration.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), otherDeclaration.getAnnotations()) && // Annotations are unordered
-        getSourceLocation() == otherDeclaration.getSourceLocation();
-  }
-
-  @override
-  int get hashCode =>
-      getName().hashCode ^
-      getParentLibrary().hashCode ^
-      _listHashCodeUnordered(getAnnotations()) ^
-      getSourceLocation().hashCode;
-
-  @override
   Map<String, Object> toJson() {
     Map<String, Object> result = {};
     result['declaration'] = 'source';
@@ -1189,14 +1260,14 @@ abstract class MemberDeclaration extends SourceDeclaration {
   /// {@macro member}
   const MemberDeclaration();
 
-  /// Returns the [ClassDeclaration] that owns this member.
+  /// Returns the [LinkDeclaration] that owns this member.
   ///
   /// ### Example
   /// ```dart
   /// final owner = member.getParentClass();
   /// print(owner.getName()); // e.g., "MyClass"
   /// ```
-  ClassDeclaration? getParentClass();
+  LinkDeclaration? getParentClass();
 
   /// Returns `true` if this member is marked `static`.
   bool getIsStatic();
@@ -1216,28 +1287,9 @@ Member(
   sourceLocation: ${getSourceLocation()},
   isStatic: ${getIsStatic()},
   isAbstract: ${getIsAbstract()},
-  parentClass: ${getParentClass()?.getDebugIdentifier()},
+  parentClass: ${getParentClass()?.toJson()},
 )
 ''';
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other.runtimeType != runtimeType) return false;
-    final otherMember = other as MemberDeclaration;
-    return getName() == otherMember.getName() &&
-        getParentLibrary() == otherMember.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), otherMember.getAnnotations()) && // Annotations are unordered
-        getSourceLocation() == otherMember.getSourceLocation() &&
-        getIsStatic() == otherMember.getIsStatic() &&
-        getIsAbstract() == otherMember.getIsAbstract() &&
-        getParentClass() == otherMember.getParentClass();
-  }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ getSourceLocation().hashCode ^ 
-    getIsStatic().hashCode ^ getIsAbstract().hashCode ^ getParentClass().hashCode;
 }
 
 /// {@template parameter}
@@ -1260,8 +1312,11 @@ abstract class ParameterDeclaration extends SourceDeclaration {
   /// The index of the parameter
   int getIndex();
 
-  /// Returns the [TypeDeclaration] of the parameter.
-  TypeDeclaration getTypeDeclaration();
+  /// Returns the [LinkDeclaration] of the parameter.
+  LinkDeclaration getLinkDeclaration();
+
+  /// Returns the [MemberDeclaration] that this parameter belongs to.
+  MemberDeclaration getMemberDeclaration();
 
   /// Returns `true` if the parameter is optional (either named or positional).
   bool getIsOptional();
@@ -1628,7 +1683,7 @@ abstract class EnumDeclaration extends TypeDeclaration implements SourceDeclarat
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract class EnumFieldDeclaration extends EntityDeclaration {
+abstract class EnumFieldDeclaration extends SourceDeclaration {
   /// Creates a new enum field declaration.
   const EnumFieldDeclaration();
 
@@ -1653,19 +1708,15 @@ abstract class EnumFieldDeclaration extends EntityDeclaration {
   /// ```
   int getPosition();
 
-  /// Gets the parent enum declaration.
-  ///
-  /// {@template enum_field_get_enum}
-  /// Returns:
-  /// - The [EnumDeclaration] containing this field
-  ///
-  /// Example:
+  /// Returns true if the field is nullable.
+  /// 
+  /// ### Example
   /// ```dart
-  /// final enumDecl = field.getEnum();
-  /// print(enumDecl.getName()); // 'Status'
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isNullable())); // [true]
   /// ```
-  /// {@endtemplate}
-  EnumDeclaration getEnum();
+  bool isNullable();
 }
 
 /// {@template typedef}
@@ -1765,10 +1816,10 @@ abstract class FieldDeclaration extends MemberDeclaration {
   /// {@macro field}
   const FieldDeclaration();
 
-  /// Returns the [TypeDeclaration] of this field.
+  /// Returns the [LinkDeclaration] of this field.
   ///
   /// For example, in `int age = 10;`, this returns the reflected type for `int`.
-  TypeDeclaration getTypeDeclaration();
+  LinkDeclaration getLinkDeclaration();
 
   /// Whether this field is declared `final`.
   bool getIsFinal();
@@ -1778,6 +1829,16 @@ abstract class FieldDeclaration extends MemberDeclaration {
 
   /// Whether this field is declared `late`.
   bool getIsLate();
+
+  /// Returns true if the field is nullable.
+  /// 
+  /// ### Example
+  /// ```dart
+  /// final annotation = ...;
+  /// final fields = annotation.getFields();
+  /// print(fields.map((f) => f.isNullable())); // [true]
+  /// ```
+  bool isNullable();
 
   /// Whether this field is `static`.
   ///
@@ -1838,7 +1899,7 @@ abstract class MethodDeclaration extends MemberDeclaration {
   const MethodDeclaration();
 
   /// Returns the return type of the method.
-  TypeDeclaration getReturnType();
+  LinkDeclaration getReturnType();
 
   /// Returns all parameters accepted by this method.
   ///
@@ -2129,43 +2190,52 @@ abstract class ResourceDeclaration {
 /// print(pkg.getIsRootPackage()); // => true
 /// ```
 /// {@endtemplate}
-@immutable
 abstract class Package extends ResourceDeclaration {
-  /// {@macro package}
-  const Package();
-
   /// Returns the name of the package (e.g., `'jetleaf'`, `'args'`).
-  String get name;
+  final String _name;
 
   /// Returns the version of the package (e.g., `'2.7.0'`).
-  String get version;
+  final String _version;
 
   /// Returns the Dart language version constraint (e.g., `'3.3'`), or `null` if unspecified.
-  String? get languageVersion;
+  final String? _languageVersion;
 
   /// Returns `true` if this is the root application package.
-  bool get isRootPackage;
+  final bool _isRootPackage;
 
   /// Returns the absolute file system path of the package root (or `null` if unavailable).
-  String? get filePath;
+  final String? _filePath;
 
   /// Returns the root URI of the package (or `null` if unavailable).
-  String? get rootUri;
+  final String? _rootUri;
+
+  /// {@macro package}
+  const Package({
+    required String name,
+    required String version,
+    String? languageVersion,
+    required bool isRootPackage,
+    String? filePath,
+    String? rootUri,
+  }) : _filePath = filePath, _languageVersion = languageVersion, _version = version, _name = name, _isRootPackage = isRootPackage, _rootUri = rootUri;
 
   /// Returns the name of the package.
-  String getName() => name;
+  String getName() => _name;
 
   /// Returns the version of the package.
-  String getVersion() => version;
+  String getVersion() => _version;
 
   /// Returns the language version of the package.
-  String? getLanguageVersion() => languageVersion;
+  String? getLanguageVersion() => _languageVersion;
 
   /// Returns whether the package is the root package.
-  bool getIsRootPackage() => isRootPackage;
+  bool getIsRootPackage() => _isRootPackage;
 
   /// Returns the file path of the package.
-  String? getFilePath() => filePath;
+  String? getFilePath() => _filePath;
+
+  /// Returns the root URI of the package.
+  String? getRootUri() => _rootUri;
 }
 
 /// {@template asset}
@@ -2192,35 +2262,88 @@ abstract class Package extends ResourceDeclaration {
 /// print(utf8.decode(asset.getContentBytes())); // "<html>...</html>"
 /// ```
 /// {@endtemplate}
-@immutable
 abstract class Asset extends ResourceDeclaration {
-  /// {@macro asset}
-  const Asset();
-
   /// The relative file path of the asset (e.g., `'resources/index.html'`).
-  String get filePath;
+  final String _filePath;
 
   /// The name of the asset file (e.g., `'index.html'`).
-  String get fileName;
+  final String _fileName;
 
   /// The name of the package this asset belongs to (e.g., `'jetleaf'`).
-  String get packageName;
+  final String _packageName;
 
   /// The raw binary contents of this asset.
-  Uint8List get contentBytes;
+  final Uint8List _contentBytes;
+
+  /// {@macro asset}
+  const Asset({
+    required String filePath,
+    required String fileName,
+    required String packageName,
+    required Uint8List contentBytes,
+  }) : _filePath = filePath, _fileName = fileName, _packageName = packageName, _contentBytes = contentBytes;
 
   /// Returns a unique name for the asset, combining the package name and file name.
-  String getUniqueName() => "${packageName}_${fileName.split(".").first}";
+  String getUniqueName() => "${_packageName}_${_fileName.split(".").first}";
 
-  /// Returns the name of the file (same as [fileName]).
-  String getFileName() => fileName;
+  /// Returns the name of the file (same as [_fileName]).
+  String getFileName() => _fileName;
 
-  /// Returns the full path to the file (same as [filePath]).
-  String getFilePath() => filePath;
+  /// Returns the full path to the file (same as [_filePath]).
+  String getFilePath() => _filePath;
 
-  /// Returns the name of the originating package (same as [packageName]).
-  String? getPackageName() => packageName;
+  /// Returns the name of the originating package (same as [_packageName]).
+  String? getPackageName() => _packageName;
 
-  /// Returns the binary content of the asset (same as [contentBytes]).
-  Uint8List getContentBytes() => contentBytes;
+  /// Returns the binary content of the asset (same as [_contentBytes]).
+  Uint8List getContentBytes() => _contentBytes;
+
+  @override
+  Map<String, Object> toJson() {
+    return {
+      'filePath': _filePath,
+      'fileName': _fileName,
+      'packageName': _packageName,
+      'contentBytes': _contentBytes,
+    };
+  }
+}
+
+/// {@template asset_extension}
+/// Extension methods for [Asset] objects.
+/// 
+/// Provides additional functionality for [Asset] objects, such as
+/// retrieving the content as a string.
+/// 
+/// {@endtemplate}
+extension AssetExtension on Asset {
+  /// {@macro asset_extension}
+  /// 
+  /// ## Example
+  /// ```dart
+  /// final asset = Asset.fromFile('index.html');
+  /// final content = asset.getContentAsString();
+  /// print(content);
+  /// ```
+  String getContentAsString() {
+    try {
+      final file = File(getFilePath());
+      if (file.existsSync()) {
+        final content = file.readAsStringSync();
+        return content;
+      }
+
+      return utf8.decode(getContentBytes());
+    } catch (e) {
+      try {
+        return utf8.decode(getContentBytes());
+      } catch (e) {
+        try {
+          return String.fromCharCodes(getContentBytes());
+        } catch (e) {
+          throw IllegalStateException('Failed to parse asset ${getFileName()}: $e');
+        }
+      }
+    }
+  }
 }

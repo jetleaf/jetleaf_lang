@@ -14,7 +14,7 @@
 
 import 'dart:math';
 
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template array_list}
 /// A resizable array implementation similar to Java's ArrayList.

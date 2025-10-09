@@ -13,9 +13,9 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
-/// {@template custom_hash_map}
+/// {@template hash_map}
 /// A custom implementation of a hash map that implements the `Map<K, V>` interface.
 ///
 /// This map uses **open addressing with chaining** to resolve hash collisions.
@@ -57,10 +57,22 @@ class HashMap<K, V> implements Map<K, V> {
   int _size = 0;
   int _capacity;
 
-  /// {@macro custom_hash_map}
+  /// {@macro hash_map}
   ///
   /// Creates an empty hash map with an initial capacity of 16.
   HashMap() : _capacity = _initialCapacity, _buckets = List.filled(_initialCapacity, null);
+
+  /// Creates a hash map from an existing map.
+  /// 
+  /// This is a factory constructor that creates a new hash map from an existing map.
+  /// {@macro hash_map}
+  factory HashMap.from(Map<K, V> map) {
+    final result = HashMap<K, V>();
+    map.forEach((key, value) {
+      result[key] = value;
+    });
+    return result;
+  }
 
   /// Calculates the bucket index for a key.
   int _getBucketIndex(Object? key) {

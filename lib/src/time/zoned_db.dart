@@ -87,7 +87,7 @@ class TimezoneDatabase {
     ZoneId.AMERICA_SANTIAGO.id: [-4, 1, -3],      // CLT/CLST
     ZoneId.AMERICA_LA_PAZ.id: [-4, 0, -4],        // BOT (no DST)
     
-    // Americas - Caribbean
+    // Americas - Caribpod
     ZoneId.AMERICA_HAVANA.id: [-5, 1, -4],        // CST/CDT
     ZoneId.AMERICA_JAMAICA.id: [-5, 0, -5],       // EST (no DST)
     ZoneId.AMERICA_PUERTO_RICO.id: [-4, 0, -4],   // AST (no DST)

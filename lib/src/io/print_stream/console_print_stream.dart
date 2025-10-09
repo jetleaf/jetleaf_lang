@@ -55,12 +55,12 @@ class ConsolePrintStream implements PrintStream {
 
   @override
   void print(Object? obj) {
-    _sink.write(obj?.toString() ?? 'null');
+    _sink.write(obj?.toString() ?? '');
   }
 
   @override
   void println([Object? obj]) {
-    _sink.writeln(obj?.toString() ?? 'null');
+    _sink.writeln(obj?.toString() ?? '');
   }
 
   @override

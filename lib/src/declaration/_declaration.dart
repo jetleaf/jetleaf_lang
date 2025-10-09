@@ -14,105 +14,6 @@
 
 part of 'declaration.dart';
 
-/// Indents each line of the input string by the specified number of levels.
-String indentLines(String input, int level) {
-  final indent = '  ' * level;
-  return input.split('\n')
-    .map((line) => line.isNotEmpty ? '$indent$line' : line)
-    .join('\n');
-}
-
-/// Helper functions for deep equality and hash codes for lists of ReflectedEntity.
-/// These are designed to be order-independent for lists where order doesn't matter
-/// (e.g., members, annotations, interfaces).
-bool _listEqualsUnordered<T extends EntityDeclaration>(List<T> a, List<T> b) {
-  if (a.length != b.length) return false;
-  if (a.isEmpty) return true;
-
-  // Sort both lists by a consistent identifier (getDebugIdentifier()) before comparing.
-  final sortedA = List<T>.from(a)..sort((x, y) => x.getDebugIdentifier().compareTo(y.getDebugIdentifier()));
-  final sortedB = List<T>.from(b)..sort((x, y) => x.getDebugIdentifier().compareTo(y.getDebugIdentifier()));
-
-  for (int i = 0; i < sortedA.length; i++) {
-    if (sortedA[i] != sortedB[i]) return false;
-  }
-  return true;
-}
-
-/// Helper functions for deep equality and hash codes for lists of ReflectedEntity.
-/// These are designed to be order-independent for lists where order doesn't matter
-/// (e.g., members, annotations, interfaces).
-int _listHashCodeUnordered<T extends EntityDeclaration>(List<T> list) {
-  if (list.isEmpty) return 0;
-  // Compute hash based on sorted elements to ensure order-independence.
-  final sortedList = List<T>.from(list)..sort((x, y) => x.getDebugIdentifier().compareTo(y.getDebugIdentifier()));
-  int hash = 0;
-  for (final item in sortedList) {
-    hash = hash ^ item.hashCode;
-  }
-  return hash;
-}
-
-/// Helper functions for deep equality and hash codes for lists where order IS important
-/// (e.g., type arguments, record positional fields).
-bool _listEqualsOrdered<T>(List<T> a, List<T> b) {
-  if (a.length != b.length) return false;
-  for (int i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) return false;
-  }
-  return true;
-}
-
-/// Helper functions for deep equality and hash codes for lists where order IS important
-/// (e.g., type arguments, record positional fields).
-int _listHashCodeOrdered<T>(List<T> list) {
-  int hash = 0;
-  for (int i = 0; i < list.length; i++) {
-    hash = hash ^ (list[i].hashCode * 31 + i); // Incorporate index for order-dependence
-  }
-  return hash;
-}
-
-/// Helper for deep map equality
-bool _mapEquals<K, V>(Map<K, V> a, Map<K, V> b) {
-  if (a.length != b.length) return false;
-  for (final key in a.keys) {
-    if (!b.containsKey(key) || a[key] != b[key]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/// Helper for deep map hash code
-int _mapHashCode<K, V>(Map<K, V> map) {
-  int hash = 0;
-  // Sort keys to ensure consistent hash code regardless of insertion order
-  final sortedKeys = map.keys.toList()..sort((a, b) => a.hashCode.compareTo(b.hashCode));
-  for (final key in sortedKeys) {
-    hash = hash ^ (key.hashCode ^ (map[key].hashCode));
-  }
-  return hash;
-}
-
-/// Compares two [Uint8List]s for binary equality.
-bool _uint8ListEquals(Uint8List a, Uint8List b) {
-  if (a.length != b.length) return false;
-  for (int i = 0; i < a.length; i++) {
-    if (a[i] != b[i]) return false;
-  }
-  return true;
-}
-
-/// Computes a hash code from a [Uint8List]'s contents.
-int _uint8ListHashCode(Uint8List list) {
-  int hash = 0;
-  for (final byte in list) {
-    hash ^= byte.hashCode;
-  }
-  return hash;
-}
-
 /// {@template asset_implementation}
 /// A concrete, immutable implementation of the [Asset] interface.
 ///
@@ -133,50 +34,32 @@ int _uint8ListHashCode(Uint8List list) {
 /// print(asset.fileName); // logo.png
 /// ```
 /// {@endtemplate}
-class AssetImplementation extends Asset {
-  @override
-  final String filePath;
-
-  @override
-  final String fileName;
-
-  @override
-  final String packageName;
-
-  @override
-  final Uint8List contentBytes;
-
+class AssetImplementation extends Asset with EqualsAndHashCode {
   /// {@macro asset_implementation}
-  AssetImplementation({
-    required this.filePath,
-    required this.fileName,
-    required this.packageName,
-    required this.contentBytes,
+  const AssetImplementation({
+    required super.filePath,
+    required super.fileName,
+    required super.packageName,
+    required super.contentBytes,
   });
 
   @override
-  bool operator ==(Object other) =>
-    identical(this, other) ||
-    other is Asset &&
-        filePath == other.filePath &&
-        fileName == other.fileName &&
-        packageName == other.packageName &&
-        _uint8ListEquals(contentBytes, other.contentBytes);
-
-  @override
-  int get hashCode =>
-      filePath.hashCode ^
-      fileName.hashCode ^
-      packageName.hashCode ^
-      _uint8ListHashCode(contentBytes);
+  List<Object?> equalizedProperties() {
+    return [
+      _filePath,
+      _fileName,
+      _packageName,
+      _contentBytes,
+    ];
+  }
 
   @override
   Map<String, Object> toJson() {
     Map<String, Object> result = {};
-    result['filePath'] = filePath;
-    result['fileName'] = fileName;
-    result['packageName'] = packageName;
-    result['contentBytes'] = contentBytes.toString();
+    result['filePath'] = _filePath;
+    result['fileName'] = _fileName;
+    result['packageName'] = _packageName;
+    result['contentBytes'] = _contentBytes.toString();
     return result;
   }
 }
@@ -204,77 +87,52 @@ class AssetImplementation extends Asset {
 /// print(package.isRootPackage); // true
 /// ```
 /// {@endtemplate}
-class PackageImplementation extends Package {
-  @override
-  final String name;
-
-  @override
-  final String version;
-
-  @override
-  final String? languageVersion;
-
-  @override
-  final bool isRootPackage;
-
-  @override
-  final String? filePath;
-
-  @override
-  final String? rootUri;
-
+class PackageImplementation extends Package with EqualsAndHashCode {
   /// {@macro package_implementation}
-  PackageImplementation({
-    required this.name,
-    required this.version,
-    this.languageVersion,
-    required this.isRootPackage,
-    required this.filePath,
-    required this.rootUri,
+  const PackageImplementation({
+    required super.name,
+    required super.version,
+    super.languageVersion,
+    required super.isRootPackage,
+    required super.filePath,
+    required super.rootUri,
   });
 
   @override
-  bool operator ==(Object other) => identical(this, other) ||
-      other is Package &&
-          name == other.name &&
-          version == other.version &&
-          languageVersion == other.languageVersion &&
-          isRootPackage == other.isRootPackage &&
-          filePath == other.filePath &&
-          rootUri == other.rootUri;
-
-  @override
-  int get hashCode =>
-      name.hashCode ^
-      version.hashCode ^
-      (languageVersion.hashCode) ^
-      isRootPackage.hashCode ^
-      (filePath.hashCode) ^
-      (rootUri.hashCode);
+  List<Object?> equalizedProperties() {
+    return [
+      _name,
+      _version,
+      _languageVersion,
+      _isRootPackage,
+      _filePath,
+      _rootUri,
+    ];
+  }
 
   @override
   Map<String, Object> toJson() {
     Map<String, Object> result = {};
-    result['name'] = name;
-    result['version'] = version;
+    result['name'] = _name;
+    result['version'] = _version;
 
-    if (languageVersion != null) {
-      result['languageVersion'] = languageVersion!;
+    if (_languageVersion != null) {
+      result['languageVersion'] = _languageVersion;
     }
-    result['isRootPackage'] = isRootPackage;
+    result['isRootPackage'] = _isRootPackage;
 
-    if (filePath != null) {
-      result['filePath'] = filePath!;
+    if (_filePath != null) {
+      result['filePath'] = _filePath;
     }
-    if (rootUri != null) {
-      result['rootUri'] = rootUri!;
+    if (_rootUri != null) {
+      result['rootUri'] = _rootUri;
     }
 
     return result;
   }
 }
 
-final class StandardDeclaration extends Declaration {
+final class StandardDeclaration extends Declaration with EqualsAndHashCode {
   /// Runtime type of the declared entity
   final Type _type;
 
@@ -311,6 +169,16 @@ final class StandardDeclaration extends Declaration {
     result['name'] = _name;
     return result;
   }
+
+  @override
+  List<Object?> equalizedProperties() {
+    return [
+      _type,
+      _name,
+      _isPublic,
+      _isSynthetic,
+    ];
+  }
 }
 
 /// {@template standard_entity_declaration}
@@ -346,7 +214,7 @@ final class StandardDeclaration extends Declaration {
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-final class StandardEntityDeclaration extends StandardDeclaration implements EntityDeclaration {
+final class StandardEntityDeclaration extends StandardDeclaration  implements EntityDeclaration {
   /// Optional analyzer Element for static analysis integration
   final Element? _element;
 
@@ -397,6 +265,19 @@ final class StandardEntityDeclaration extends StandardDeclaration implements Ent
       "type": _type.toString(),
       "debugger": _debugger
     };
+  }
+
+  @override
+  List<Object?> equalizedProperties() {
+    return [
+      _type,
+      _name,
+      _isPublic,
+      _isSynthetic,
+      _element,
+      _dartType,
+      _debugger,
+    ];
   }
 }
 
@@ -491,32 +372,41 @@ final class StandardSourceDeclaration extends StandardEntityDeclaration implemen
 
   @override
   Uri? getSourceLocation() => _sourceLocation;
+
+  @override
+  List<Object?> equalizedProperties() {
+    return [
+      _annotations,
+      _library,
+      _sourceLocation,
+    ];
+  }
 }
 
-  /// {@template standard_link_declaration}
-  /// A standard implementation of [LinkDeclaration] for representing links to
-  /// other types.
-  ///
-  /// This class holds metadata such as the type's name, runtime representation,
-  /// nullability, kind (e.g., class, enum), generic type arguments, and optionally
-  /// a reference to a [SourceDeclaration].
-  ///
-  /// ## Example
-  /// ```dart
-  /// final link = StandardReflectedLink(
-  ///   name: 'List',
-  ///   type: List,
-  ///   pointerType: List,
-  ///   pointerQualifiedName: 'List',
-  ///   canonicalUri: Uri.parse('dart:core#List'),
-  ///   referenceUri: Uri.parse('dart:core#List'),
-  ///   variance: TypeVariance.invariant,
-  /// );
-  ///
-  /// print(link.getName()); // "List"
-  /// print(link.getKind()); // TypeKind.classType
-  /// ```
-  /// {@endtemplate}
+/// {@template standard_link_declaration}
+/// A standard implementation of [LinkDeclaration] for representing links to
+/// other types.
+///
+/// This class holds metadata such as the type's name, runtime representation,
+/// nullability, kind (e.g., class, enum), generic type arguments, and optionally
+/// a reference to a [SourceDeclaration].
+///
+/// ## Example
+/// ```dart
+/// final link = StandardReflectedLink(
+///   name: 'List',
+///   type: List,
+///   pointerType: List,
+///   pointerQualifiedName: 'List',
+///   canonicalUri: Uri.parse('dart:core#List'),
+///   referenceUri: Uri.parse('dart:core#List'),
+///   variance: TypeVariance.invariant,
+/// );
+///
+/// print(link.getName()); // "List"
+/// print(link.getKind()); // TypeKind.classType
+/// ```
+/// {@endtemplate}
 final class StandardLinkDeclaration extends StandardDeclaration implements LinkDeclaration {
   final Type _pointerType;
   final String _pointerQualifiedName;
@@ -577,6 +467,19 @@ final class StandardLinkDeclaration extends StandardDeclaration implements LinkD
     if(_upperBound != null) "upper_bound": _upperBound.toJson(),
     if(_typeArguments.isNotEmpty) "type_arguments": _typeArguments.map((t) => t.toJson()).toList(),
   };
+
+  @override
+  List<Object?> equalizedProperties() {
+    return [
+      _pointerType,
+      _pointerQualifiedName,
+      _canonicalUri,
+      _referenceUri,
+      _variance,
+      _upperBound,
+      _typeArguments,
+    ];
+  }
 }
 
 /// {@template standard_type}
@@ -601,7 +504,7 @@ final class StandardLinkDeclaration extends StandardDeclaration implements LinkD
 /// print(type.getKind()); // TypeKind.classType
 /// ```
 /// {@endtemplate}
-final class StandardTypeDeclaration extends TypeDeclaration {
+final class StandardTypeDeclaration extends TypeDeclaration with EqualsAndHashCode {
   final String _name;
   final bool _isNullable;
   final TypeKind _kind;
@@ -672,38 +575,39 @@ final class StandardTypeDeclaration extends TypeDeclaration {
 
   @override
   bool isAssignableTo(TypeDeclaration target) {
-    // Use analyzer's type system if available
-    if (hasAnalyzerSupport() && target.hasAnalyzerSupport()) {
-      return _isAssignableToWithAnalyzer(target);
-    }
+    // // Use analyzer's type system if available
+    // if (hasAnalyzerSupport() && target.hasAnalyzerSupport()) {
+    //   return _isAssignableToWithAnalyzer(target);
+    // }
     
-    // Fallback to basic checking
-    return _isAssignableToBasic(target);
+    // // Fallback to basic checking
+    // return _isAssignableToBasic(target);
+    return false;
   }
 
   // Private helper methods
-  bool _isAssignableToWithAnalyzer(TypeDeclaration target) {
-    final from = getDartType();
-    final to = target.getDartType();
+  // bool _isAssignableToWithAnalyzer(TypeDeclaration target) {
+  //   final from = getDartType();
+  //   final to = target.getDartType();
     
-    if (from == null || to == null) {
-      return _isAssignableToBasic(target);
-    }
+  //   if (from == null || to == null) {
+  //     return _isAssignableToBasic(target);
+  //   }
     
-    final typeSystem = from.element?.library?.typeSystem;
-    if (typeSystem == null) {
-      return _isAssignableToBasic(target);
-    }
+  //   final typeSystem = from.element?.library?.typeSystem;
+  //   if (typeSystem == null) {
+  //     return _isAssignableToBasic(target);
+  //   }
     
-    return typeSystem.isAssignableTo(from, to);
-  }
+  //   return typeSystem.isAssignableTo(from, to);
+  // }
 
-  bool _isAssignableToBasic(TypeDeclaration target) {
-    // Basic assignability logic as fallback
-    if (getName() == target.getName()) return true;
-    if (getKind() == TypeKind.dynamicType && target.getKind() == TypeKind.dynamicType) return true;
-    return false;
-  }
+  // bool _isAssignableToBasic(TypeDeclaration target) {
+  //   // Basic assignability logic as fallback
+  //   if (getName() == target.getName()) return true;
+  //   if (getKind() == TypeKind.dynamicType && target.getKind() == TypeKind.dynamicType) return true;
+  //   return false;
+  // }
 
   @override
   bool isGeneric() {
@@ -748,14 +652,25 @@ final class StandardTypeDeclaration extends TypeDeclaration {
   String getDebugIdentifier() => "type_${getSimpleName().toLowerCase()}";
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! StandardTypeDeclaration) return false;
-    return _type == other._type;
+  List<Object?> equalizedProperties() {
+    return [
+      _name,
+      _isNullable,
+      _kind,
+      _element,
+      _dartType,
+      _type,
+      _qualifiedName,
+      _simpleName,
+      _packageUri,
+      _mixins,
+      _interfaces,
+      _superClass,
+      _typeArguments,
+      _isPublic,
+      _isSynthetic,
+    ];
   }
-
-  @override
-  int get hashCode => _type.hashCode;
 }
 
 /// {@template standard_typedef}
@@ -867,26 +782,19 @@ final class StandardTypedefDeclaration extends StandardTypeDeclaration implement
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! StandardTypedefDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments()) && // Type arguments are ordered
-        getAliasedType() == other.getAliasedType();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+      getAliasedType(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    getType().hashCode ^ getIsNullable().hashCode ^ getKind().hashCode ^ 
-    _listHashCodeOrdered(getTypeArguments()) ^ getAliasedType().hashCode;
 
   StandardTypedefDeclaration copyWith({
     String? name,
@@ -1027,22 +935,16 @@ final class StandardTypeVariableDeclaration extends StandardTypeDeclaration impl
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! TypeVariableDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getUpperBound() == other.getUpperBound() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getUpperBound(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getUpperBound().hashCode ^
-      getType().hashCode ^ getIsNullable().hashCode ^
-      getKind().hashCode ^ _listHashCodeOrdered(getTypeArguments());
 
   StandardTypeVariableDeclaration copyWith({
     String? name,
@@ -1216,30 +1118,20 @@ final class StandardRecordDeclaration extends StandardTypeDeclaration implements
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! RecordDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments()) && // Type arguments are ordered
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) && // Annotations are unordered
-        getSourceLocation() == other.getSourceLocation() &&
-        _listEqualsOrdered(getPositionalFields(), other.getPositionalFields()) && // Positional fields are ordered
-        _mapEquals(getNamedFields(), other.getNamedFields()); // Named fields are a map
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getPositionalFields(),
+      getNamedFields(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getType().hashCode ^
-      getIsNullable().hashCode ^ getKind().hashCode ^
-      _listHashCodeOrdered(getTypeArguments()) ^
-      getParentLibrary().hashCode ^ _listHashCodeUnordered(getAnnotations()) ^
-      getSourceLocation().hashCode ^
-      _listHashCodeOrdered(getPositionalFields()) ^
-      _mapHashCode(getNamedFields());
 
   StandardRecordDeclaration copyWith({
     String? name,
@@ -1300,7 +1192,8 @@ final class StandardRecordDeclaration extends StandardTypeDeclaration implements
 /// {@endtemplate}
 final class StandardRecordFieldDeclaration extends StandardSourceDeclaration implements RecordFieldDeclaration {
   final int? _position; // null for named fields
-  final TypeDeclaration _typeDeclaration;
+  final bool _isNullable;
+  final LinkDeclaration _typeDeclaration;
 
   /// {@macro standard_record_field}
   const StandardRecordFieldDeclaration({
@@ -1308,13 +1201,15 @@ final class StandardRecordFieldDeclaration extends StandardSourceDeclaration imp
     required super.isPublic,
     required super.isSynthetic,
     int? position,
-    required TypeDeclaration typeDeclaration,
+    required LinkDeclaration typeDeclaration,
     super.sourceLocation,
     super.element,
     super.dartType,
     required super.type,
     required super.libraryDeclaration,
-  })  : _position = position, _typeDeclaration = typeDeclaration;
+    required bool isNullable,
+    super.annotations
+  })  : _position = position, _typeDeclaration = typeDeclaration, _isNullable = isNullable;
 
   @override
   String getName() => _name;
@@ -1323,7 +1218,7 @@ final class StandardRecordFieldDeclaration extends StandardSourceDeclaration imp
   int? getPosition() => _position;
 
   @override
-  TypeDeclaration getTypeDeclaration() => _typeDeclaration;
+  LinkDeclaration getLinkDeclaration() => _typeDeclaration;
 
   @override
   Element? getElement() => _element;
@@ -1333,6 +1228,9 @@ final class StandardRecordFieldDeclaration extends StandardSourceDeclaration imp
 
   @override
   Type getType() => _type;
+
+  @override
+  bool isNullable() => _isNullable;
 
   @override
   bool getIsNamed() => _position == null;
@@ -1374,25 +1272,18 @@ final class StandardRecordFieldDeclaration extends StandardSourceDeclaration imp
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! RecordFieldDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getPosition() == other.getPosition() &&
-        getType() == other.getType() &&
-        getIsNamed() == other.getIsNamed() &&
-        getIsPositional() == other.getIsPositional() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getPosition(),
+      getType(),
+      getIsNamed(),
+      getIsPositional(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getPosition().hashCode ^ 
-    getType().hashCode ^ getIsNamed().hashCode ^ getIsPositional().hashCode ^
-    getParentLibrary().hashCode ^ _listHashCodeUnordered(getAnnotations()) ^
-    getSourceLocation().hashCode;
 }
 
 /// {@template standard_enum}
@@ -1522,28 +1413,20 @@ final class StandardEnumDeclaration extends StandardTypeDeclaration implements E
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! EnumDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments()) && // Type arguments are ordered
-        _listEqualsOrdered(getValues(), other.getValues()) && // Enum values are ordered
-        _listEqualsUnordered(getMembers(), other.getMembers());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+      getValues(),
+      getMembers(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    getType().hashCode ^ getIsNullable().hashCode ^ getKind().hashCode ^ 
-    _listHashCodeOrdered(getTypeArguments()) ^ 
-    _listHashCodeOrdered(getValues()) ^ _listHashCodeUnordered(getMembers());
 
   StandardEnumDeclaration copyWith({
     String? name,
@@ -1625,8 +1508,8 @@ final class StandardEnumFieldDeclaration extends StandardSourceDeclaration imple
   /// The enum field position
   final int _position;
 
-  /// The parent enum declaration
-  final EnumDeclaration _enum;
+  /// Whether this enum field is nullable
+  final bool _isNullable;
 
   /// Creates a standard enum field declaration
   ///
@@ -1647,9 +1530,10 @@ final class StandardEnumFieldDeclaration extends StandardSourceDeclaration imple
     required super.isSynthetic,
     required dynamic value,
     required int position,
-    required EnumDeclaration declaration,
     required super.libraryDeclaration,
-  }) : _value = value, _enum = declaration, _position = position;
+    super.annotations,
+    required bool isNullable,
+  }) : _value = value, _position = position, _isNullable = isNullable;
 
   @override
   dynamic getValue() => _value;
@@ -1658,7 +1542,7 @@ final class StandardEnumFieldDeclaration extends StandardSourceDeclaration imple
   int getPosition() => _position;
 
   @override
-  EnumDeclaration getEnum() => _enum;
+  bool isNullable() => _isNullable;
 
   @override
   String getDebugIdentifier() => 'enum_field_${getName().toLowerCase()}';
@@ -1670,20 +1554,17 @@ final class StandardEnumFieldDeclaration extends StandardSourceDeclaration imple
     result['name'] = getName();
     result['value'] = getValue();
     result['type'] = getType().toString();
-    result['enum'] = getEnum().toJson();
     return result;
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! EnumFieldDeclaration) return false;
-
-    return getName() == other.getName() && getValue() == other.getValue();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getValue(),
+      getType(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getValue().hashCode;
 }
 
 /// {@template standard_mixin}
@@ -1927,33 +1808,23 @@ final class StandardMixinDeclaration extends StandardTypeDeclaration implements 
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! MixinDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments()) && // Type arguments are ordered
-        _listEqualsUnordered(getFields(), other.getFields()) &&
-        _listEqualsUnordered(getMethods(), other.getMethods()) &&
-        getHasConstraints() == other.getHasConstraints() &&
-        getHasInterfaces() == other.getHasInterfaces() &&
-        _listEqualsUnordered(getMembers(), other.getMembers());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+      getFields(),
+      getMethods(),
+      getHasConstraints(),
+      getHasInterfaces(),
+      getMembers(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    getType().hashCode ^ getIsNullable().hashCode ^ getKind().hashCode ^ 
-    _listHashCodeOrdered(getTypeArguments()) ^ 
-    _listHashCodeUnordered(getFields()) ^ _listHashCodeUnordered(getMethods()) ^
-    getHasConstraints().hashCode ^ getHasInterfaces().hashCode ^ 
-    _listHashCodeUnordered(getMembers());
 }
 
 /// {@template standard_class}
@@ -2253,54 +2124,30 @@ final class StandardClassDeclaration extends StandardTypeDeclaration implements 
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! ClassDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getType() == other.getType() &&
-        getIsNullable() == other.getIsNullable() &&
-        getKind() == other.getKind() &&
-        _listEqualsOrdered(getTypeArguments(), other.getTypeArguments()) && // Type arguments are ordered
-        getIsAbstract() == other.getIsAbstract() &&
-        getIsMixin() == other.getIsMixin() &&
-        getIsSealed() == other.getIsSealed() &&
-        getIsBase() == other.getIsBase() &&
-        getIsInterface() == other.getIsInterface() &&
-        getIsFinal() == other.getIsFinal() &&
-        getIsRecord() == other.getIsRecord() &&
-        _listEqualsUnordered(getConstructors(), other.getConstructors()) &&
-        _listEqualsUnordered(getFields(), other.getFields()) &&
-        _listEqualsUnordered(getMethods(), other.getMethods()) &&
-        _listEqualsUnordered(getRecords(), other.getRecords()) &&
-        _listEqualsUnordered(getMembers(), other.getMembers());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getType(),
+      getIsNullable(),
+      getKind(),
+      getTypeArguments(),
+      getSuperClass(),
+      getInterfaces(),
+      getMixins(),
+      getRecords(),
+      getConstructors(),
+      getIsAbstract(),
+      getIsMixin(),
+      getIsSealed(),
+      getIsBase(),
+      getIsInterface(),
+      getIsFinal(),
+      getIsRecord(),
+    ];
   }
-
-  @override
-  int get hashCode =>
-      getName().hashCode ^
-      getParentLibrary().hashCode ^
-      _listHashCodeUnordered(getAnnotations()) ^
-      (getSourceLocation().hashCode) ^
-      getType().hashCode ^
-      getIsNullable().hashCode ^
-      getKind().hashCode ^
-      _listHashCodeOrdered(getTypeArguments()) ^
-      getIsAbstract().hashCode ^
-      getIsMixin().hashCode ^
-      getIsSealed().hashCode ^
-      getIsBase().hashCode ^
-      getIsInterface().hashCode ^
-      getIsFinal().hashCode ^
-      getIsRecord().hashCode ^
-      _listHashCodeUnordered(getConstructors()) ^
-      _listHashCodeUnordered(getFields()) ^
-      _listHashCodeUnordered(getMethods()) ^
-      _listHashCodeUnordered(getRecords()) ^
-      _listHashCodeUnordered(getMembers());
 }
 
 bool _constructorMatches(ConstructorDeclaration constructor, Map<String, dynamic> arguments) {
@@ -2343,12 +2190,13 @@ bool _constructorMatches(ConstructorDeclaration constructor, Map<String, dynamic
 /// ```
 /// {@endtemplate}
 final class StandardParameterDeclaration extends StandardSourceDeclaration implements ParameterDeclaration {
-  final TypeDeclaration _typeDeclaration;
+  final LinkDeclaration _typeDeclaration;
   final bool _isOptional;
   final bool _isNamed;
   final bool _hasDefaultValue;
   final dynamic _defaultValue;
   final int _index;
+  final MemberDeclaration _memberDeclaration;
   final LibraryDeclaration _parentLibrary;
 
   /// {@macro standard_parameter}
@@ -2358,7 +2206,7 @@ final class StandardParameterDeclaration extends StandardSourceDeclaration imple
     super.dartType,
     required super.type,
     required super.libraryDeclaration,
-    required TypeDeclaration typeDeclaration,
+    required LinkDeclaration typeDeclaration,
     bool isOptional = false,
     bool isNamed = false,
     required super.isPublic,
@@ -2366,19 +2214,21 @@ final class StandardParameterDeclaration extends StandardSourceDeclaration imple
     bool hasDefaultValue = false,
     dynamic defaultValue,
     required int index,
+    required MemberDeclaration memberDeclaration,
     required LibraryDeclaration parentLibrary,
-    required Uri? sourceLocation,
-    required List<AnnotationDeclaration> annotations,
+    super.sourceLocation,
+    super.annotations,
   })  : _typeDeclaration = typeDeclaration,
         _isOptional = isOptional,
         _isNamed = isNamed,
+        _memberDeclaration = memberDeclaration,
         _hasDefaultValue = hasDefaultValue,
         _defaultValue = defaultValue,
         _parentLibrary = parentLibrary,
         _index = index;
 
   @override
-  TypeDeclaration getTypeDeclaration() => _typeDeclaration;
+  LinkDeclaration getLinkDeclaration() => _typeDeclaration;
 
   @override
   bool getIsOptional() => _isOptional;
@@ -2400,6 +2250,9 @@ final class StandardParameterDeclaration extends StandardSourceDeclaration imple
 
   @override
   Uri? getSourceLocation() => _sourceLocation;
+
+  @override
+  MemberDeclaration getMemberDeclaration() => _memberDeclaration;
 
   @override
   List<AnnotationDeclaration> getAnnotations() => _annotations;
@@ -2441,22 +2294,21 @@ final class StandardParameterDeclaration extends StandardSourceDeclaration imple
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! ParameterDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getType() == other.getType() &&
-        getIsOptional() == other.getIsOptional() &&
-        getIsNamed() == other.getIsNamed() &&
-        getHasDefaultValue() == other.getHasDefaultValue() &&
-        getDefaultValue() == other.getDefaultValue();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getType(),
+      getIsOptional(),
+      getIsNamed(),
+      getHasDefaultValue(),
+      getDefaultValue(),
+      getIndex(),
+      getMemberDeclaration(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getType().hashCode ^ 
-    getIsOptional().hashCode ^ getIsNamed().hashCode ^ 
-    getHasDefaultValue().hashCode ^ (getDefaultValue().hashCode); // Handle null default value
 }
 
 /// {@template standard_method}
@@ -2490,18 +2342,18 @@ final class StandardParameterDeclaration extends StandardSourceDeclaration imple
 ///   method's static/non-static requirements are not met.
 /// {@endtemplate}
 final class StandardMethodDeclaration extends StandardSourceDeclaration implements MethodDeclaration {
-  final TypeDeclaration _returnType;
-  final List<ParameterDeclaration> _parameters;
-  final bool _isStatic;
-  final bool _isAbstract;
-  final bool _isGetter;
-  final bool _isSetter;
-  final ClassDeclaration? _parentClass;
-  final bool _isConst;
-  final bool _isFactory;
+  LinkDeclaration returnType;
+  List<ParameterDeclaration> parameters;
+  bool isStatic;
+  bool isAbstract;
+  bool isGetter;
+  bool isSetter;
+  LinkDeclaration? parentClass;
+  bool isConst;
+  bool isFactory;
 
   /// {@macro standard_method}
-  const StandardMethodDeclaration({
+  StandardMethodDeclaration({
     required super.name,
     required super.element,
     required super.dartType,
@@ -2509,76 +2361,56 @@ final class StandardMethodDeclaration extends StandardSourceDeclaration implemen
     required super.isSynthetic,
     required super.type,
     required super.libraryDeclaration,
-    required TypeDeclaration returnType,
-    List<ParameterDeclaration> parameters = const [],
+    required this.returnType,
+    this.parameters = const [],
     super.sourceLocation,
     super.annotations,
-    bool isStatic = false,
-    bool isAbstract = false,
-    bool isGetter = false,
-    bool isSetter = false,
-    ClassDeclaration? parentClass,
-    bool isConst = false,
-    bool isFactory = false,
-  })  : _returnType = returnType,
-        _parameters = parameters,
-        _isStatic = isStatic,
-        _isAbstract = isAbstract,
-        _isGetter = isGetter,
-        _isSetter = isSetter,
-        _parentClass = parentClass,
-        _isConst = isConst,
-        _isFactory = isFactory;
+    this.isStatic = false,
+    this.isAbstract = false,
+    this.isGetter = false,
+    this.isSetter = false,
+    this.parentClass,
+    this.isConst = false,
+    this.isFactory = false,
+  });
 
   @override
-  TypeDeclaration getReturnType() => _returnType;
+  LinkDeclaration getReturnType() => returnType;
 
   @override
-  List<ParameterDeclaration> getParameters() => List.unmodifiable(_parameters);
+  List<ParameterDeclaration> getParameters() => List.unmodifiable(parameters);
 
   @override
-  bool getIsStatic() => _isStatic;
+  bool getIsStatic() => isStatic;
 
   @override
-  bool getIsAbstract() => _isAbstract;
+  bool getIsAbstract() => isAbstract;
 
   @override
-  bool getIsGetter() => _isGetter;
+  bool getIsGetter() => isGetter;
 
   @override
-  bool getIsSetter() => _isSetter;
+  bool getIsSetter() => isSetter;
 
   @override
   dynamic invoke(dynamic instance, Map<String, dynamic> arguments) {
-    final positional = <dynamic>[];
-    final named = <String, dynamic>{};
+    InstanceArgument arg = _resolveArgument(arguments, parameters, "${parentClass?.getName() ?? "#"}$_name");
 
-    for (final param in _parameters) {
-      final name = param.getName();
-      final value = arguments[name];
-
-      if (param.getIsNamed()) {
-        named[name] = value;
-      } else {
-        positional.add(value);
-      }
-    }
-
-    if (_isStatic) {
-      return Runtime.getRuntimeResolver().invokeMethod(instance, _name, args: positional, namedArgs: named);
+    if (isStatic) {
+      return Runtime.getRuntimeResolver().invokeMethod(instance, _name, args: arg.getPositional(), namedArgs: arg.getNamed());
     } else {
-      return Runtime.getRuntimeResolver().invokeMethod(instance, _name, args: positional, namedArgs: named);
+      return Runtime.getRuntimeResolver().invokeMethod(instance, _name, args: arg.getPositional(), namedArgs: arg.getNamed());
     }
   }
   
   @override
-  bool getIsConst() => _isConst;
+  bool getIsConst() => isConst;
   
   @override
-  bool getIsFactory() => _isFactory;
+  bool getIsFactory() => isFactory;
   
   @override
-  ClassDeclaration? getParentClass() => _parentClass;
+  LinkDeclaration? getParentClass() => parentClass;
 
   @override
   String getDebugIdentifier() => 'method_${getName().toLowerCase()}';
@@ -2629,32 +2461,121 @@ final class StandardMethodDeclaration extends StandardSourceDeclaration implemen
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! MethodDeclaration) return false;
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getParentClass(),
+      getIsStatic(),
+      getIsAbstract(),
+      getReturnType(),
+      getParameters(),
+      getIsGetter(),
+      getIsSetter(),
+      getIsFactory(),
+      getIsConst(),
+    ];
+  }
+}
 
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getParentClass() == other.getParentClass() &&
-        getIsStatic() == other.getIsStatic() &&
-        getIsAbstract() == other.getIsAbstract() &&
-        getReturnType() == other.getReturnType() &&
-        _listEqualsOrdered(getParameters(), other.getParameters()) && // Parameters are ordered
-        getIsGetter() == other.getIsGetter() &&
-        getIsSetter() == other.getIsSetter() &&
-        getIsFactory() == other.getIsFactory() &&
-        getIsConst() == other.getIsConst();
+/// Resolves arguments for a method invocation.
+/// 
+/// Takes a map of arguments and a list of parameters, and returns an [InstanceArgument]
+/// object containing the resolved positional and named arguments.
+/// 
+/// The function also checks for the following:
+/// 
+/// * If the number of positional arguments provided matches the number of required positional arguments.
+/// * If the number of positional arguments provided does not exceed the total number of positional arguments.
+/// * If all named arguments provided are valid parameters.
+/// 
+/// If any of these checks fail, an [IllegalStateException] is thrown.
+InstanceArgument _resolveArgument(Map<String, dynamic> arguments, List<ParameterDeclaration> parameters, String location) {
+  InstanceArgument result = InstanceArgument();
+
+  final positional = <dynamic>[];
+  final named = <String, dynamic>{};
+  final argKeys = arguments.keys.toList();
+
+  // Separate positional and named arguments based on parameter definitions
+  for (int i = 0; i < parameters.length; i++) {
+    final param = parameters[i];
+    final name = param.getName();
+    
+    if (param.getIsNamed()) {
+      // Named parameter
+      if (arguments.containsKey(name)) {
+        named[name] = arguments[name];
+      } else if (!param.getIsOptional()) {
+        // Required named parameter is missing
+        throw IllegalStateException('Missing required named parameter: $name in $location');
+      }
+    } else {
+      // Positional parameter
+      if (argKeys.contains(name)) {
+        positional.add(arguments[name]);
+      } else if (argKeys.isNotEmpty && i < argKeys.length) {
+        final key = argKeys.elementAt(i);
+
+        if(key.isInt && key.toInt() == param.getIndex()) {
+          positional.add(arguments[key]);
+        } else if(!param.getIsOptional()) {
+          // Required positional parameter is missing
+          throw IllegalStateException('Missing required positional parameter: $name in $location');
+        }
+      }
+    }
+  }
+  
+  // Check if we have the right number of positional arguments
+  final requiredPositionalCount = parameters.where((p) => !p.getIsNamed() && !p.getIsOptional()).length;
+  final totalPositionalCount = parameters.where((p) => !p.getIsNamed()).length;
+      
+  if (positional.length < requiredPositionalCount) {
+    throw IllegalStateException(
+      'Not enough positional arguments provided. Expected at least $requiredPositionalCount, got ${positional.length} in $location'
+    );
+  }
+  
+  if (positional.length > totalPositionalCount) {
+    throw IllegalStateException(
+      'Too many positional arguments provided. Expected at most $totalPositionalCount, got ${positional.length} in $location'
+    );
+  }
+  
+  // Check for unexpected named arguments
+  for (final argName in arguments.keys) {
+    final hasMatchingParam = parameters.any((p) => p.getName() == argName);
+    if (!hasMatchingParam) {
+      throw IllegalStateException('Unexpected argument: $argName in $location');
+    }
   }
 
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    (getParentClass().hashCode) ^ getIsStatic().hashCode ^ getIsAbstract().hashCode ^ 
-    getReturnType().hashCode ^ _listHashCodeOrdered(getParameters()) ^ 
-    getIsGetter().hashCode ^ getIsSetter().hashCode ^ 
-    getIsFactory().hashCode ^ getIsConst().hashCode;
+  result.setNamed(named);
+  result.setPositional(positional);
+
+  return result;
+}
+
+class InstanceArgument {
+  InstanceArgument();
+
+  Map<String, dynamic> _named = {};
+  List<dynamic> _positional = [];
+
+  void setNamed(Map<String, dynamic> result) {
+    _named = result;
+  }
+
+  Map<String, dynamic> getNamed() => _named;
+
+  void setPositional(List<dynamic> result) {
+    _positional = result;
+  }
+
+  List<dynamic> getPositional() => _positional;
 }
 
 /// {@template standard_library}
@@ -2688,7 +2609,7 @@ final class StandardMethodDeclaration extends StandardSourceDeclaration implemen
 /// print(lib.getTopLevelMethods().first.getName()); // e.g., "myTopLevelFunction"
 /// ```
 /// {@endtemplate}
-final class StandardLibraryDeclaration extends LibraryDeclaration {
+final class StandardLibraryDeclaration extends LibraryDeclaration with EqualsAndHashCode {
   final String _uri;
   final DartType? _dartType;
   final Element? _element;
@@ -2877,32 +2798,24 @@ final class StandardLibraryDeclaration extends LibraryDeclaration {
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! LibraryDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getPackage() == other.getPackage() &&
-        getUri() == other.getUri() &&
-        getSourceLocation() == other.getSourceLocation() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        _listEqualsUnordered(getTopLevelMethods(), other.getTopLevelMethods()) &&
-        _listEqualsUnordered(getTopLevelFields(), other.getTopLevelFields()) &&
-        _listEqualsUnordered(getTopLevelRecords(), other.getTopLevelRecords()) &&
-        _listEqualsUnordered(getTopLevelRecordFields(), other.getTopLevelRecordFields()) &&
-        _listEqualsUnordered(getClasses(), other.getClasses()) &&
-        _listEqualsUnordered(getEnums(), other.getEnums()) &&
-        _listEqualsUnordered(getTypedefs(), other.getTypedefs()) &&
-        _listEqualsUnordered(getExtensions(), other.getExtensions()) &&
-        _listEqualsUnordered(getDeclarations(), other.getDeclarations());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getPackage(),
+      getUri(),
+      getSourceLocation(),
+      getAnnotations(),
+      getTopLevelMethods(),
+      getTopLevelFields(),
+      getTopLevelRecords(),
+      getTopLevelRecordFields(),
+      getClasses(),
+      getEnums(),
+      getTypedefs(),
+      getExtensions(),
+      getDeclarations(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getPackage().hashCode ^ 
-    getUri().hashCode ^ (getSourceLocation().hashCode) ^ _listHashCodeUnordered(getAnnotations()) ^ 
-    _listHashCodeUnordered(getTopLevelMethods()) ^ _listHashCodeUnordered(getTopLevelFields()) ^ _listHashCodeUnordered(getTopLevelRecords()) ^ 
-    _listHashCodeUnordered(getTopLevelRecordFields()) ^ _listHashCodeUnordered(getClasses()) ^ _listHashCodeUnordered(getEnums()) ^ _listHashCodeUnordered(getTypedefs()) ^ 
-    _listHashCodeUnordered(getExtensions()) ^ _listHashCodeUnordered(getDeclarations());
 }
 
 /// {@template standard_field}
@@ -2929,13 +2842,14 @@ final class StandardLibraryDeclaration extends LibraryDeclaration {
 /// ```
 /// {@endtemplate}
 final class StandardFieldDeclaration extends StandardSourceDeclaration implements FieldDeclaration {
-  final ClassDeclaration? _parentClass;
-  final TypeDeclaration _typeDeclaration;
+  final LinkDeclaration? _parentClass;
+  final LinkDeclaration _typeDeclaration;
   final bool _isFinal;
   final bool _isConst;
   final bool _isLate;
   final bool _isStatic;
   final bool _isAbstract;
+  final bool _isNullable;
 
   /// {@macro standard_field}
   const StandardFieldDeclaration({
@@ -2944,8 +2858,8 @@ final class StandardFieldDeclaration extends StandardSourceDeclaration implement
     super.dartType,
     super.element,
     required super.libraryDeclaration,
-    ClassDeclaration? parentClass,
-    required TypeDeclaration typeDeclaration,
+    LinkDeclaration? parentClass,
+    required LinkDeclaration linkDeclaration,
     super.annotations,
     required super.isPublic,
     required super.isSynthetic,
@@ -2955,19 +2869,21 @@ final class StandardFieldDeclaration extends StandardSourceDeclaration implement
     bool isLate = false,
     bool isStatic = false,
     bool isAbstract = false,
+    bool isNullable = false,
   })  : _parentClass = parentClass,
-        _typeDeclaration = typeDeclaration,
+        _typeDeclaration = linkDeclaration,
         _isFinal = isFinal,
         _isConst = isConst,
+        _isNullable = isNullable,
         _isLate = isLate,
         _isStatic = isStatic,
         _isAbstract = isAbstract;
 
   @override
-  ClassDeclaration? getParentClass() => _parentClass;
+  LinkDeclaration? getParentClass() => _parentClass;
 
   @override
-  TypeDeclaration getTypeDeclaration() => _typeDeclaration;
+  LinkDeclaration getLinkDeclaration() => _typeDeclaration;
 
   @override
   bool getIsFinal() => _isFinal;
@@ -2985,6 +2901,9 @@ final class StandardFieldDeclaration extends StandardSourceDeclaration implement
   bool getIsAbstract() => _isAbstract;
 
   @override
+  bool isNullable() => _isNullable;
+
+  @override
   dynamic getValue(dynamic instance) {
     if (_isStatic) {
       return Runtime.getRuntimeResolver().getValue(instance, _name);
@@ -2995,7 +2914,7 @@ final class StandardFieldDeclaration extends StandardSourceDeclaration implement
 
   @override
   void setValue(dynamic instance, dynamic value) {
-    if (_isFinal || _isConst) {
+    if ((_isFinal || _isConst) && !_isLate) {
       throw IllegalStateException('Cannot set value on final/const field $_name');
     }
     
@@ -3044,28 +2963,21 @@ final class StandardFieldDeclaration extends StandardSourceDeclaration implement
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! FieldDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getParentClass() == other.getParentClass() &&
-        getIsStatic() == other.getIsStatic() &&
-        getIsAbstract() == other.getIsAbstract() &&
-        getType() == other.getType() &&
-        getIsFinal() == other.getIsFinal() &&
-        getIsConst() == other.getIsConst() &&
-        getIsLate() == other.getIsLate();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getParentClass(),
+      getIsStatic(),
+      getIsAbstract(),
+      getType(),
+      getIsFinal(),
+      getIsConst(),
+      getIsLate(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    (getParentClass().hashCode) ^ getIsStatic().hashCode ^ getIsAbstract().hashCode ^ 
-    getType().hashCode ^ getIsFinal().hashCode ^ getIsConst().hashCode ^ getIsLate().hashCode;
 }
 
 /// {@template standard_extension}
@@ -3158,22 +3070,16 @@ final class StandardExtensionDeclaration extends StandardSourceDeclaration imple
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! ExtensionDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getExtendedType() == other.getExtendedType() &&
-        _listEqualsUnordered(getMembers(), other.getMembers());
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getExtendedType(),
+      getMembers(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    getExtendedType().hashCode ^ _listHashCodeUnordered(getMembers());
 }
 
 /// {@template standard_constructor}
@@ -3206,13 +3112,13 @@ final class StandardExtensionDeclaration extends StandardSourceDeclaration imple
 ///
 /// {@endtemplate}
 final class StandardConstructorDeclaration extends StandardSourceDeclaration implements ConstructorDeclaration {
-  final ClassDeclaration _parentClass;
-  final List<ParameterDeclaration> _parameters;
-  final bool _isFactory;
-  final bool _isConst;
+  LinkDeclaration parentClass;
+  List<ParameterDeclaration> parameters;
+  bool isFactory;
+  bool isConst;
 
   /// {@macro standard_constructor}
-  const StandardConstructorDeclaration({
+  StandardConstructorDeclaration({
     required super.name,
     required super.type,
     super.element,
@@ -3220,28 +3126,25 @@ final class StandardConstructorDeclaration extends StandardSourceDeclaration imp
     required super.isPublic,
     required super.isSynthetic,
     required super.libraryDeclaration,
-    required ClassDeclaration parentClass,
+    required this.parentClass,
     super.annotations,
-    List<ParameterDeclaration> parameters = const [],
+    this.parameters = const [],
     super.sourceLocation,
-    bool isFactory = false,
-    bool isConst = false,
-  })  : _parentClass = parentClass,
-        _parameters = parameters,
-        _isFactory = isFactory,
-        _isConst = isConst;
+    this.isFactory = false,
+    this.isConst = false,
+  });
 
   @override
-  ClassDeclaration getParentClass() => _parentClass;
+  LinkDeclaration getParentClass() => parentClass;
 
   @override
-  List<ParameterDeclaration> getParameters() => List.unmodifiable(_parameters);
+  List<ParameterDeclaration> getParameters() => List.unmodifiable(parameters);
 
   @override
-  bool getIsFactory() => _isFactory;
+  bool getIsFactory() => isFactory;
 
   @override
-  bool getIsConst() => _isConst;
+  bool getIsConst() => isConst;
 
   @override
   bool getIsStatic() => false; // Constructors are never static
@@ -3251,58 +3154,9 @@ final class StandardConstructorDeclaration extends StandardSourceDeclaration imp
 
   @override
   T newInstance<T>(Map<String, dynamic> arguments) {
-    final positional = <dynamic>[];
-    final named = <String, dynamic>{};
+    InstanceArgument arg = _resolveArgument(arguments, parameters, "${parentClass.getName()}$_name");
 
-    // Separate positional and named arguments based on parameter definitions
-    for (int i = 0; i < _parameters.length; i++) {
-      final param = _parameters[i];
-      final name = param.getName();
-      
-      if (param.getIsNamed()) {
-        // Named parameter
-        if (arguments.containsKey(name)) {
-          named[name] = arguments[name];
-        } else if (!param.getIsOptional()) {
-          // Required named parameter is missing
-          throw IllegalStateException('Missing required named parameter: $name in ${_parentClass.getName()}.$_name');
-        }
-      } else {
-        // Positional parameter
-        if (arguments.containsKey(name)) {
-          positional.add(arguments[name]);
-        } else if (!param.getIsOptional()) {
-          // Required positional parameter is missing
-          throw IllegalStateException('Missing required positional parameter: $name in ${_parentClass.getName()}.$_name');
-        }
-      }
-    }
-    
-    // Check if we have the right number of positional arguments
-    final requiredPositionalCount = _parameters.where((p) => !p.getIsNamed() && !p.getIsOptional()).length;
-    final totalPositionalCount = _parameters.where((p) => !p.getIsNamed()).length;
-        
-    if (positional.length < requiredPositionalCount) {
-      throw IllegalStateException(
-        'Not enough positional arguments provided. Expected at least $requiredPositionalCount, got ${positional.length} in ${_parentClass.getName()}.$_name'
-      );
-    }
-    
-    if (positional.length > totalPositionalCount) {
-      throw IllegalStateException(
-        'Too many positional arguments provided. Expected at most $totalPositionalCount, got ${positional.length} in ${_parentClass.getName()}.$_name'
-      );
-    }
-    
-    // Check for unexpected named arguments
-    for (final argName in arguments.keys) {
-      final hasMatchingParam = _parameters.any((p) => p.getName() == argName);
-      if (!hasMatchingParam) {
-        throw IllegalStateException('Unexpected argument: $argName in ${_parentClass.getName()}.$_name');
-      }
-    }
-
-    return Runtime.getRuntimeResolver().newInstance<T>(_name, positional, named);
+    return Runtime.getRuntimeResolver().newInstance<T>(_name, parentClass.getType(), arg.getPositional(), arg.getNamed());
   }
 
   @override
@@ -3342,28 +3196,19 @@ final class StandardConstructorDeclaration extends StandardSourceDeclaration imp
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! ConstructorDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getParentLibrary() == other.getParentLibrary() &&
-        _listEqualsUnordered(getAnnotations(), other.getAnnotations()) &&
-        getSourceLocation() == other.getSourceLocation() &&
-        getParentClass() == other.getParentClass() &&
-        getIsStatic() == other.getIsStatic() &&
-        getIsAbstract() == other.getIsAbstract() &&
-        _listEqualsOrdered(getParameters(), other.getParameters()) && // Parameters are ordered
-        getIsFactory() == other.getIsFactory() &&
-        getIsConst() == other.getIsConst();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getParentLibrary(),
+      getAnnotations(),
+      getSourceLocation(),
+      getParentClass(),
+      getIsStatic(),
+      getIsAbstract(),
+      getIsFactory(),
+      getIsConst(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ getParentLibrary().hashCode ^ 
-    _listHashCodeUnordered(getAnnotations()) ^ (getSourceLocation().hashCode) ^ 
-    (getParentClass().hashCode) ^ getIsStatic().hashCode ^ getIsAbstract().hashCode ^ 
-    _listHashCodeOrdered(getParameters()) ^ 
-    getIsFactory().hashCode ^ getIsConst().hashCode;
 }
 
 /// {@template standard_annotation}
@@ -3499,47 +3344,46 @@ final class StandardAnnotationDeclaration extends StandardEntityDeclaration impl
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! AnnotationDeclaration) return false;
-
-    return getType() == other.getType() &&
-        _listEqualsUnordered(getFields(), other.getFields()) && // Fields are unordered
-        _mapEquals(getUserProvidedValues(), other.getUserProvidedValues()) && // Map equality
-        _mapEquals(getMappedFields(), other.getMappedFields()) && // Map equality
-        _mapEquals(getFieldsWithDefaults(), other.getFieldsWithDefaults()) && // Map equality
-        _mapEquals(getFieldsWithUserValues(), other.getFieldsWithUserValues()); // Map equality
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getType(),
+      getFields(),
+      getUserProvidedValues(),
+      getMappedFields(),
+      getFieldsWithDefaults(),
+      getFieldsWithUserValues(),
+    ];
   }
-
-  @override
-  int get hashCode => getType().hashCode ^ _listHashCodeUnordered(getFields()) ^ 
-    _mapHashCode(getUserProvidedValues()) ^ _mapHashCode(getMappedFields()) ^ 
-    _mapHashCode(getFieldsWithDefaults()) ^ _mapHashCode(getFieldsWithUserValues());
 }
 
 /// Enhanced annotation field metadata
 final class StandardAnnotationFieldDeclaration extends StandardEntityDeclaration implements AnnotationFieldDeclaration {
-  final TypeDeclaration _typeDeclaration;
+  final LinkDeclaration _typeDeclaration;
   final dynamic _defaultValue;
   final bool _hasDefaultValue;
   final dynamic _userValue;
   final bool _hasUserValue;
   final bool _isFinal;
   final bool _isConst;
+  final int _position;
+  final bool _isNullable;
 
   const StandardAnnotationFieldDeclaration({
     required super.name,
     required super.isPublic,
     required super.isSynthetic,
-    required TypeDeclaration typeDeclaration,
+    required LinkDeclaration typeDeclaration,
     required dynamic defaultValue,
     required bool hasDefaultValue,
     required dynamic userValue,
     required bool hasUserValue,
     required bool isFinal,
     required bool isConst,
+    required int position,
     required super.dartType,
     super.element,
+    required bool isNullable,
     required super.type,
   }) : _typeDeclaration = typeDeclaration,
        _defaultValue = defaultValue,
@@ -3547,10 +3391,12 @@ final class StandardAnnotationFieldDeclaration extends StandardEntityDeclaration
        _userValue = userValue,
        _hasUserValue = hasUserValue,
        _isFinal = isFinal,
-       _isConst = isConst;
+       _position = position,
+       _isConst = isConst,
+       _isNullable = isNullable;
 
   @override
-  TypeDeclaration getTypeDeclaration() => _typeDeclaration;
+  LinkDeclaration getLinkDeclaration() => _typeDeclaration;
 
   @override
   dynamic getValue() => hasUserProvidedValue() ? getUserProvidedValue() : getDefaultValue();
@@ -3563,6 +3409,12 @@ final class StandardAnnotationFieldDeclaration extends StandardEntityDeclaration
 
   @override
   bool hasDefaultValue() => _hasDefaultValue;
+
+  @override
+  bool isNullable() => _isNullable;
+
+  @override
+  int getPosition() => _position;
 
   @override
   bool hasUserProvidedValue() => _hasUserValue;
@@ -3582,7 +3434,7 @@ final class StandardAnnotationFieldDeclaration extends StandardEntityDeclaration
     result['declaration'] = 'annotation_field';
     result['name'] = getName();
 
-    final type = getTypeDeclaration().toJson();
+    final type = getLinkDeclaration().toJson();
     if(type.isNotEmpty) {
       result['type'] = type;
     }
@@ -3604,25 +3456,17 @@ final class StandardAnnotationFieldDeclaration extends StandardEntityDeclaration
   }
 
   @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if(other is! AnnotationFieldDeclaration) return false;
-
-    return getName() == other.getName() &&
-        getType() == other.getType() &&
-        getValue() == other.getValue() &&
-        getDefaultValue() == other.getDefaultValue() &&
-        getUserProvidedValue() == other.getUserProvidedValue() &&
-        hasDefaultValue() == other.hasDefaultValue() &&
-        hasUserProvidedValue() == other.hasUserProvidedValue() &&
-        isFinal() == other.isFinal() &&
-        isConst() == other.isConst();
+  List<Object?> equalizedProperties() {
+    return [
+      getName(),
+      getType(),
+      getValue(),
+      getDefaultValue(),
+      getUserProvidedValue(),
+      hasDefaultValue(),
+      hasUserProvidedValue(),
+      isFinal(),
+      isConst(),
+    ];
   }
-
-  @override
-  int get hashCode => getName().hashCode ^ 
-    getType().hashCode ^ getValue().hashCode ^ 
-    getDefaultValue().hashCode ^ getUserProvidedValue().hashCode ^ 
-    hasDefaultValue().hashCode ^ hasUserProvidedValue().hashCode ^ 
-    isFinal().hashCode ^ isConst().hashCode;
 }

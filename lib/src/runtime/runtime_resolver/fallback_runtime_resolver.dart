@@ -51,12 +51,12 @@ class FallbackRuntimeResolver implements RuntimeResolver {
   FallbackRuntimeResolver(this._primary, this._fallback);
 
   @override
-  T newInstance<T>(String name, [List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]) {
+  T newInstance<T>(String name, [Type? returnType, List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]) {
     try {
-      return _primary.newInstance<T>(name, args, namedArgs);
+      return _primary.newInstance<T>(name, returnType, args, namedArgs);
     } on UnImplementedResolverException catch (_) {
       // Fallback only if the primary resolver explicitly states it's unimplemented
-      return _fallback.newInstance<T>(name, args, namedArgs);
+      return _fallback.newInstance<T>(name, returnType, args, namedArgs);
     } catch (_) {
       // For other errors, rethrow
       rethrow;

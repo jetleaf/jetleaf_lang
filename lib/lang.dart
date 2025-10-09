@@ -52,6 +52,9 @@ export 'src/collectors/collector.dart';
 
 export 'src/comparator/comparator.dart';
 
+export 'src/helpers/equals_and_hash_code.dart';
+export 'src/helpers/to_string.dart';
+
 export 'src/extensions/others/date_time.dart';
 export 'src/extensions/others/duration.dart';
 export 'src/extensions/others/dynamic.dart';
@@ -119,11 +122,11 @@ export 'src/primitives/character.dart';
 export 'src/primitives/boolean.dart';
 export 'src/primitives/short.dart';
 
-export 'src/system/system.dart' hide InternalSystemContext;
-export 'src/system/abstract_system_interface.dart';
-export 'src/system/compiled_design.dart';
-export 'src/system/system_info.dart';
-export 'src/system/system_detector.dart';
+export 'src/system/system.dart';
+export 'src/system/detector/system_detector.dart';
+export 'src/system/detector/standard_system_detector.dart';
+export 'src/system/properties/properties.dart';
+export 'src/system/properties/system_properties.dart';
 
 export 'src/time/zoned_date_time.dart';
 export 'src/time/local_date_time.dart';
@@ -132,10 +135,13 @@ export 'src/time/local_time.dart';
 export 'src/time/zone_id.dart';
 
 export 'src/thread/thread.dart';
-export 'src/thread/thread_local.dart' hide ThreadLocalKey;
+export 'src/thread/local_thread.dart' hide LocalThreadKey;
 
 export 'src/synchronized/synchronized.dart';
 export 'src/synchronized/synchronized_lock.dart';
+
+export 'src/comparator/order_comparator.dart';
+export 'src/comparator/ordered.dart';
 
 export 'src/commons/optional.dart';
 export 'src/commons/string_builder.dart';
@@ -145,26 +151,28 @@ export 'src/commons/regex_utils.dart';
 export 'src/commons/typedefs.dart';
 export 'src/commons/runnable.dart';
 export 'src/commons/throwing_supplier.dart';
-export 'src/commons/locale.dart';
+export 'src/locale/locale.dart';
 
 export 'src/currency/currency.dart';
 export 'src/uuid/uuid.dart';
 
-export 'src/meta/annotations.dart';
-export 'src/meta/class/class.dart';
-export 'src/meta/class/class_extension.dart';
-export 'src/meta/class/class_utils.dart';
-export 'src/meta/field/field.dart';
-export 'src/meta/constructor/constructor.dart';
-export 'src/meta/enum/enum_field.dart';
-export 'src/meta/method/method.dart';
-export 'src/meta/parameter/parameter.dart';
-export 'src/meta/annotation/annotation.dart';
-export 'src/meta/protection_domain/protection_domain.dart';
-export 'src/meta/parameterized_type_reference/parameterized_type_reference.dart';
+export 'src/meta/class.dart';
+export 'src/meta/class_type.dart';
+export 'src/meta/class_utils.dart';
+export 'src/meta/field.dart';
+export 'src/meta/constructor.dart';
+export 'src/meta/method.dart';
+export 'src/meta/parameter.dart';
+export 'src/meta/annotation.dart';
+export 'src/meta/protection_domain.dart';
+export 'src/meta/parameterized_type_reference.dart';
 export 'src/meta/resolvable_type.dart';
-export 'src/meta/generic_type_parser.dart';
-export 'src/meta/meta.dart';
+export 'src/meta/qualified_name.dart';
+export 'src/meta/asset_path_resource.dart';
+export 'src/meta/class_path_resource.dart';
+export 'src/meta/asset_resource.dart';
+export 'src/meta/package_identifier.dart';
+export 'src/meta/core.dart';
 
 export 'src/declaration/declaration.dart'
   hide PackageImplementation, StandardAnnotationDeclaration,
@@ -184,11 +192,20 @@ export 'src/runtime/runtime_provider/configurable_runtime_provider.dart';
 export 'src/runtime/runtime_provider/runtime_metadata_provider.dart';
 export 'src/runtime/runtime_provider/runtime_provider.dart';
 export 'src/runtime/runtime_resolver/runtime_resolver.dart';
-export 'src/runtime/meta_runtime_provider.dart';
+export 'src/runtime/runtime_provider/meta_runtime_provider.dart';
+export 'src/runtime/class_loader/class_loader.dart';
+export 'src/runtime/utils/generic_type_parser.dart';
 export 'src/runtime/runtime_hint/runtime_hint.dart';
 export 'src/runtime/runtime_hint/runtime_hint_descriptor.dart';
 export 'src/runtime/runtime_hint/runtime_hint_processor.dart';
+export 'src/runtime/class_loader/default_class_loader.dart';
+
+export 'src/obs/obs.dart';
+export 'src/obs/obs_enums.dart';
+export 'src/obs/obs_event.dart';
+export 'src/obs/obs_types.dart';
 
 export 'src/exceptions.dart';
 export 'src/throwable.dart';
 export 'src/constant.dart';
+export 'src/annotations.dart';

@@ -15,7 +15,7 @@
 import 'dart:collection';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template stack}
 /// A last-in-first-out (LIFO) stack implementation, mimicking Java's Stack.

@@ -13,7 +13,7 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 import 'base_stream/generic/generic_stream.dart';
 
 /// {@template stream_builder}

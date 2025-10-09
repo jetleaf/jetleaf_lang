@@ -39,7 +39,7 @@
 /// }
 /// ```
 /// {@endtemplate}
-abstract class UriValidator {
+abstract interface class UriValidator {
   /// Validates whether the given URI meets specific criteria.
   ///
   /// Implement this method to define custom validation logic.

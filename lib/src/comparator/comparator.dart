@@ -13,7 +13,7 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 part '_reversed_comparator.dart';
 part '_natural_order_comparator.dart';
@@ -87,9 +87,7 @@ abstract class Comparator<T> {
   /// print(list); // [3, 2, 1]
   /// ```
   /// {@endtemplate}
-  Comparator<T> reversed() {
-    return _ReversedComparator(this);
-  }
+  Comparator<T> reversed() => _ReversedComparator(this);
 
   /// {@template comparator_then_comparing}
   /// Chains another comparator to be used if this comparator returns 0 (equality).
@@ -107,9 +105,7 @@ abstract class Comparator<T> {
   /// print(list); // [bar, baz, foo]
   /// ```
   /// {@endtemplate}
-  Comparator<T> thenComparing(Comparator<T> other) {
-    return _ChainedComparator(this, other);
-  }
+  Comparator<T> thenComparing(Comparator<T> other) => _ChainedComparator(this, other);
 
   /// {@template comparator_then_comparing_comparable}
   /// Chains a comparator by extracting a `Comparable` key from each element.
@@ -169,9 +165,7 @@ abstract class Comparator<T> {
   /// print(numbers); // [1, 3, 5]
   /// ```
   /// {@endtemplate}
-  static Comparator<T> naturalOrder<T>() {
-    return _NaturalOrderComparator<T>();
-  }
+  static Comparator<T> naturalOrder<T>() => _NaturalOrderComparator<T>();
 
   /// {@template comparator_reverse_order}
   /// Creates a comparator that compares `Comparable` objects in reverse (descending) order.
@@ -185,9 +179,7 @@ abstract class Comparator<T> {
   /// print(list); // [c, b, a]
   /// ```
   /// {@endtemplate}
-  static Comparator<T> reverseOrder<T>() {
-    return _NaturalOrderComparator<T>().reversed();
-  }
+  static Comparator<T> reverseOrder<T>() => _NaturalOrderComparator<T>().reversed();
 
   /// {@template comparator_comparing}
   /// Creates a comparator based on a `Comparable` key extracted from each element.
@@ -208,9 +200,7 @@ abstract class Comparator<T> {
   /// print(users.map((u) => u.age)); // [20, 40]
   /// ```
   /// {@endtemplate}
-  static Comparator<T> comparing<T, U extends Comparable<U>>(U Function(T) keyExtractor) {
-    return _ComparingComparableComparator(keyExtractor);
-  }
+  static Comparator<T> comparing<T, U extends Comparable<U>>(U Function(T) keyExtractor) => _ComparingComparableComparator(keyExtractor);
 
   /// {@template comparator_comparing_with}
   /// Creates a comparator based on a key extractor and a custom comparator for the key.
@@ -235,7 +225,5 @@ abstract class Comparator<T> {
   /// print(items.map((i) => i.name)); // [Bat, Box, Ball]
   /// ```
   /// {@endtemplate}
-  static Comparator<T> comparingWith<T, U>(U Function(T) keyExtractor, Comparator<U> keyComparator) {
-    return _ComparingComparator(keyExtractor, keyComparator);
-  }
+  static Comparator<T> comparingWith<T, U>(U Function(T) keyExtractor, Comparator<U> keyComparator) => _ComparingComparator(keyExtractor, keyComparator);
 }

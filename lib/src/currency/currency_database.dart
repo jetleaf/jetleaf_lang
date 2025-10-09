@@ -100,7 +100,7 @@ class CurrencyDatabase {
     'BSD': {'symbol': 'B\$', 'digits': 2, 'numeric': 44, 'name': 'Bahamian Dollar'},
     'KYD': {'symbol': 'CI\$', 'digits': 2, 'numeric': 136, 'name': 'Cayman Islands Dollar'},
     'BMD': {'symbol': 'BD\$', 'digits': 2, 'numeric': 60, 'name': 'Bermudian Dollar'},
-    'XCD': {'symbol': 'EC\$', 'digits': 2, 'numeric': 951, 'name': 'East Caribbean Dollar'},
+    'XCD': {'symbol': 'EC\$', 'digits': 2, 'numeric': 951, 'name': 'East Caribpod Dollar'},
     'ZAR': {'symbol': 'R', 'digits': 2, 'numeric': 710, 'name': 'South African Rand'},
     'NGN': {'symbol': '₦', 'digits': 2, 'numeric': 566, 'name': 'Nigerian Naira'},
     'EGP': {'symbol': '£', 'digits': 2, 'numeric': 818, 'name': 'Egyptian Pound'},

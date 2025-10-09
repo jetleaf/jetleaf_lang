@@ -51,7 +51,9 @@ Future<void> setupRuntime({List<String> packagesToExclude = const [], List<Strin
       "string_scanner",
       "package:collection/src/list_extensions.dart",
       ...packagesToExclude
-    ]
+    ],
+    // enableTreeShaking: true,
+    // writeDeclarationsToFiles: true
   ));
   Runtime.register(scan.getContext());
 }

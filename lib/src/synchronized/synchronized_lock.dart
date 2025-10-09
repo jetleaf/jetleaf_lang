@@ -15,7 +15,7 @@
 import 'dart:async';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template synchronized_lock}
 /// A reentrant async lock for critical section execution.

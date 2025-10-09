@@ -19,7 +19,7 @@ import 'dart:async';
 import 'package:path/path.dart' as p;
 
 import '../declaration/declaration.dart';
-import '../runtime/file_utility.dart';
+import '../runtime/utils/file_utility.dart';
 import '../runtime/runtime_provider/standard_runtime_provider.dart';
 import '../runtime/runtime_provider/configurable_runtime_provider.dart';
 import '../runtime/runtime_resolver/runtime_resolving.dart';
@@ -165,7 +165,7 @@ class MockRuntimeScanner implements RuntimeScanner {
     final stopwatch = Stopwatch()..start();
     _logInfo("Starting mock runtime scan...");
 
-    FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration);
+    FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration, false);
 
     // 1. Setup directory and verify its existence
     Directory directory = source ?? Directory.current;
@@ -185,9 +185,10 @@ class MockRuntimeScanner implements RuntimeScanner {
     
     // 3. Force load specified files
     final dartFiles = await FileUtils.findDartFiles(directory);
+    final resources = await FileUtils.discoverAllResources(_package!);
     dartFiles.addAll(_forceLoadFiles);
 
-    _logInfo('Loading dart files that are not present in the [currentMirrorSystem]...');
+    _logInfo('Loading dart files that are not present in the [currentMirrorSystem#(${access.isolate.debugName})]...');
     Map<File, Uri> urisToLoad = FileUtils.getUrisToLoad(dartFiles, _package!);
     List<mirrors.LibraryMirror> forceLoadedMirrors = [];
     for (final uriEntry in urisToLoad.entries) {
@@ -212,7 +213,7 @@ class MockRuntimeScanner implements RuntimeScanner {
     configuration = _addDefaultPackagesToScan(configuration, _package!);
 
     // 4. Generate reflection metadata
-    _logInfo('Generating reflection metadata...');
+    _logInfo('Generating declaration metadata...');
     final params = MockLibraryGeneratorParams(
       mirrorSystem: access,
       forceLoadedMirrors: forceLoadedMirrors,
@@ -222,6 +223,7 @@ class MockRuntimeScanner implements RuntimeScanner {
       configuration: configuration,
       packages: [_createPackage(_package!)],
     );
+    print(configuration);
     final libraryGenerator = _libraryGeneratorFactory?.call(params) ?? MockLibraryGenerator(
       mirrorSystem: params.mirrorSystem,
       forceLoadedMirrors: params.forceLoadedMirrors,
@@ -234,7 +236,7 @@ class MockRuntimeScanner implements RuntimeScanner {
 
     List<LibraryDeclaration> libraries = [];
     libraries = await libraryGenerator.generate(dartFiles.toList());
-    _logInfo('Generated metadata for ${libraries.length} libraries');
+    _logInfo('Generated declaration metadata for ${libraries.length} libraries');
 
     // 5. Create or update context
     final refreshContext = _context == null || configuration.reload;
@@ -258,6 +260,7 @@ class MockRuntimeScanner implements RuntimeScanner {
       logWarning: _logWarning,
       logError: _logError,
     );
+    _context?.addAssets(resources);
     _context?.setRuntimeResolver(await resolving.resolve());
 
     stopwatch.stop();
@@ -350,5 +353,11 @@ RuntimeScannerConfiguration _addDefaultPackagesToScan(RuntimeScannerConfiguratio
     filesToExclude: configuration.filesToExclude,
     additions: configuration.additions,
     removals: configuration.removals,
+    writeDeclarationsToFiles: configuration.writeDeclarationsToFiles,
+    enableTreeShaking: configuration.enableTreeShaking,
+    outputPath: configuration.outputPath,
+    scanClasses: configuration.scanClasses,
+    excludeClasses: configuration.excludeClasses,
+    skipTests: configuration.skipTests
   );
 }

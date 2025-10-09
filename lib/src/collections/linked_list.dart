@@ -15,7 +15,7 @@
 import 'dart:math';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template linked_list}
 /// A custom implementation of a **doubly linked list** that implements the standard `List<E>` interface.

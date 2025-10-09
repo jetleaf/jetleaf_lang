@@ -16,7 +16,7 @@ import 'dart:mirrors' as mirrors;
 
 import '../../extensions/primitives/iterable.dart';
 import '../../declaration/declaration.dart';
-import '../file_utility.dart';
+import '../utils/file_utility.dart';
 import '../runtime_hint/default_runtime_hint_descriptor.dart';
 import '../runtime_hint/runtime_hint_descriptor.dart';
 import '../runtime_hint/runtime_hint_processor.dart';

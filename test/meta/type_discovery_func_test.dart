@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'package:jetleaf_lang/src/meta/type_discovery.dart';
+import 'package:jetleaf_lang/src/runtime/type_discovery.dart';
 import 'package:test/test.dart';
 
 import '../_dependencies.dart';

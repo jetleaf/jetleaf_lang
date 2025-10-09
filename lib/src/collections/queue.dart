@@ -15,7 +15,7 @@
 import 'dart:collection';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template queue}
 /// A first-in-first-out (FIFO) queue interface implementation, mimicking Java's Queue.

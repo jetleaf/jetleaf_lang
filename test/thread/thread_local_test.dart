@@ -19,10 +19,10 @@ import 'package:jetleaf_lang/lang.dart';
 
 void main() {
   group('ThreadLocal (Isolate-based)', () {
-    late ThreadLocal<String> threadLocal;
+    late LocalThread<String> threadLocal;
 
     setUp(() {
-      threadLocal = ThreadLocal<String>();
+      threadLocal = LocalThread<String>();
     });
 
     test('get returns null when unset', () {
@@ -45,7 +45,7 @@ void main() {
 
       final receivePort = ReceivePort();
       await Isolate.spawn((SendPort sendPort) {
-        final threadLocal = ThreadLocal<String>();
+        final threadLocal = LocalThread<String>();
         threadLocal.set('child');
         sendPort.send(threadLocal.get());
       }, receivePort.sendPort);

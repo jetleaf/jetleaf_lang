@@ -89,6 +89,14 @@ class RuntimeScannerConfiguration {
   /// Patterns can be:
   /// - Exact package names (`my_package`)
   /// - Regular expressions prefixed with `r:` (`r:package:my_.*`)
+  /// 
+  ///  r:.*/(test|tests)/.*',
+  ///  r:.*/_test\.dart$',
+  ///  r:.*/tool/.*',
+  ///  r:.*/example/.*',
+  ///  r:.*/benchmark/.*',
+  ///  r:.*/\.dart_tool/.*',
+  ///  r:.*/build/.*',
   ///
   /// When empty, scans all non-excluded packages.
   final List<String> packagesToScan;
@@ -130,6 +138,15 @@ class RuntimeScannerConfiguration {
   /// Used to clean up metadata from deleted sources.
   final List<File> removals;
 
+  /// Whether to enable tree-shaking to only include used classes
+  final bool enableTreeShaking;
+  
+  /// Whether to write declarations to separate files
+  final bool writeDeclarationsToFiles;
+  
+  /// Output path for generated files
+  final String outputPath;
+
   /// {@macro runtime_scanner_configuration}
   ///
   /// {@template scan_loader_constructor}
@@ -164,6 +181,9 @@ class RuntimeScannerConfiguration {
     this.excludeClasses = const [],
     this.additions = const [],
     this.removals = const [],
+    this.enableTreeShaking = false,
+    this.writeDeclarationsToFiles = false,
+    this.outputPath = 'build/generated',
   });
 
   /// Returns a string representation of the scan configuration.
@@ -197,6 +217,9 @@ RuntimeScanLoader(
   additions: $additions,
   removals: $removals,
   skipTests: $skipTests,
+  enableTreeShaking: $enableTreeShaking,
+  writeDeclarationsToFiles: $writeDeclarationsToFiles,
+  outputPath: $outputPath,
 )
 ''';
   }

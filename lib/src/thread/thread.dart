@@ -16,8 +16,8 @@ import 'dart:async';
 import 'dart:isolate';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
-import 'thread_local.dart';
+import '../annotations.dart';
+import 'local_thread.dart';
 
 part 'thread_registry.dart';
 part 'thread_message.dart';
@@ -240,9 +240,9 @@ final class Thread<T> {
   }
 
   /// {@template dart_thread_get_thread_local}
-  /// Retrieves a [ThreadLocal] instance by its unique ID.
+  /// Retrieves a [LocalThread] instance by its unique ID.
   ///
-  /// This is useful when you need to access a specific [ThreadLocal]
+  /// This is useful when you need to access a specific [LocalThread]
   /// from a different part of your application, especially across Isolate boundaries
   /// where you might only have the ID.
   ///
@@ -255,7 +255,7 @@ final class Thread<T> {
   /// }
   /// ```
   /// {@endtemplate}
-  static ThreadLocal<T> getThreadLocal<T>(int id) {
-    return ThreadLocal<T>();
+  static LocalThread<T> getThreadLocal<T>(int id) {
+    return LocalThread<T>();
   }
 }

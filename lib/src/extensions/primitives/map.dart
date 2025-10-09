@@ -105,4 +105,22 @@ extension MapExtensions<K, V> on Map<K, V> {
   V? get(K key) {
     return this[key];
   }
+
+  /// Computes a value for the given key if it is not already present in the map.
+  /// 
+  /// ## Parameters
+  /// - `key`: The key to compute a value for
+  /// - `ifAbsent`: The function to compute the value if the key is not present
+  /// 
+  /// ## Returns
+  /// - The computed value
+  V computeIfAbsent(K key, V Function(K key) ifAbsent) {
+    if (containsKey(key)) {
+      return this[key] as V;
+    } else {
+      final V newValue = ifAbsent(key);
+      this[key] = newValue;
+      return newValue;
+    }
+  }
 }

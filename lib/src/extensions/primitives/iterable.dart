@@ -372,8 +372,14 @@ extension IterableExtension<T> on Iterable<T> {
   /// 
   /// ## Example
   /// ```dart
-  /// final numbers = <int>[1, 2, 3, 5, 6, 7];
-  /// var result = numbers.map((e) => e * 2); // [2, 4, 6, 10, 12, 14]
+  /// final fruits = ["apple", "banana", "cherry"];
+  ///
+  /// final fruitLengthMap = fruits.toMap(
+  ///   (fruit) => fruit,        // key = the fruit itself
+  ///   (fruit) => fruit.length, // value = length of the fruit
+  /// );
+  // 
+  /// print(fruitLengthMap); // {apple: 5, banana: 6, cherry: 6}
   /// ```
   Map<K, V> toMap<K, V>(K Function(T item) keySelector, V Function(T item) valueSelector) {
     final Map<K, V> result = {};
@@ -383,5 +389,21 @@ extension IterableExtension<T> on Iterable<T> {
     }
 
     return result;
+  }
+
+  /// Processes each element of the iterable using the provided [action] function.
+  /// 
+  /// ## Parameters
+  /// - `action`: The function to apply to each element of the iterable
+  /// 
+  /// ## Example
+  /// ```dart
+  /// final numbers = <int>[1, 2, 3, 5, 6, 7];
+  /// numbers.process((e) => print(e));
+  /// ```
+  void process(Function(T item) action) {
+    for (final element in this) {
+      action(element);
+    }
   }
 }

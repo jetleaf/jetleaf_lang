@@ -61,17 +61,22 @@ class AotRuntimeResolver implements RuntimeResolver {
   const AotRuntimeResolver(this.resolver);
 
   @override
-  T newInstance<T>(String name, [List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]) {
-    final descriptor = resolver?.getRuntimeHints()[T];
+  T newInstance<T>(String name, [Type? returnType, List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]) {
+    final descriptor = resolver?.getRuntimeHints()[returnType ?? T];
+    
     if (descriptor == null || descriptor.newInstance == null) {
       throw UnImplementedResolverException(T, 'No newInstance creator found for type $T or constructor "$name"');
     }
+    
     return descriptor.newInstance!(name, args, namedArgs) as T;
   }
 
   @override
   Object? invokeMethod<T>(T instance, String method, {List<Object?> args = const [], Map<String, Object?> namedArgs = const {}}) {
-    final descriptor = resolver?.getRuntimeHints()[instance.runtimeType];
+    final descriptor = instance.runtimeType != Type 
+      ? resolver?.getRuntimeHints()[instance.runtimeType]
+      : resolver?.getRuntimeHints()[instance];
+    
     if (descriptor == null || descriptor.invokeMethod == null) {
       throw UnImplementedResolverException(instance.runtimeType, 'No invokeMethod creator found for type ${instance.runtimeType} or method "$method"');
     }
@@ -80,7 +85,10 @@ class AotRuntimeResolver implements RuntimeResolver {
 
   @override
   Object? getValue<T>(T instance, String name) {
-    final descriptor = resolver?.getRuntimeHints()[instance.runtimeType];
+    final descriptor = instance.runtimeType != Type 
+      ? resolver?.getRuntimeHints()[instance.runtimeType]
+      : resolver?.getRuntimeHints()[instance];
+    
     if (descriptor == null || descriptor.getValue == null) {
       throw UnImplementedResolverException(instance.runtimeType, 'No getValue creator found for type ${instance.runtimeType} or field "$name"');
     }
@@ -89,7 +97,10 @@ class AotRuntimeResolver implements RuntimeResolver {
 
   @override
   void setValue<T>(T instance, String name, Object? value) {
-    final descriptor = resolver?.getRuntimeHints()[instance.runtimeType];
+    final descriptor = instance.runtimeType != Type 
+      ? resolver?.getRuntimeHints()[instance.runtimeType]
+      : resolver?.getRuntimeHints()[instance];
+    
     if (descriptor == null || descriptor.setValue == null) {
       throw UnImplementedResolverException(instance.runtimeType, 'No setValue creator found for type ${instance.runtimeType} or field "$name"');
     }

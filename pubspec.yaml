@@ -28,6 +28,7 @@ environment:
 
 dependencies:
   analyzer: ^8.0.0
+  dart_internal: ^0.2.15
   meta: ^1.17.0
   path: ^1.9.1
 

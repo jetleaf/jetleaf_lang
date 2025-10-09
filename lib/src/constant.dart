@@ -79,9 +79,6 @@ class Constant {
   /// {@endtemplate}
   static const String HOME_PAGE = "/jetleaf";
 
-  /// The name of the JetLeaf package.
-  static const String PACKAGE_NAME = 'jetleaf';
-
   /// Path to the JetLeaf asset directory inside `lib/`.
   ///
   /// This is where static or generated assets are located during development.
@@ -118,4 +115,119 @@ class Constant {
 
   /// Name of the Dart SDK package.
   static const String DART_PACKAGE_NAME = "dart-sdk";
+}
+
+/// {@template package_names}
+/// A central collection of constant package name identifiers used
+/// throughout the **Jetleaf framework**.
+///
+/// These names are used for namespacing, module organization,
+/// and avoiding hard-coded strings in the codebase. By centralizing
+/// them here, it ensures consistency and reduces the likelihood
+/// of typos.
+///
+/// ### Example
+/// ```dart
+/// void main() {
+///   print(PackageNames.MAIN);   // "jetleaf"
+///   print(PackageNames.POD);   // "jetleaf_core"
+///   print(PackageNames.LANG);   // "jetleaf_lang"
+/// }
+/// ```
+/// {@endtemplate}
+class PackageNames {
+  /// {@macro package_names}
+  ///
+  /// The root name of the framework: `"jetleaf"`.
+  static const String MAIN = "jetleaf";
+
+  /// The package name for the **core** module.
+  ///
+  /// Value: `"jetleaf_core"`.
+  static const String CORE = "${MAIN}_core";
+
+  /// The package name for the **type conversion** module.
+  ///
+  /// Value: `"jetleaf_convert"`.
+  static const String CONVERT = "${MAIN}_convert";
+
+  /// The package name for the **language support** module.
+  ///
+  /// Value: `"jetleaf_lang"`.
+  static const String LANG = "${MAIN}_lang";
+
+  /// The package name for the **meta-programming** module.
+  ///
+  /// Value: `"jetleaf_meta"`.
+  static const String META = "${MAIN}_meta";
+
+  /// The package name for the **utility** module.
+  ///
+  /// Value: `"jetleaf_utils"`.
+  static const String UTILS = "${MAIN}_utils";
+
+  /// The package name for the **Dart SDK**.
+  ///
+  /// Value: `"dart_sdk"`.
+  static const String DART = "dart_sdk";
+
+  /// The package name for the **logging support** module
+  /// 
+  /// Value: `"jetleaf_logging"`
+  static const String LOGGING = "${MAIN}_logging";
+
+  /// The package name for the **web server** module
+  /// 
+  /// Value: `"jetleaf_web"`
+  static const String WEB = "${MAIN}_web";
+
+  /// The package name for the **pod** module
+  /// 
+  /// Value: `"jetleaf_pod"`
+  static const String POD = "${MAIN}_pod";
+
+  /// The package name for the **scheduler** module
+  /// 
+  /// Value: `"jetleaf_scheduler"`
+  static const String SCHEDULER = "${MAIN}_scheduler";
+
+  /// The package name for the **security** module
+  /// 
+  /// Value: `"jetleaf_security"`
+  static const String SECURITY = "${MAIN}_security";
+
+  /// The package name for the **testing** module
+  /// 
+  /// Value: `"jetleaf_test"`
+  static const String TEST = "${MAIN}_test";
+
+  /// The package name for the **data** module
+  /// 
+  /// Value: `"jetleaf_data"`
+  static const String DATA = "${MAIN}_data";
+
+  /// The package name for the **rate limiter** module
+  /// 
+  /// Value: `"jetleaf_rate_limiter"`
+  static const String RATE_LIMITER = "${MAIN}_rate_limiter";
+
+  /// The package name for the **cache** module
+  /// 
+  /// Value: `"jetleaf_cache"`
+  static const String CACHE = "${MAIN}_cache";
+
+  /// The package name for the **validation** module
+  /// 
+  /// Value: `"jetleaf_validation"`
+  static const String VALIDATION = "${MAIN}_validation";
+
+  /// The package name for the **jetson** module
+  /// 
+  /// Value: `"jetson"`
+  static const String JETSON = "jetson";
+
+  /// The package name for the **environment** module
+  /// 
+  /// Value: `"jetleaf_env"`
+  static const String ENV = "${MAIN}_env";
 }

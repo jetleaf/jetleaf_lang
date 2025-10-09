@@ -63,11 +63,12 @@ abstract interface class RuntimeResolver {
   /// For the default unnamed constructor, use an empty string `''` for `name`.
   ///
   /// - `name`: The name of the constructor (e.g., 'named', or '' for default).
+  /// - `returnType`: The expected return type of the constructor.
   /// - `args`: Positional arguments for the constructor.
   /// - `namedArgs`: Named arguments for the constructor.
   ///
   /// Throws an [UnImplementedResolverException] if the constructor cannot be resolved.
-  T newInstance<T>(String name, [List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]);
+  T newInstance<T>(String name, [Type? returnType, List<Object?> args = const [], Map<String, Object?> namedArgs = const {}]);
 
   /// Invokes a method `method` on the given `instance` of type `T`.
   ///

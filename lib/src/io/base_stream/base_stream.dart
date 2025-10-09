@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../../meta/annotations.dart';
+import '../../annotations.dart';
 import '../auto_closeable.dart';
 
 /// {@template base_stream}

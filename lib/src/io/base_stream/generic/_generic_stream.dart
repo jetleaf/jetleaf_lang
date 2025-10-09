@@ -14,7 +14,7 @@
 
 import '../../../exceptions.dart';
 import '../../../commons/typedefs.dart';
-import '../../../meta/annotations.dart';
+import '../../../annotations.dart';
 import '../int/int_stream.dart';
 import '../double/double_stream.dart';
 import 'generic_stream.dart';

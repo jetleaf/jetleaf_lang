@@ -15,7 +15,7 @@
 import 'dart:collection';
 
 import '../exceptions.dart';
-import '../meta/annotations.dart';
+import '../annotations.dart';
 
 /// {@template linked_stack}
 /// A stack implementation using a linked list structure, mimicking Java's LinkedList as Stack.

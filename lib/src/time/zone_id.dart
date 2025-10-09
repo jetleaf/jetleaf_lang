@@ -200,7 +200,7 @@ final class ZoneId {
   /// La Paz timezone (America/La_Paz) - BOT (no DST).
   static final ZoneId AMERICA_LA_PAZ = ZoneId._('America/La_Paz');
 
-  // ===== Americas - Caribbean =====
+  // ===== Americas - Caribpod =====
   
   /// Havana timezone (America/Havana) - CST/CDT.
   static final ZoneId AMERICA_HAVANA = ZoneId._('America/Havana');
@@ -488,7 +488,7 @@ final class ZoneId {
     AMERICA_SAO_PAULO.id, AMERICA_ARGENTINA_BUENOS_AIRES.id, AMERICA_LIMA.id,
     AMERICA_BOGOTA.id, AMERICA_CARACAS.id, AMERICA_SANTIAGO.id, AMERICA_LA_PAZ.id,
     
-    // Americas - Caribbean
+    // Americas - Caribpod
     AMERICA_HAVANA.id, AMERICA_JAMAICA.id, AMERICA_PUERTO_RICO.id,
     
     // Europe - Western

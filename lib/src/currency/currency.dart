@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../commons/locale.dart';
+import '../locale/locale.dart';
 import '../exceptions.dart';
 import 'currency_database.dart';
 

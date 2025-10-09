@@ -19,7 +19,7 @@ import 'package:meta/meta.dart';
 
 import '../../declaration/declaration.dart';
 import '../runtime_scanner/runtime_scanner_configuration.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 
 /// {@template library_generator}
 /// Enhanced reflection generator that creates both metadata and reflector classes.
@@ -108,33 +108,33 @@ abstract class LibraryGenerator {
 
   /// {@macro non_loadable_check}
   @protected
-  bool isNonLoadableJetLeafFile(Uri uri) => ReflectUtils.isNonLoadableJetLeafFile(uri);
+  bool isNonLoadableJetLeafFile(Uri uri) => RuntimeUtils.isNonLoadableJetLeafFile(uri);
 
   /// {@macro non_loadable_check}
   @protected
-  bool isSkippableJetLeafPackage(Uri identifier) => ReflectUtils.isSkippableJetLeafPackage(identifier);
+  bool isSkippableJetLeafPackage(Uri identifier) => RuntimeUtils.isSkippableJetLeafPackage(identifier);
 
   /// {@macro package_name_extraction}
   @protected
-  String? getPackageNameFromUri(dynamic uri) => ReflectUtils.getPackageNameFromUri(uri);
+  String? getPackageNameFromUri(dynamic uri) => RuntimeUtils.getPackageNameFromUri(uri);
 
   /// {@macro is_part_of}
   @protected
-  bool isPartOf(String content) => ReflectUtils.isPartOf(content);
+  bool isPartOf(String content) => RuntimeUtils.isPartOf(content);
 
   /// {@macro has_mirror_import}
   @protected
-  bool hasMirrorImport(String content) => ReflectUtils.hasMirrorImport(content);
+  bool hasMirrorImport(String content) => RuntimeUtils.hasMirrorImport(content);
 
   /// {@macro is_test}
   @protected
-  bool isTest(String content) => ReflectUtils.isTest(content);
+  bool isTest(String content) => RuntimeUtils.isTest(content);
 
   /// {@macro uri_resolution}
   @protected
-  Future<Uri?> resolveUri(Uri uri) => ReflectUtils.resolveUri(uri);
+  Future<Uri?> resolveUri(Uri uri) => RuntimeUtils.resolveUri(uri);
 
   /// {@macro library_exclusion}
   @protected
-  Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) => ReflectUtils.shouldNotIncludeLibrary(uri, configuration, onError);
+  Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) => RuntimeUtils.shouldNotIncludeLibrary(uri, configuration, onError);
 }

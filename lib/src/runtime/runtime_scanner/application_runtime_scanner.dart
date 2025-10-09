@@ -18,13 +18,13 @@ import 'dart:mirrors' as mirrors;
 import 'package:path/path.dart' as p;
 
 import '../../declaration/declaration.dart';
-import '../file_utility.dart';
+import '../utils/file_utility.dart';
 import '../generators/application_library_generator.dart';
 import '../generators/library_generator.dart';
 import '../runtime_provider/standard_runtime_provider.dart';
 import '../runtime_provider/configurable_runtime_provider.dart';
 import '../runtime_resolver/runtime_resolving.dart';
-import '../utils.dart';
+import '../utils/utils.dart';
 import 'default_runtime_scanner_summary.dart';
 import 'configurable_runtime_scanner_summary.dart';
 import 'runtime_scanner.dart';
@@ -137,7 +137,7 @@ class ApplicationRuntimeScanner implements RuntimeScanner {
   Future<RuntimeScannerSummary> scan(String outputFolder, RuntimeScannerConfiguration configuration, {Directory? source}) async {
     bool refreshContext = _context == null || !configuration.reload;
     final stopwatch = Stopwatch()..start();
-    FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration);
+    FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration, true);
 
     // 1. Setup directory and verify its existence
     if(refreshContext) {
@@ -149,12 +149,12 @@ class ApplicationRuntimeScanner implements RuntimeScanner {
     // 2. Read package name from pubspec.yaml
     _package ??= await FileUtils.readPackageName();
 
-    directory = Directory(p.join(directory.path, outputFolder));
-    if(!await directory.exists()) {
-      await directory.create(recursive: true);
+    Directory outputDirectory = Directory(p.join(directory.path, outputFolder));
+    if(!await outputDirectory.exists()) {
+      await outputDirectory.create(recursive: true);
     } else {
-      await directory.delete(recursive: true);
-      await directory.create(recursive: true);
+      await outputDirectory.delete(recursive: true);
+      await outputDirectory.create(recursive: true);
     }
 
     // 3. Add default packages to scan if none specified
@@ -201,11 +201,11 @@ class ApplicationRuntimeScanner implements RuntimeScanner {
     _logInfo('Mirror system and access domain set up.');
 
     // 4. Load dart files that are not present in the [currentMirrorSystem]
-    _logInfo('Loading dart files that are not present in the [currentMirrorSystem]...');
+    _logInfo('Loading dart files that are not present in the [currentMirrorSystem#${access.isolate.debugName}]...');
     Map<File, Uri> urisToLoad = FileUtils.getUrisToLoad(dartFiles, _package!);
     List<mirrors.LibraryMirror> forceLoadedMirrors = [];
     for (final uriEntry in urisToLoad.entries) {
-      if(ReflectUtils.isNonLoadableJetLeafFile(uriEntry.value) || ReflectUtils.isNonLoadableFile(uriEntry.value, configuration)) {
+      if(RuntimeUtils.isNonLoadableJetLeafFile(uriEntry.value) || RuntimeUtils.isNonLoadableFile(uriEntry.value, configuration)) {
         continue;
       }
 
@@ -216,7 +216,7 @@ class ApplicationRuntimeScanner implements RuntimeScanner {
     }
 
     // 5. Generate reflection metadata
-    _logInfo('Resolving code metadata libraries...');
+    _logInfo('Resolving declaration metadata libraries...');
     LibraryGenerator libraryGenerator = ApplicationLibraryGenerator(
       mirrorSystem: access,
       forceLoadedMirrors: forceLoadedMirrors,
@@ -227,7 +227,7 @@ class ApplicationRuntimeScanner implements RuntimeScanner {
       packages: packages,
     );
     final result = await libraryGenerator.generate(dartFiles.toList());
-    _logInfo('Resolved ${result.length} libraries.');
+    _logInfo('Resolved ${result.length} declaration libraries.');
 
     libraries.addAll(result);
 
