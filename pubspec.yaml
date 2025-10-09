@@ -9,19 +9,13 @@ topics:
 - IO
 - Collections
 - Primitives
-- Optional Types
-- Math
-- Date/Time
-- Regex
+- Helpers
 
 keywords:
 - IO
 - Collections
 - Primitives
-- Optional Types
-- Math
-- Date/Time
-- Regex
+- Helpers
 
 environment:
   sdk: ^3.9.0
