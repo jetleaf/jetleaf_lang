@@ -54,11 +54,11 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/MethodDeclaration-class.html">MethodDeclaration</a></span>&gt;</span></span>
-<span class="name ">generateTopLevelMethod</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateTopLevelMethod-param-methodMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-mirrors/MethodMirror-class.html">MethodMirror</a></span> <span class="parameter-name">methodMirror</span>, </span></li>
-<li><span class="parameter" id="generateTopLevelMethod-param-package"><span class="type-annotation"><a href="../../jetleaf_lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
-<li><span class="parameter" id="generateTopLevelMethod-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
-<li><span class="parameter" id="generateTopLevelMethod-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/MethodDeclaration-class.html">MethodDeclaration</a></span>&gt;</span></span>
+<span class="name ">generateTopLevelMethod</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateTopLevelMethod-param-methodMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-mirrors/MethodMirror-class.html">MethodMirror</a></span> <span class="parameter-name">methodMirror</span>, </span></li>
+<li><span class="parameter" id="generateTopLevelMethod-param-package"><span class="type-annotation"><a href="../../lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="generateTopLevelMethod-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
+<li><span class="parameter" id="generateTopLevelMethod-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
 </ol>)
 
       
@@ -80,6 +80,7 @@
   Uri sourceUri,
 ) async {
   final methodName = mirrors.MirrorSystem.getName(methodMirror.simpleName);
+
   final libraryElement = await _getLibraryElement(Uri.parse(libraryUri));
 
   &#47;&#47; Get top-level function element
@@ -88,20 +89,27 @@
     functionElement = libraryElement.topLevelFunctions.firstWhereOrNull((f) =&gt; f.name == methodName);
   }
 
-  return StandardMethodDeclaration(
+  final dartType = functionElement?.type;
+  final mirrorType = methodMirror.returnType;
+  Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+  &#47;&#47; Extract annotations and resolve type
+  if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+    final annotations = await _extractAnnotations(mirrorType.metadata, package);
+    final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+    if (resolvedType != null) {
+      runtimeType = resolvedType;
+    }
+  }
+
+  final result = StandardMethodDeclaration(
     name: methodName,
     element: functionElement,
-    dartType: functionElement?.type,
-    type: methodMirror.runtimeType,
+    dartType: dartType,
+    type: runtimeType,
     libraryDeclaration: _libraryCache[libraryUri]!,
-    returnType: await generateType(methodMirror.returnType, package, libraryUri),
+    returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri, dartType),
     annotations: await _extractAnnotations(methodMirror.metadata, package),
-    parameters: await _extractParameters(
-      methodMirror.parameters,
-      functionElement?.typeParameters,
-      package,
-      libraryUri
-    ),
     sourceLocation: sourceUri,
     isStatic: true,
     isAbstract: false,
@@ -112,6 +120,16 @@
     isSynthetic: _isSynthetic(methodName),
     isConst: false,
   );
+
+  result.parameters = await _extractParameters(
+    methodMirror.parameters,
+    functionElement?.typeParameters,
+    package,
+    libraryUri,
+    result
+  );
+
+  return result;
 }</code></pre>
 </section>
 

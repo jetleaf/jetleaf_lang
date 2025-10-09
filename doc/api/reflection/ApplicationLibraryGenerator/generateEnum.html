@@ -54,11 +54,11 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/EnumDeclaration-class.html">EnumDeclaration</a></span>&gt;</span></span>
-<span class="name ">generateEnum</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateEnum-param-enumMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-mirrors/ClassMirror-class.html">ClassMirror</a></span> <span class="parameter-name">enumMirror</span>, </span></li>
-<li><span class="parameter" id="generateEnum-param-package"><span class="type-annotation"><a href="../../jetleaf_lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
-<li><span class="parameter" id="generateEnum-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
-<li><span class="parameter" id="generateEnum-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/EnumDeclaration-class.html">EnumDeclaration</a></span>&gt;</span></span>
+<span class="name ">generateEnum</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateEnum-param-enumMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-mirrors/ClassMirror-class.html">ClassMirror</a></span> <span class="parameter-name">enumMirror</span>, </span></li>
+<li><span class="parameter" id="generateEnum-param-package"><span class="type-annotation"><a href="../../lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="generateEnum-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
+<li><span class="parameter" id="generateEnum-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
 </ol>)
 
       
@@ -99,7 +99,7 @@
     dartType: dartType,
     isPublic: !_isInternal(enumName),
     isSynthetic: _isSynthetic(enumName),
-    qualifiedName: _buildQualifiedName(enumName, libraryUri),
+    qualifiedName: _buildQualifiedName(enumName, (enumMirror.location?.sourceUri ?? Uri.parse(libraryUri)).toString()),
     parentLibrary: _libraryCache[libraryUri]!,
     values: values,
     isNullable: false,
@@ -121,10 +121,10 @@
           type: runtimeType,
           libraryDeclaration: _libraryCache[libraryUri]!,
           value: fieldMirror.reflectee,
-          declaration: reflectedEnum,
           isPublic: !_isInternal(enumFieldName),
           isSynthetic: _isSynthetic(enumFieldName),
-          position: enumMirror.declarations.values.toList().indexOf(declaration)
+          position: enumMirror.declarations.values.toList().indexOf(declaration),
+          isNullable: _isNullable(fieldName: enumFieldName, sourceCode: await _readSourceCode(sourceUri))
         ));
       }
     }

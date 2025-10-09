@@ -59,8 +59,8 @@
         <li>@<a href="https://pub.dev/documentation/meta/1.17.0/meta/protected-constant.html">protected</a></li>
     </ol>
   </div>
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
-<span class="name ">shouldNotIncludeLibrary</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="shouldNotIncludeLibrary-param-uri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">uri</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>&gt;</span></span>
+<span class="name ">shouldNotIncludeLibrary</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="shouldNotIncludeLibrary-param-uri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">uri</span>, </span></li>
 <li><span class="parameter" id="shouldNotIncludeLibrary-param-configuration"><span class="type-annotation"><a href="../../reflection/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a></span> <span class="parameter-name">configuration</span></span></li>
 </ol>)
 
@@ -95,7 +95,7 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">@protected
-Future&lt;bool&gt; shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) =&gt; ReflectUtils.shouldNotIncludeLibrary(uri, configuration, onError);</code></pre>
+Future&lt;bool&gt; shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) =&gt; RuntimeUtils.shouldNotIncludeLibrary(uri, configuration, onError);</code></pre>
 </section>
 
 

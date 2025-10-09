@@ -54,10 +54,10 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/TypeDeclaration-class.html">TypeDeclaration</a></span>&gt;</span></span>
-<span class="name ">generateType</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="generateType-param-typeMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-mirrors/TypeMirror-class.html">TypeMirror</a></span> <span class="parameter-name">typeMirror</span>, </span></li>
-<li><span class="parameter" id="generateType-param-package"><span class="type-annotation"><a href="../../jetleaf_lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
-<li><span class="parameter" id="generateType-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span></span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/TypeDeclaration-class.html">TypeDeclaration</a></span>&gt;</span></span>
+<span class="name ">generateType</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="generateType-param-typeMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-mirrors/TypeMirror-class.html">TypeMirror</a></span> <span class="parameter-name">typeMirror</span>, </span></li>
+<li><span class="parameter" id="generateType-param-package"><span class="type-annotation"><a href="../../lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="generateType-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span></span></li>
 </ol>)
 
       
@@ -85,7 +85,7 @@
       type: dynamic,
       element: null,
       dartType: null,
-      qualifiedName: &#39;dart:core.dynamic&#39;,
+      qualifiedName: _buildQualifiedName(&#39;dynamic&#39;, &#39;dart:core&#39;),
       simpleName: &#39;dynamic&#39;,
       packageUri: &#39;dart:core&#39;,
       isNullable: false,
@@ -101,7 +101,7 @@
       type: VoidType,
       element: null,
       dartType: null,
-      qualifiedName: &#39;dart:core.void&#39;,
+      qualifiedName: _buildQualifiedName(&#39;void&#39;, &#39;dart:core&#39;),
       simpleName: &#39;void&#39;,
       packageUri: &#39;dart:core&#39;,
       isNullable: false,
@@ -139,7 +139,7 @@
       type: runtimeType,
       element: typeElement,
       dartType: dartType,
-      qualifiedName: &#39;dart:core.$typeName&#39;,
+      qualifiedName: _buildQualifiedName(typeName, &#39;dart:core&#39;),
       simpleName: typeName,
       packageUri: &#39;dart:core&#39;,
       isNullable: false,
@@ -162,14 +162,13 @@
 
   &#47;&#47; Determine type kind
   final kind = _determineTypeKind(typeMirror, dartType);
-  final qualifiedName = _buildQualifiedName(typeName, libraryUri);
 
   final declaration = StandardTypeDeclaration(
     name: typeName,
     type: runtimeType,
     element: typeElement,
     dartType: dartType,
-    qualifiedName: qualifiedName,
+    qualifiedName: _buildQualifiedName(typeName, libraryUri),
     simpleName: typeName,
     packageUri: libraryUri,
     isNullable: false,

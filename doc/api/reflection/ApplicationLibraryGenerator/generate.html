@@ -56,11 +56,11 @@
       
   <div>
     <ol class="annotation-list">
-        <li>@<a href="https://api.dart.dev/stable/3.9.0/dart-core/override-constant.html">override</a></li>
+        <li>@<a href="https://api.dart.dev/stable/3.9.2/dart-core/override-constant.html">override</a></li>
     </ol>
   </div>
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/LibraryDeclaration-class.html">LibraryDeclaration</a></span>&gt;</span></span>&gt;</span></span>
-<span class="name ">generate</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="generate-param-dartFiles"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.0/dart-io/File-class.html">File</a></span>&gt;</span></span> <span class="parameter-name">dartFiles</span></span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/LibraryDeclaration-class.html">LibraryDeclaration</a></span>&gt;</span></span>&gt;</span></span>
+<span class="name ">generate</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="generate-param-dartFiles"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-io/File-class.html">File</a></span>&gt;</span></span> <span class="parameter-name">dartFiles</span></span></li>
 </ol>)
 
       <div class="features"><span class="feature">override</span></div>
@@ -75,7 +75,7 @@
 <ul>
 <li><code>dartFiles</code>: A list of Dart files to process via analyzer</li>
 </ul>
-<p><strong>Returns:</strong> A list of <a href="../../jetleaf_lang/LibraryDeclaration-class.html">LibraryDeclaration</a> objects representing the reflected libraries</p>
+<p><strong>Returns:</strong> A list of <a href="../../lang/LibraryDeclaration-class.html">LibraryDeclaration</a> objects representing the reflected libraries</p>
 <p><strong>Example:</strong></p>
 <pre class="language-dart"><code class="language-dart">final libraries = await generator.generate(dartFiles);
 for (final library in libraries) {
@@ -96,27 +96,33 @@ Future&lt;List&lt;LibraryDeclaration&gt;&gt; generate(List&lt;File&gt; dartFiles
   &#47;&#47; Initialize analyzer
   await _initializeAnalyzer(dartFiles);
 
+  &#47;&#47; Initialize tree shaker if needed
+  if (configuration.enableTreeShaking) {
+    _treeShaker = TreeShaker();
+  }
+
   &#47;&#47; Create package lookup
   for (final package in packages) {
-    _packageCache[package.name] = package;
+    _packageCache[package.getName()] = package;
   }
 
   final libraries = &lt;LibraryDeclaration&gt;[];
 
-  onInfo(&#39;Generating reflection metadata with analyzer integration...&#39;);
+  onInfo(&#39;Generating declaration metadata with analyzer integration...&#39;);
 
   for (final libraryMirror in loader) {
     final fileUri = libraryMirror.uri;
 
     try {
-      if(libraryMirror.uri.toString() == &quot;dart:mirrors&quot;) {
+      final mustSkip = &quot;jetleaf_lang&#47;src&#47;runtime&#47;&quot;;
+      if(libraryMirror.uri.toString() == &quot;dart:mirrors&quot; || libraryMirror.uri.toString().startsWith(&quot;package:$mustSkip&quot;) || libraryMirror.uri.toString().contains(mustSkip)) {
         continue;
       }
 
       onInfo(&#39;Processing library: ${fileUri.toString()}&#39;);
       LibraryDeclaration? libDecl;
 
-      if (_isBuiltInDartLibrary(libraryMirror.uri)) {
+      if (_isBuiltInDartLibrary(fileUri)) {
         &#47;&#47; Handle built-in Dart libraries (dart:core, dart:io, etc.)
         libDecl = await _generateBuiltInLibraryDeclaration(libraryMirror);
       } else {
@@ -144,6 +150,25 @@ Future&lt;List&lt;LibraryDeclaration&gt;&gt; generate(List&lt;File&gt; dartFiles
     } catch (e, stackTrace) {
       onError(&#39;Error processing library ${fileUri.toString()}: $e\n$stackTrace&#39;);
     }
+  }
+
+  &#47;&#47; Apply tree-shaking if enabled
+  Set&lt;String&gt; usedClasses = {};
+  if (configuration.enableTreeShaking &amp;&amp; _treeShaker != null) {
+    final userPackageNames = packages
+        .where((p) =&gt; p.getIsRootPackage())
+        .map((p) =&gt; p.getName())
+        .toSet();
+
+    usedClasses = _treeShaker!.shake(libraries, userPackageNames);
+    onInfo(&#39;Tree-shaking enabled: ${usedClasses.length} classes marked as used&#39;);
+  }
+
+  &#47;&#47; Write declarations to files if configured
+  if (configuration.writeDeclarationsToFiles) {
+    _fileWriter = DeclarationFileWriter(configuration.outputPath);
+    await _fileWriter!.writeDeclarations(libraries, usedClasses, configuration.enableTreeShaking);
+    onInfo(&#39;Declarations written to ${configuration.outputPath}&#47;classes&#47;&#39;);
   }
 
   &#47;&#47; Check for unresolved generic classes

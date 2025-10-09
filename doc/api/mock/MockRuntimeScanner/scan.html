@@ -56,13 +56,13 @@
       
   <div>
     <ol class="annotation-list">
-        <li>@<a href="https://api.dart.dev/stable/3.9.0/dart-core/override-constant.html">override</a></li>
+        <li>@<a href="https://api.dart.dev/stable/3.9.2/dart-core/override-constant.html">override</a></li>
     </ol>
   </div>
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../reflection/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a></span>&gt;</span></span>
-<span class="name ">scan</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="scan-param-outputFolder"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">outputFolder</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../reflection/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a></span>&gt;</span></span>
+<span class="name ">scan</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="scan-param-outputFolder"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">outputFolder</span>, </span></li>
 <li><span class="parameter" id="scan-param-configuration"><span class="type-annotation"><a href="../../reflection/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a></span> <span class="parameter-name">configuration</span>, {</span></li>
-<li><span class="parameter" id="scan-param-source"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-io/Directory-class.html">Directory</a>?</span> <span class="parameter-name">source</span>, </span></li>
+<li><span class="parameter" id="scan-param-source"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-io/Directory-class.html">Directory</a>?</span> <span class="parameter-name">source</span>, </span></li>
 </ol>})
 
       <div class="features"><span class="feature">override</span></div>
@@ -106,7 +106,7 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
   final stopwatch = Stopwatch()..start();
   _logInfo(&quot;Starting mock runtime scan...&quot;);
 
-  FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration);
+  FileUtility FileUtils = FileUtility(_logInfo, _logWarning, _logError, configuration, false);
 
   &#47;&#47; 1. Setup directory and verify its existence
   Directory directory = source ?? Directory.current;
@@ -126,9 +126,10 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
 
   &#47;&#47; 3. Force load specified files
   final dartFiles = await FileUtils.findDartFiles(directory);
+  final resources = await FileUtils.discoverAllResources(_package!);
   dartFiles.addAll(_forceLoadFiles);
 
-  _logInfo(&#39;Loading dart files that are not present in the [currentMirrorSystem]...&#39;);
+  _logInfo(&#39;Loading dart files that are not present in the [currentMirrorSystem#(${access.isolate.debugName})]...&#39;);
   Map&lt;File, Uri&gt; urisToLoad = FileUtils.getUrisToLoad(dartFiles, _package!);
   List&lt;mirrors.LibraryMirror&gt; forceLoadedMirrors = [];
   for (final uriEntry in urisToLoad.entries) {
@@ -153,7 +154,7 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
   configuration = _addDefaultPackagesToScan(configuration, _package!);
 
   &#47;&#47; 4. Generate reflection metadata
-  _logInfo(&#39;Generating reflection metadata...&#39;);
+  _logInfo(&#39;Generating declaration metadata...&#39;);
   final params = MockLibraryGeneratorParams(
     mirrorSystem: access,
     forceLoadedMirrors: forceLoadedMirrors,
@@ -163,6 +164,7 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
     configuration: configuration,
     packages: [_createPackage(_package!)],
   );
+  print(configuration);
   final libraryGenerator = _libraryGeneratorFactory?.call(params) ?? MockLibraryGenerator(
     mirrorSystem: params.mirrorSystem,
     forceLoadedMirrors: params.forceLoadedMirrors,
@@ -175,7 +177,7 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
 
   List&lt;LibraryDeclaration&gt; libraries = [];
   libraries = await libraryGenerator.generate(dartFiles.toList());
-  _logInfo(&#39;Generated metadata for ${libraries.length} libraries&#39;);
+  _logInfo(&#39;Generated declaration metadata for ${libraries.length} libraries&#39;);
 
   &#47;&#47; 5. Create or update context
   final refreshContext = _context == null || configuration.reload;
@@ -199,6 +201,7 @@ Future&lt;RuntimeScannerSummary&gt; scan(String outputFolder, RuntimeScannerConf
     logWarning: _logWarning,
     logError: _logError,
   );
+  _context?.addAssets(resources);
   _context?.setRuntimeResolver(await resolving.resolve());
 
   stopwatch.stop();

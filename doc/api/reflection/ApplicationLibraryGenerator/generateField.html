@@ -54,15 +54,15 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/FieldDeclaration-class.html">FieldDeclaration</a></span>&gt;</span></span>
-<span class="name ">generateField</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateField-param-fieldMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-mirrors/VariableMirror-class.html">VariableMirror</a></span> <span class="parameter-name">fieldMirror</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/FieldDeclaration-class.html">FieldDeclaration</a></span>&gt;</span></span>
+<span class="name ">generateField</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateField-param-fieldMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-mirrors/VariableMirror-class.html">VariableMirror</a></span> <span class="parameter-name">fieldMirror</span>, </span></li>
 <li><span class="parameter" id="generateField-param-parentElement"><span class="type-annotation"><a href="https://pub.dev/documentation/analyzer/8.1.1/dart_element_element/Element-class.html">Element</a>?</span> <span class="parameter-name">parentElement</span>, </span></li>
-<li><span class="parameter" id="generateField-param-package"><span class="type-annotation"><a href="../../jetleaf_lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
-<li><span class="parameter" id="generateField-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
-<li><span class="parameter" id="generateField-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
-<li><span class="parameter" id="generateField-param-className"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">className</span>, </span></li>
-<li><span class="parameter" id="generateField-param-parentClass"><span class="type-annotation"><a href="../../jetleaf_lang/ClassDeclaration-class.html">ClassDeclaration</a>?</span> <span class="parameter-name">parentClass</span>, </span></li>
-<li><span class="parameter" id="generateField-param-sourceCode"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceCode</span>, </span></li>
+<li><span class="parameter" id="generateField-param-package"><span class="type-annotation"><a href="../../lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="generateField-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
+<li><span class="parameter" id="generateField-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
+<li><span class="parameter" id="generateField-param-className"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">className</span>, </span></li>
+<li><span class="parameter" id="generateField-param-parentClass"><span class="type-annotation"><a href="../../lang/ClassDeclaration-class.html">ClassDeclaration</a>?</span> <span class="parameter-name">parentClass</span>, </span></li>
+<li><span class="parameter" id="generateField-param-sourceCode"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">sourceCode</span>, </span></li>
 </ol>)
 
       
@@ -95,14 +95,36 @@
     fieldElement = parentElement.getField(fieldName);
   }
 
+  final dartType = fieldElement?.type;
+  final mirrorType = fieldMirror.type;
+  Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+  &#47;&#47; Extract annotations and resolve type
+  if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+    final annotations = await _extractAnnotations(mirrorType.metadata, package);
+    final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, fieldName);
+    if (resolvedType != null) {
+      runtimeType = resolvedType;
+    }
+  }
+
   return StandardFieldDeclaration(
     name: fieldName,
-    type: fieldMirror.runtimeType,
+    type: runtimeType,
     element: fieldElement,
-    dartType: fieldElement?.type,
+    dartType: dartType,
     libraryDeclaration: _libraryCache[libraryUri]!,
-    parentClass: parentClass,
-    typeDeclaration: await generateType(fieldMirror.type, package, libraryUri),
+    parentClass: parentClass != null ? StandardLinkDeclaration(
+      name: parentClass.getName(),
+      type: parentClass.getType(),
+      pointerType: parentClass.getType(),
+      qualifiedName: parentClass.getQualifiedName(),
+      isPublic: parentClass.getIsPublic(),
+      canonicalUri: Uri.parse(parentClass.getPackageUri()),
+      referenceUri: Uri.parse(parentClass.getPackageUri()),
+      isSynthetic: parentClass.getIsSynthetic(),
+    ) : null,
+    linkDeclaration: await _getLinkDeclaration(fieldMirror.type, package, libraryUri, dartType),
     annotations: await _extractAnnotations(fieldMirror.metadata, package),
     sourceLocation: sourceUri,
     isFinal: fieldMirror.isFinal,
@@ -112,6 +134,11 @@
     isAbstract: false,
     isPublic: !_isInternal(fieldName),
     isSynthetic: _isSynthetic(fieldName),
+    isNullable: _isNullable(
+      fieldName: fieldName,
+      sourceCode: sourceCode ?? await _readSourceCode(sourceUri),
+      fieldElement: fieldElement
+    )
   );
 }</code></pre>
 </section>

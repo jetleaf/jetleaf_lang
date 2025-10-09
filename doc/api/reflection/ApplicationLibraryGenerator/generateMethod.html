@@ -54,14 +54,14 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../jetleaf_lang/MethodDeclaration-class.html">MethodDeclaration</a></span>&gt;</span></span>
-<span class="name ">generateMethod</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateMethod-param-methodMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-mirrors/MethodMirror-class.html">MethodMirror</a></span> <span class="parameter-name">methodMirror</span>, </span></li>
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/MethodDeclaration-class.html">MethodDeclaration</a></span>&gt;</span></span>
+<span class="name ">generateMethod</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="generateMethod-param-methodMirror"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-mirrors/MethodMirror-class.html">MethodMirror</a></span> <span class="parameter-name">methodMirror</span>, </span></li>
 <li><span class="parameter" id="generateMethod-param-parentElement"><span class="type-annotation"><a href="https://pub.dev/documentation/analyzer/8.1.1/dart_element_element/Element-class.html">Element</a>?</span> <span class="parameter-name">parentElement</span>, </span></li>
-<li><span class="parameter" id="generateMethod-param-package"><span class="type-annotation"><a href="../../jetleaf_lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
-<li><span class="parameter" id="generateMethod-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
-<li><span class="parameter" id="generateMethod-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
-<li><span class="parameter" id="generateMethod-param-className"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.0/dart-core/String-class.html">String</a></span> <span class="parameter-name">className</span>, </span></li>
-<li><span class="parameter" id="generateMethod-param-parentClass"><span class="type-annotation"><a href="../../jetleaf_lang/ClassDeclaration-class.html">ClassDeclaration</a>?</span> <span class="parameter-name">parentClass</span>, </span></li>
+<li><span class="parameter" id="generateMethod-param-package"><span class="type-annotation"><a href="../../lang/Package-class.html">Package</a></span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="generateMethod-param-libraryUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">libraryUri</span>, </span></li>
+<li><span class="parameter" id="generateMethod-param-sourceUri"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Uri-class.html">Uri</a></span> <span class="parameter-name">sourceUri</span>, </span></li>
+<li><span class="parameter" id="generateMethod-param-className"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">className</span>, </span></li>
+<li><span class="parameter" id="generateMethod-param-parentClass"><span class="type-annotation"><a href="../../lang/ClassDeclaration-class.html">ClassDeclaration</a>?</span> <span class="parameter-name">parentClass</span>, </span></li>
 </ol>)
 
       
@@ -99,20 +99,27 @@
     }
   }
 
-  return StandardMethodDeclaration(
+  final dartType = (methodElement as ExecutableElement?)?.type;
+  final mirrorType = methodMirror.returnType;
+  Type runtimeType = mirrorType.hasReflectedType ? mirrorType.reflectedType : mirrorType.runtimeType;
+
+  &#47;&#47; Extract annotations and resolve type
+  if(GenericTypeParser.shouldCheckGeneric(runtimeType)) {
+    final annotations = await _extractAnnotations(mirrorType.metadata, package);
+    final resolvedType = await _resolveTypeFromGenericAnnotation(annotations, methodName);
+    if (resolvedType != null) {
+      runtimeType = resolvedType;
+    }
+  }
+
+  final result = StandardMethodDeclaration(
     name: methodName,
     element: methodElement,
-    dartType: (methodElement as ExecutableElement?)?.type,
-    type: methodMirror.runtimeType,
+    dartType: dartType,
+    type: runtimeType,
     libraryDeclaration: _libraryCache[libraryUri]!,
-    returnType: await generateType(methodMirror.returnType, package, libraryUri),
+    returnType: await _getLinkDeclaration(methodMirror.returnType, package, libraryUri, dartType),
     annotations: await _extractAnnotations(methodMirror.metadata, package),
-    parameters: await _extractParameters(
-      methodMirror.parameters,
-      methodElement?.typeParameters,
-      package,
-      libraryUri
-    ),
     isPublic: !_isInternal(methodName),
     isSynthetic: _isSynthetic(methodName),
     sourceLocation: sourceUri,
@@ -120,10 +127,29 @@
     isAbstract: methodMirror.isAbstract,
     isGetter: methodMirror.isGetter,
     isSetter: methodMirror.isSetter,
-    parentClass: parentClass,
+    parentClass: parentClass != null ? StandardLinkDeclaration(
+      name: parentClass.getName(),
+      type: parentClass.getType(),
+      pointerType: parentClass.getType(),
+      qualifiedName: parentClass.getQualifiedName(),
+      isPublic: parentClass.getIsPublic(),
+      canonicalUri: Uri.parse(parentClass.getPackageUri()),
+      referenceUri: Uri.parse(parentClass.getPackageUri()),
+      isSynthetic: parentClass.getIsSynthetic(),
+    ) : null,
     isFactory: methodMirror.isFactoryConstructor,
     isConst: methodMirror.isConstConstructor,
   );
+
+  result.parameters = await _extractParameters(
+    methodMirror.parameters,
+    methodElement?.typeParameters,
+    package,
+    libraryUri,
+    result
+  );
+
+  return result;
 }</code></pre>
 </section>
 
