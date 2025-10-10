@@ -6,16 +6,16 @@ homepage: https://jetleaf.hapnium.com
 repository: https://github.com/jetleaf/jetleaf_lang
 
 topics:
-- IO
-- Collections
-- Primitives
-- Helpers
+- io
+- collections
+- primitives
+- helpers
 
 keywords:
-- IO
-- Collections
-- Primitives
-- Helpers
+- io
+- collections
+- primitives
+- helpers
 
 environment:
   sdk: ^3.9.0
