@@ -88,8 +88,8 @@ void main() {
         packagesToExclude: ['package:html', 'r:package:.*_test'],
       );
       
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:html/parser.dart'), loader, print), true);
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:app_test/core.dart'), loader, print), true);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:html/parser.dart'), loader), true);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:app_test/core.dart'), loader), true);
     });
 
     test('should include packages in packagesToScan', () async {
@@ -97,33 +97,15 @@ void main() {
         packagesToScan: ['package:core', 'r:package:feature_.*'],
       );
       
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:core/utils.dart'), loader, print), false);
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:feature_auth/login.dart'), loader, print), false);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:core/utils.dart'), loader), false);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('package:feature_auth/login.dart'), loader), false);
     });
 
     test('should handle non-package URIs', () async {
       final loader = RuntimeScannerConfiguration();
       
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('dart:core'), loader, print), false);
-      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('file:///test/main_test.dart'), loader, print), false);
-    });
-  });
-
-  group('isNonLoadableFile', () {
-    test('should match files in excluded directories', () {
-      final loader = RuntimeScannerConfiguration(
-        filesToExclude: [File('lib/internal')],
-      );
-
-      expect(RuntimeUtils.isNonLoadableFile(Uri.parse('file:///${Directory.current.path}/lib/internal/utils.dart'), loader), true);
-    });
-
-    test('should not match included files', () {
-      final loader = RuntimeScannerConfiguration(
-        filesToExclude: [File('lib/internal')],
-      );
-      
-      expect(RuntimeUtils.isNonLoadableFile(Uri.parse('file:///${Directory.current.path}/lib/main.dart'), loader), false);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('dart:core'), loader), false);
+      expect(await RuntimeUtils.shouldNotIncludeLibrary(Uri.parse('file:///test/main_test.dart'), loader), false);
     });
   });
 

@@ -224,7 +224,7 @@ class RuntimeUtils {
   /// );
   /// ```
   /// {@endtemplate}
-  static Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration loader, void Function(String) onError) async {
+  static Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration loader) async {
     if (uri.pathSegments.isNotEmpty && uri.pathSegments.first.equalsAny([
       'analyzer',
       '_fe_analyzer_shared',
@@ -235,10 +235,21 @@ class RuntimeUtils {
     final packageName = getPackageNameFromUri(uri);
     final filePath = (await resolveUri(uri))?.toFilePath();
 
-    if (matchesAnyPattern(uri.toString(), loader.packagesToExclude) || (packageName != null && matchesAnyPattern(packageName, loader.packagesToExclude))) {
+    // 🚫 Skip unwanted common folders
+    const excludedDirs = [
+      '/example/',
+      '/benchmark/',
+      '/tool/',
+      '/build/',
+      '/.dart_tool/',
+    ];
+    if (excludedDirs.any((dir) => (packageName != null && uri.toString().contains("$packageName$dir")) || uri.toString().contains(dir))) {
       return true;
     }
 
+    if (matchesAnyPattern(uri.toString(), loader.packagesToExclude) || (packageName != null && matchesAnyPattern(packageName, loader.packagesToExclude))) {
+      return true;
+    }
     if (filePath != null && matchesAnyFile(filePath, loader.filesToExclude)) {
       return true;
     }
@@ -304,40 +315,6 @@ class RuntimeUtils {
   /// {@endtemplate}
   static bool isTest(String content) => _testImportRegex.hasMatch(content);
 
-  /// Checks if a file should be excluded based on loader configuration.
-  ///
-  /// {@template file_exclusion}
-  /// Parameters:
-  /// - [uri]: The file URI to check
-  /// - [loader]: The [RuntimeScannerConfiguration] configuration
-  ///
-  /// Returns `true` if:
-  /// - The file matches exact exclusion patterns
-  /// - The file path matches exclusion patterns
-  ///
-  /// Example:
-  /// ```dart
-  /// final exclude = ReflectUtils.isNonLoadableFile(uri, loader);
-  /// ```
-  /// {@endtemplate}
-  static bool isNonLoadableFile(Uri uri, RuntimeScannerConfiguration loader) {
-    final path = uri.toString();
-    
-    if (loader.filesToExclude.any((file) => file.uri.toString() == path)) {
-      return true;
-    }
-
-    return loader.filesToExclude.any((file) {
-      final pattern = RegExp(
-        r'^(.*[/\\])?' + 
-        RegExp.escape(p.basename(file.path)) + 
-        r'(?:[/\\].*)?$',
-        caseSensitive: !Platform.isWindows,
-      );
-      return pattern.hasMatch(path);
-    });
-  }
-
   /// Matches input against a list of patterns.
   ///
   /// {@template pattern_matching}
@@ -372,6 +349,39 @@ class RuntimeUtils {
       }
       return input == pattern;
     });
+  }
+
+  /// {@template should_not_include_path}
+  /// Determines if a path should be excluded based on loader configuration.
+  ///
+  /// {@endtemplate}
+  static Future<bool> shouldNotIncludePath(Uri uri, File file, RuntimeScannerConfiguration loader) async {
+    if (uri.pathSegments.isNotEmpty && uri.pathSegments.first.equalsAny(['analyzer', '_fe_analyzer_shared'])) {
+      return true;
+    }
+
+    final packageName = getPackageNameFromUri(uri);
+    final filePath = file.path;
+
+    if (matchesAnyPattern(filePath, loader.packagesToExclude) || (packageName != null && matchesAnyPattern(packageName, loader.packagesToExclude))) {
+      return true;
+    }
+
+    if (matchesAnyFile(filePath, loader.filesToExclude)) {
+      return true;
+    }
+
+    if (loader.packagesToScan.isNotEmpty || loader.filesToScan.isNotEmpty) {
+      final packageMatch = loader.packagesToScan.isEmpty || 
+          matchesAnyPattern(uri.toString(), loader.packagesToScan) ||
+          (packageName != null && matchesAnyPattern(packageName, loader.packagesToScan));
+
+      final fileMatch = (loader.filesToScan.isEmpty || matchesAnyFile(filePath, loader.filesToScan));
+
+      return !(packageMatch || fileMatch);
+    }
+
+    return false;
   }
 
   /// Matches a file path against a list of files.

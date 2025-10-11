@@ -128,33 +128,6 @@ class RuntimeResolving {
   /// ```
   /// {@endtemplate}
   Future<RuntimeResolver> resolve() async {
-    // logInfo('Generating AOT Runtime Resolvers...');
-    // final resolverGenerator = RuntimeResolverGenerator(fileUtils, package, logInfo, logWarning, logError);
-
-    // Pass existing hints to avoid regenerating for types already handled by RuntimeHintProcessor
-    // final generatedResolvers = await resolverGenerator.generateResolvers(libraries, _executable);
-
-    // Write generated resolvers to files and add them to forceLoadedMirrors
-    // final resolverOutputDirectory = Directory(p.join(outputFolder, 'resolvers'));
-    // if (!await resolverOutputDirectory.exists()) {
-    //   await resolverOutputDirectory.create(recursive: true);
-    // }
-
-    // for (final entry in generatedResolvers.entries) {
-    //   final filePath = p.join(resolverOutputDirectory.path, entry.key);
-    //   final file = File(filePath);
-    //   await file.writeAsString(entry.value);
-    //   logInfo('Wrote generated resolver to: $filePath');
-
-    //   // Add the newly generated file to forceLoadedMirrors so it's available for the AOT resolver
-    //   final generatedFileUri = file.uri;
-    //   mirrors.LibraryMirror? mirror = await fileUtils.forceLoadLibrary(generatedFileUri, file, access);
-    //   if(mirror != null) {
-    //     forceLoadedMirrors.add(mirror);
-    //   }
-    // }
-    // logInfo('Finished generating and loading ${generatedResolvers.length} AOT Runtime Resolvers.');
-
     // Determine Compiler and ExecutableResolver
     return await _prepareResolver([...access.libraries.values, ...forceLoadedMirrors]);
   }

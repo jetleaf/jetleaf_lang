@@ -3,12 +3,12 @@ import 'class.dart';
 import 'protection_domain.dart';
 
 /// {@template class_type}
-/// The `ClassType` class in **Jetleaf** represents a reference to a Dart 
-/// class, optionally including metadata such as package, protection domain, 
+/// The `ClassType` class in **Jetleaf** represents a reference to a Dart
+/// class, optionally including metadata such as package, protection domain,
 /// or type declaration.
 ///
-/// It provides a convenient way to convert a class reference into a [Class] 
-/// instance used by the Jetleaf framework for reflection, conditional 
+/// It provides a convenient way to convert a class reference into a [Class]
+/// instance used by the Jetleaf framework for reflection, conditional
 /// processing, or pod registration.
 ///
 /// ### Key Features:
@@ -35,9 +35,9 @@ class ClassType<T> {
   /// {@template class_type_name}
   /// The simple name of the class.
   ///
-  /// Optional. If not provided, the [toClass] method will use the declaration 
+  /// Optional. If not provided, the [toClass] method will use the declaration
   /// or create a generic class instance.
-  /// 
+  ///
   /// {@endtemplate}
   final String? name;
 
@@ -45,7 +45,7 @@ class ClassType<T> {
   /// The package the class belongs to, if any.
   ///
   /// Optional. Used by [toClass] to resolve the fully qualified class name.
-  /// 
+  ///
   /// {@endtemplate}
   final String? package;
 
@@ -53,16 +53,16 @@ class ClassType<T> {
   /// The [ProtectionDomain] associated with this class reference.
   ///
   /// If not provided, defaults to [ProtectionDomain.current] when calling [toClass].
-  /// 
+  ///
   /// {@endtemplate}
   final ProtectionDomain? pd;
 
   /// {@template class_type_declaration}
   /// Optional [TypeDeclaration] that represents the class declaration.
   ///
-  /// If provided, [toClass] will use this declaration to create a [Class] 
+  /// If provided, [toClass] will use this declaration to create a [Class]
   /// instance.
-  /// 
+  ///
   /// {@endtemplate}
   final TypeDeclaration? declaration;
 
@@ -97,4 +97,16 @@ class ClassType<T> {
 
     return Class<T>(pd ?? ProtectionDomain.current(), package);
   }
+
+  /// {@template class_type_getType}
+  /// Returns the type parameter [T] of this [ClassType].
+  ///
+  /// ### Example:
+  /// ```dart
+  /// final classRef = ClassType<int>();
+  /// final type = classRef.getType();
+  /// print(type); // prints: int
+  /// ```
+  /// {@endtemplate}
+  Type getType() => T;
 }

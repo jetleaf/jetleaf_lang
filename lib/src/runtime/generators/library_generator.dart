@@ -136,5 +136,5 @@ abstract class LibraryGenerator {
 
   /// {@macro library_exclusion}
   @protected
-  Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) => RuntimeUtils.shouldNotIncludeLibrary(uri, configuration, onError);
+  Future<bool> shouldNotIncludeLibrary(Uri uri, RuntimeScannerConfiguration configuration) => RuntimeUtils.shouldNotIncludeLibrary(uri, configuration);
 }

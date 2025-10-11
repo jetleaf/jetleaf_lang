@@ -1,6 +1,6 @@
 name: jetleaf_lang
 description: This library exposes extended Dart primitives, collections, optional types, I/O streams, date/time utilities, math types, regex, and more.
-version: 1.0.0
+version: 1.0.0+1
 
 homepage: https://jetleaf.hapnium.com
 repository: https://github.com/jetleaf/jetleaf_lang

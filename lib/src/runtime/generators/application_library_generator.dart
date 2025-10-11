@@ -175,7 +175,7 @@ class ApplicationLibraryGenerator extends LibraryGenerator {
 
     // Check for unresolved generic classes
     final unresolvedClasses = libraries
-      .where((l) => l.getIsPublic() && !l.getIsSynthetic())
+      .where((l) => l.getIsPublic() && !l.getIsSynthetic() && l.getPackage().getIsRootPackage())
       .flatMap((l) => l.getDeclarations())
       .whereType<TypeDeclaration>()
       .where((d) => GenericTypeParser.shouldCheckGeneric(d.getType()) && d.getIsPublic() && !d.getIsSynthetic());
