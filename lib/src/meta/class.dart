@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dart_internal/extract_type_arguments.dart';
 
 import '../extensions/primitives/iterable.dart';
@@ -403,6 +405,33 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName {
   /// ```
   /// {@endtemplate}
   bool isInvokable();
+
+  /// {@template method_isAsync}
+  /// Determines whether this method is asynchronous.
+  ///
+  /// A method is considered asynchronous if its declared return type
+  /// is either [Future] or [FutureOr]. This check allows AOP or reflection
+  /// mechanisms to distinguish between synchronous and asynchronous methods
+  /// when performing advice invocation, proxying, or instrumentation.
+  ///
+  /// ## Example
+  /// ```dart
+  /// class UserService {
+  ///   Future<void> fetchUser() async {}
+  ///   void saveUser() {}
+  /// }
+  ///
+  /// final methodFetch = Class(UserService).getMethod('fetchUser');
+  /// final methodSave = Class(UserService).getMethod('saveUser');
+  ///
+  /// print(methodFetch.isAsync()); // true
+  /// print(methodSave.isAsync());  // false
+  /// ```
+  ///
+  /// @return `true` if the method's return type is [Future] or [FutureOr],
+  ///         `false` otherwise.
+  /// {@endtemplate}
+  bool isAsync();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Type Comparators ===

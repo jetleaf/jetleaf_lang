@@ -12,8 +12,6 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'package:meta/meta.dart';
-
 import '../declaration/declaration.dart';
 import 'annotation.dart';
 import 'class.dart';
@@ -367,7 +365,7 @@ abstract class Source extends PermissionManager {
 
     final annotations = getAllDirectAnnotations();
     for (final annotation in annotations) {
-      if (annotationMatches<A>(annotation)) {
+      if (annotation.matches<A>()) {
         try {
           return annotation.getInstance<A>();
         } catch (_) {
@@ -377,24 +375,6 @@ abstract class Source extends PermissionManager {
     }
 
     return null;
-  }
-
-  @protected
-  bool annotationMatches<A>(Annotation annotation) {
-    if (annotation.getClass().getType() == A) {
-      return true;
-    }
-
-    if (annotation.getClass().isInstance(A)) {
-      return true;
-    }
-
-    final cls = Class<A>();
-    if (annotation.getClass().isInstance(cls)) {
-      return true;
-    }
-
-    return false;
   }
   
   /// Gets all annotations of a specific type.
@@ -468,6 +448,60 @@ abstract class Source extends PermissionManager {
   /// - `true` if the element is public
   /// - `false` otherwise
   bool isPublic();
+
+  /// {@template source_get_modifiers}
+  /// Returns the list of **modifiers** associated with this source element.
+  ///
+  /// A *modifier* in JetLeaf represents a keyword that alters the behavior,
+  /// visibility, or semantics of a language element — similar to modifiers in
+  /// Dart such as `public`, `private`, `static`, `final`, `abstract`.
+  ///
+  /// ### JetLeaf Context
+  /// Every reflective entity (`Class`, `Field`, `Method`, `Parameter`,
+  /// or `Constructor`) inherits from [Source] and therefore supports querying
+  /// modifiers for meta-analysis and dynamic weaving.
+  ///
+  /// Modifiers are typically derived from parsed annotations, metadata, or
+  /// language-level declarations available via JetLeaf’s reflection system.
+  ///
+  /// ### Example
+  /// ```dart
+  /// void inspectModifiers(Source source) {
+  ///   final modifiers = source.getModifiers();
+  ///
+  ///   print('Source name: ${source.getName()}');
+  ///   print('Modifiers: ${modifiers.join(', ')}');
+  ///
+  ///   if (modifiers.contains('static')) {
+  ///     print('This element is static.');
+  ///   }
+  ///
+  ///   if (modifiers.contains('final')) {
+  ///     print('This element cannot be reassigned.');
+  ///   }
+  /// }
+  ///
+  /// final field = Class<MyService>().getField('repository');
+  /// inspectModifiers(field);
+  /// // Output:
+  /// // Source name: repository
+  /// // Modifiers: private, final
+  /// // This element cannot be reassigned.
+  /// ```
+  ///
+  /// ### Return
+  /// A list of modifier names as strings, in declaration order.  
+  /// Returns an empty list if the element has no explicit modifiers.
+  ///
+  /// ### Usage Notes
+  /// - For classes, modifiers may include: `abstract`, `final`, `sealed`, `base`.
+  /// - For methods: `async`, `override`, `static`, `final`.
+  /// - For fields: `const`, `static`, `late`, `final`, or visibility modifiers.
+  /// - For constructors: `factory`, `const`, `private`.
+  /// - For parameters: `required`, `named`, `positional`, etc.
+  ///
+  /// {@endtemplate}
+  List<String> getModifiers();
 }
 
 /// {@template executable_element}

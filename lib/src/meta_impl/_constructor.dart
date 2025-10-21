@@ -33,6 +33,14 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   }
 
   @override
+  List<String> getModifiers() => [
+    if (isPublic()) 'PUBLIC',
+    if (!isPublic()) 'PRIVATE',
+    if (isConst()) 'CONST',
+    if (isFactory()) 'FACTORY',
+  ];
+
+  @override
   Class<D> getDeclaringClass<D>() {
     checkAccess('getDeclaringClass', DomainPermission.READ_CONSTRUCTORS);
     

@@ -326,7 +326,9 @@ class FileUtility {
 
   /// Checks if a file is a test file
   bool _isTestFile(String filePath) {
-    return RegExp(r'(^|/|\\)(test|tests)(/|\\|$)|_test\.dart$', caseSensitive: false).hasMatch(filePath);
+    // Matches paths containing `/test/` or `/tests/` (case-insensitive)
+    // return RegExp(r'(^|/|\\)(test|tests)(/|\\|$)|_test\.dart$', caseSensitive: false).hasMatch(filePath);
+    return RegExp(r'(^|/|\\)(test|tests)(/|\\|$)', caseSensitive: false).hasMatch(filePath);
   }
 
   /// Finds all non-Dart files within the current project directory, respecting inclusion/exclusion lists.

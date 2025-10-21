@@ -151,6 +151,11 @@ class PackageNames {
   /// Value: `"jetleaf_convert"`.
   static const String CONVERT = "${MAIN}_convert";
 
+  /// The package name for the **AOP** module.
+  /// 
+  /// Value: `"jetleaf_aop"`.
+  static const String AOP = "${MAIN}_aop";
+
   /// The package name for the **language support** module.
   ///
   /// Value: `"jetleaf_lang"`.
@@ -230,4 +235,9 @@ class PackageNames {
   /// 
   /// Value: `"jetleaf_env"`
   static const String ENV = "${MAIN}_env";
+
+  /// The package name for the **resource** module
+  /// 
+  /// Value: `"jetleaf_resource"`
+  static const String RESOURCE = "${MAIN}_resource";
 }

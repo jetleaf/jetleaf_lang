@@ -122,6 +122,33 @@ abstract class Method extends Executable implements Member {
   /// - [getOverriddenMethod] to retrieve the superclass method
   /// {@endtemplate}
   bool isOverride();
+
+  /// {@template method_isVoid}
+  /// Determines whether this method declares a `void` return type.
+  ///
+  /// This method inspects the method's declared return type and returns `true`
+  /// if it is explicitly `void`. It is useful for AOP frameworks, reflection
+  /// systems, and code generation tools that need to distinguish between
+  /// methods that produce values and those that perform side effects only.
+  ///
+  /// ## Example
+  /// ```dart
+  /// class Logger {
+  ///   void log(String message) {}
+  ///   int countLogs() => 42;
+  /// }
+  ///
+  /// final logMethod = Class(Logger).getMethod('log');
+  /// final countMethod = Class(Logger).getMethod('countLogs');
+  ///
+  /// print(logMethod.isVoid());   // true
+  /// print(countMethod.isVoid()); // false
+  /// ```
+  ///
+  /// @return `true` if the method’s return type is `void`,
+  ///         `false` otherwise.
+  /// {@endtemplate}
+  bool isVoid();
   
   /// Gets the method that this method overrides.
   ///

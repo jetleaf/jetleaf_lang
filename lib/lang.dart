@@ -158,7 +158,6 @@ export 'src/uuid/uuid.dart';
 
 export 'src/meta/class.dart';
 export 'src/meta/class_type.dart';
-export 'src/meta/class_utils.dart';
 export 'src/meta/field.dart';
 export 'src/meta/constructor.dart';
 export 'src/meta/method.dart';
@@ -186,6 +185,9 @@ export 'src/declaration/declaration.dart'
 export 'src/uri/uri_template.dart';
 export 'src/uri/uri_validators.dart';
 export 'src/uri/uri_validator.dart';
+
+export 'src/utils/method_utils.dart';
+export 'src/utils/class_utils.dart';
 
 export 'src/runtime/runtime_provider/standard_runtime_provider.dart';
 export 'src/runtime/runtime_provider/configurable_runtime_provider.dart';

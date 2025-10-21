@@ -100,6 +100,18 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
+  List<String> getModifiers() => [
+    if (isPublic()) 'PUBLIC',
+    if (!isPublic()) 'PRIVATE',
+    if (isStatic()) 'STATIC',
+    if (isAbstract()) 'ABSTRACT',
+    if (isConst()) 'CONST',
+    if (isFactory()) 'FACTORY',
+    if (isGetter()) 'GETTER',
+    if (isSetter()) 'SETTER',
+  ];
+
+  @override
   bool isStatic() {
     checkAccess('isStatic', DomainPermission.READ_METHODS);
     return _declaration.getIsStatic();
@@ -109,6 +121,16 @@ class _Method extends Method with EqualsAndHashCode {
   bool isAbstract() {
     checkAccess('isAbstract', DomainPermission.READ_METHODS);
     return _declaration.getIsAbstract();
+  }
+
+  @override
+  bool isVoid() {
+    try {
+      getReturnClass();
+      return false;
+    } on ClassNotFoundException catch (_) {
+      return true;
+    }
   }
 
   @override
@@ -242,11 +264,7 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
-  String getSignature() {
-    checkAccess('getSignature', DomainPermission.READ_METHODS);
-    final paramTypes = getParameterTypes().map((t) => t.getName()).join(', ');
-    return '${getReturnClass().getName()} ${getName()}($paramTypes)';
-  }
+  String getSignature() => _createMethodSignature(_declaration);
 
   @override
   bool isOverride() {
@@ -493,7 +511,6 @@ class _Method extends Method with EqualsAndHashCode {
   List<Object?> equalizedProperties() {
     return [
       _declaration.getName(),
-      getSignature(),
       _declaration.getIsStatic(),
       _declaration.getIsGetter(),
       _declaration.getIsSetter(),

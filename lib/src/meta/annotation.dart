@@ -78,6 +78,27 @@ abstract class Annotation extends PermissionManager implements FieldAccess {
   /// {@endtemplate}
   Type getType();
 
+  /// {@template annotation_matcher.matches}
+  /// Checks whether this annotation instance matches the type parameter [A].
+  ///
+  /// This is typically used to determine if a particular annotation is present
+  /// on a class, method, or field, and if it can be treated as type [A].
+  ///
+  /// ### Example:
+  /// ```dart
+  /// @SomeAnnotation()
+  /// class MyClass {}
+  ///
+  /// final annotation = getAnnotation(MyClass);
+  /// if (annotation.matches<SomeAnnotation>()) {
+  ///   // Do something with the annotation
+  /// }
+  /// ```
+  ///
+  /// @return `true` if this annotation is of type [A], `false` otherwise.
+  /// {@endtemplate}
+  bool matches<A>([Class<A>? type]);
+
   // ---------------------------------------------------------------------------------------------------------
   // === Field Information ===
   // ---------------------------------------------------------------------------------------------------------

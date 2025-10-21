@@ -25,12 +25,10 @@ class _IdentPair {
   _IdentPair(this.a, this.b);
 
   @override
-  bool operator ==(Object other) =>
-      other is _IdentPair && identical(a, other.a) && identical(b, other.b);
+  bool operator ==(Object other) => other is _IdentPair && identical(a, other.a) && identical(b, other.b);
 
   @override
-  int get hashCode =>
-      identityHashCode(a) ^ (identityHashCode(b) << 1); // identity-based
+  int get hashCode => identityHashCode(a) ^ (identityHashCode(b) << 1); // identity-based
 }
 
 /// Decide whether a value is a simple "leaf" that we should never add to visited.

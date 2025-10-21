@@ -165,7 +165,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
     final annotations = getAllDirectAnnotations();
     for (final annotation in annotations) {
-      if (annotationMatches<A>(annotation)) {
+      if (annotation.matches<A>()) {
         try {
           return annotation.getInstance<A>();
         } catch (_) {
@@ -180,7 +180,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   List<A> getDirectAnnotations<A>() {
     checkAccess('getAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllDirectAnnotations();
-    return annotations.where((a) => annotationMatches<A>(a)).map((a) => a.getInstance<A>()).toList();
+    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
   }
 
   @override
@@ -240,24 +240,6 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
   @override
   bool isInvokable() => !isAbstract() || getConstructors().any((c) => c.isFactory());
-
-  @override
-  bool annotationMatches<A>(Annotation annotation) {
-    if (annotation.getClass().getType() == A) {
-      return true;
-    }
-
-    if (annotation.getClass().isInstance(A)) {
-      return true;
-    }
-
-    final cls = Class<A>();
-    if (annotation.getClass().isInstance(cls)) {
-      return true;
-    }
-
-    return false;
-  }
 
   @override
   bool isInstance(Object? obj) {
@@ -401,6 +383,33 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   String toString() => 'Class<${getName()}>:Class<${getType()}>:${getQualifiedName()}';
 
   // =========================================== HELPER METHODS ===============================================
+
+  @override
+  List<String> getModifiers() => [
+    if (isPublic()) 'PUBLIC',
+    if (!isPublic()) 'PRIVATE',
+    if (isBase()) 'BASE',
+    if (isAbstract()) 'ABSTRACT',
+    if (isEnum()) 'ENUM',
+    if (isFinal()) 'FINAL',
+    if (isInterface()) 'INTERFACE',
+    if (isMixin()) 'MIXIN',
+    if (isRecord()) 'RECORD',
+    if (isSealed()) 'SEALED',
+    if (isTypeVariable()) 'TYPE_VARIABLE',
+    if (isTypedef()) 'TYPEDEF',
+    if (isClass()) 'CLASS',
+    if (isExtension()) 'EXTENSION',
+  ];
+
+  @override
+  bool isAsync() {
+    if (Class<Future>(null, "dart").isAssignableFrom(this) || Class<FutureOr>(null, "dart").isAssignableFrom(this)) {
+      return true;
+    }
+
+    return false;
+  }
 
   @override
   bool isAbstract() {
@@ -850,7 +859,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   List<A> getAnnotations<A>() {
     checkAccess('getAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllAnnotations();
-    return annotations.where((a) => annotationMatches<A>(a)).map((a) => a.getInstance<A>()).toList();
+    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
   }
 
   @override

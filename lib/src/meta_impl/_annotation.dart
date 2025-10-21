@@ -27,6 +27,26 @@ class _Annotation extends Annotation {
     checkAccess('getType', DomainPermission.READ_ANNOTATIONS);
     return _declaration.getType();
   }
+
+  @override
+  bool matches<A>([Class<A>? type]) {
+    try {
+      if (getClass().getType() == A) {
+        return true;
+      }
+
+      if (getClass().isInstance(A)) {
+        return true;
+      }
+
+      final cls = type ?? Class<A>();
+      if (getClass().isInstance(cls)) {
+        return true;
+      }
+    } on ClassNotFoundException catch (_) { }
+
+    return false;
+  }
   
   @override
   Class getClass() {

@@ -50,7 +50,7 @@ import '../../meta/class.dart';
 /// final loader = SystemClassLoader();
 /// 
 /// // Load a class with caching
-/// final userClass = await loader.loadClass<User>('com.example.User');
+/// final userClass = await loader.loadClass<User>('package:example/test.dart.User');
 /// 
 /// // Find related classes efficiently
 /// final subclasses = await loader.findSubclasses(userClass);
@@ -105,7 +105,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// // Load with custom domain
   /// final userClass = await loader.loadClass<User>(
-  ///   'com.example.User',
+  ///   'package:example/test.dart.User',
   ///   ProtectionDomain.application()
   /// );
   /// ```
@@ -172,9 +172,9 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final dogClass = await loader.loadClass<Dog>('com.example.Dog');
+  /// final dogClass = await loader.loadClass<Dog>('package:example/test.dart.Dog');
   /// final superClass = loader.findSuperClass(dogClass);
-  /// print(superClass?.qualifiedName); // e.g., "com.example.Animal"
+  /// print(superClass?.qualifiedName); // e.g., "package:example/test.dart.Animal"
   /// ```
   /// 
   /// ## Usage Notes
@@ -342,7 +342,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final animalClass = await loader.loadClass<Animal>('com.example.Animal');
+  /// final animalClass = await loader.loadClass<Animal>('package:example/test.dart.Animal');
   /// final subclasses = await loader.findSubclasses(animalClass);
   /// // Returns: [Dog, Cat, Bird] (direct subclasses only)
   /// ```
@@ -505,7 +505,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// ```dart
   /// class MyClass extends BaseClass with MixinA, MixinB {}
   /// 
-  /// final myClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final myClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final mixins = await loader.findMixins(myClass);
   /// // Returns: [MixinA, MixinB] (in application order)
   /// ```
@@ -533,7 +533,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// ## Example
   /// ```dart
   /// class Example with MixinA, MixinB {}
-  /// final exampleClass = await loader.loadClass<Example>('com.example.Example');
+  /// final exampleClass = await loader.loadClass<Example>('package:example/test.dart.Example');
   /// final mixins = loader.findMixins<MixinA>(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -551,7 +551,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final args = loader.findAllMixinArguments(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -572,7 +572,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final mixinArgs = loader.findMixinArguments<SomeMixin>(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -590,7 +590,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final args = loader.findAllConstraintArguments(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -611,7 +611,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final constraintArgs = loader.findConstraintArguments<SomeConstraint>(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -632,7 +632,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final constraints = loader.findConstraints<SomeConstraint>(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -650,7 +650,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// final exampleClass = await loader.loadClass<MyClass>('com.example.MyClass');
+  /// final exampleClass = await loader.loadClass<MyClass>('package:example/test.dart.MyClass');
   /// final constraints = loader.findAllConstraints(exampleClass);
   /// ```
   /// {@endtemplate}
@@ -673,9 +673,9 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// ## Example
   /// ```dart
-  /// if (!loader.isLoaded('com.example.User')) {
+  /// if (!loader.isLoaded('package:example/test.dart.User')) {
   ///   print('Loading User class for first time...');
-  ///   await loader.loadClass<User>('com.example.User');
+  ///   await loader.loadClass<User>('package:example/test.dart.User');
   /// }
   /// ```
   /// 
@@ -777,7 +777,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// 
   /// // Or use with try-with-resources pattern
   /// await using(SystemClassLoader(), (loader) async {
-  ///   return await loader.loadClass<User>('com.example.User');
+  ///   return await loader.loadClass<User>('package:example/test.dart.User');
   /// });
   /// ```
   /// 

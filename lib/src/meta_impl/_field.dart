@@ -104,6 +104,18 @@ class _Field extends Field with EqualsAndHashCode {
     checkAccess('getType', DomainPermission.READ_FIELDS);
     return _declaration.getType();
   }
+
+  @override
+  List<String> getModifiers() => [
+    if (isPublic()) 'PUBLIC',
+    if (!isPublic()) 'PRIVATE',
+    if (isPositional()) 'POSITIONAL',
+    if (isNamed()) 'NAMED',
+    if (isLate()) 'LATE',
+    if (isNullable()) 'NULLABLE',
+    if (isStatic()) 'STATIC',
+    if (isFinal()) 'FINAL',
+  ];
   
   @override
   Class<D> getDeclaringClass<D>() {

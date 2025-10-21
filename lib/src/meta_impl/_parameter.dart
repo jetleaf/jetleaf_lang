@@ -88,6 +88,16 @@ class _Parameter extends Parameter with EqualsAndHashCode {
     checkAccess('getIndex', DomainPermission.READ_METHODS);
     return _declaration.getIndex();
   }
+
+  @override
+  List<String> getModifiers() => [
+    if (isPublic()) 'PUBLIC',
+    if (!isPublic()) 'PRIVATE',
+    if (isOptional()) 'OPTIONAL',
+    if (isNamed()) 'NAMED',
+    if (isPositional()) 'POSITIONAL',
+    if (isRequired()) 'REQUIRED',
+  ];
   
   @override
   bool isOptional() {
