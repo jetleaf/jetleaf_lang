@@ -14,8 +14,9 @@
 
 import 'dart:async';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 /// {@template synchronized_lock}
 /// A reentrant async lock for critical section execution.

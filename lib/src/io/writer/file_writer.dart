@@ -16,6 +16,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import '../base.dart';
 import 'writer.dart';
 import '../../exceptions.dart';
 
@@ -67,7 +68,7 @@ class FileWriter extends Writer {
   /// - [fileName]: The name of the file to write to
   /// - [append]: If true, characters will be written to the end of the file
   ///   rather than the beginning (default: false)
-  /// - [encoding]: The character encoding to use (default: utf8)
+  /// - [encoding]: The character encoding to use (default: Closeable.DEFAULT_ENCODING)
   /// 
   /// ## Example
   /// ```dart
@@ -81,7 +82,7 @@ class FileWriter extends Writer {
   /// opened for any other reason.
   /// 
   /// {@macro file_writer}
-  FileWriter(String fileName, {bool append = false, Encoding encoding = utf8}) 
+  FileWriter(String fileName, {bool append = false, Encoding encoding = Closeable.DEFAULT_ENCODING}) 
       : _file = File(fileName), _append = append, _encoding = encoding;
   
   /// Creates a new [FileWriter], given the [File] to write to.
@@ -90,7 +91,7 @@ class FileWriter extends Writer {
   /// - [file]: The [File] to write to
   /// - [append]: If true, characters will be written to the end of the file
   ///   rather than the beginning (default: false)
-  /// - [encoding]: The character encoding to use (default: utf8)
+  /// - [encoding]: The character encoding to use (default: Closeable.DEFAULT_ENCODING)
   /// 
   /// ## Example
   /// ```dart
@@ -104,7 +105,7 @@ class FileWriter extends Writer {
   /// opened for any other reason.
   /// 
   /// {@macro file_writer}
-  FileWriter.fromFile(File file, {bool append = false, Encoding encoding = utf8}) 
+  FileWriter.fromFile(File file, {bool append = false, Encoding encoding = Closeable.DEFAULT_ENCODING}) 
       : _file = file, _append = append, _encoding = encoding;
   
   /// Ensures the file is open for writing.

@@ -59,12 +59,16 @@ class, optionally including metadata such as package, protection domain,
 or type declaration.</p>
 <p>It provides a convenient way to convert a class reference into a <a href="../lang/Class-class.html">Class</a>
 instance used by the Jetleaf framework for reflection, conditional
-processing, or pod registration.</p>
+processing, or pod registration. ClassType serves as a bridge between
+compile-time type information and runtime class metadata in JetLeaf's
+type system infrastructure.</p>
 <h3 id="key-features">Key Features:</h3>
 <ul>
-<li>Supports optional class <a href="../lang/ClassType/name.html">name</a>, <a href="../lang/ClassType/package.html">package</a>, <a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>, and <a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a>.</li>
+<li>Supports optional class <a href="../lang/ClassType/name.html">name</a>, <a href="../lang/ClassType/package.html">package</a>, <a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>, and <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>.</li>
 <li>Can convert itself into a <a href="../lang/Class-class.html">Class</a> instance using <a href="../lang/ClassType/toClass.html">toClass</a>.</li>
 <li>Integrates with Jetleaf's type system for dynamic class handling.</li>
+<li>Provides multiple factory constructors for flexible class reference creation.</li>
+<li>Supports equality and hash code operations for use in collections.</li>
 </ul>
 <h3 id="usage-example">Usage Example:</h3>
 <pre class="language-dart"><code class="language-dart">import 'package:jetleaf/jetleaf.dart';
@@ -78,22 +82,79 @@ final userClass = simpleClass.toClass();
 // Create a ClassType with a TypeDeclaration
 final declaredClass = ClassType(declaration: someTypeDeclaration);
 final declaredClassInstance = declaredClass.toClass();
+
+// Use in pod registration
+@Pod
+class ServiceConfiguration {
+  @Provide
+  UserService userService() =&gt; UserService();
+
+  @Provide
+  ClassType&lt;UserService&gt; userServiceType() =&gt; ClassType&lt;UserService&gt;();
+}
 </code></pre>
 </section>
 
 
+    <section>
+      <dl class="dl-horizontal">
+        
+
+        
+  <dt>Implemented types</dt>
+  <dd>
+    <ul class="comma-separated clazz-relationships">
+        <li><a href="../lang/ClassGettable-class.html">ClassGettable</a></li>
+    </ul>
+  </dd>
+        
+  <dt>Mixed-in types</dt>
+  <dd>
+    <ul class="comma-separated clazz-relationships">
+        <li><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/EqualsAndHashCode-mixin.html">EqualsAndHashCode</a></li>
+    </ul>
+  </dd>
+
+
+        
+        
+
+
+      </dl>
+    </section>
 
     
   <section class="summary offset-anchor" id="constructors">
     <h2>Constructors</h2>
     <dl class="constructor-summary-list">
         <dt id="ClassType.new" class="callable">
-          <span class="name"><a href="../lang/ClassType/ClassType.html">ClassType.new</a></span><span class="signature">({<span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="-param-pd"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span><span class="parameter" id="-param-declaration"><span class="type-annotation"><a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span></span>})</span>
+          <span class="name"><a href="../lang/ClassType/ClassType.html">ClassType.new</a></span><span class="signature">([<span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="-param-pd"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span><span class="parameter" id="-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span>, </span><span class="parameter" id="-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">qualifiedName</span></span>])</span>
         </dt>
         <dd>
           The <code>ClassType</code> class in <strong>Jetleaf</strong> represents a reference to a Dart
 class, optionally including metadata such as package, protection domain,
 or type declaration.
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="ClassType.declared" class="callable">
+          <span class="name"><a href="../lang/ClassType/ClassType.declared.html">ClassType.declared</a></span><span class="signature">(<span class="parameter" id="declared-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span>, [</span><span class="parameter" id="declared-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">qualifiedName</span>, </span><span class="parameter" id="declared-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="declared-param-pd"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span><span class="parameter" id="declared-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])</span>
+        </dt>
+        <dd>
+          Creates a ClassType from a TypeDeclaration.
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="ClassType.named" class="callable">
+          <span class="name"><a href="../lang/ClassType/ClassType.named.html">ClassType.named</a></span><span class="signature">(<span class="parameter" id="named-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="named-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, [</span><span class="parameter" id="named-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">qualifiedName</span>, </span><span class="parameter" id="named-param-pd"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span><span class="parameter" id="named-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span></span>])</span>
+        </dt>
+        <dd>
+          Creates a ClassType from a class name and package.
+            <div class="constructor-modifier features">const</div>
+        </dd>
+        <dt id="ClassType.qualified" class="callable">
+          <span class="name"><a href="../lang/ClassType/ClassType.qualified.html">ClassType.qualified</a></span><span class="signature">(<span class="parameter" id="qualified-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">qualifiedName</span>, [</span><span class="parameter" id="qualified-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span><span class="parameter" id="qualified-param-pd"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span><span class="parameter" id="qualified-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span>, </span><span class="parameter" id="qualified-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])</span>
+        </dt>
+        <dd>
+          Creates a ClassType from a fully qualified class name.
             <div class="constructor-modifier features">const</div>
         </dd>
     </dl>
@@ -106,18 +167,18 @@ or type declaration.
     <dl class="properties">
         <dt id="declaration" class="property">
   <span class="name"><a href="../lang/ClassType/declaration.html">declaration</a></span>
-  <span class="signature">&#8594; <a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a>?</span>
+  <span class="signature">&#8594; <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span>
   
 
 </dt>
 <dd>
-  Optional <a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a> that represents the class declaration.
+  Optional <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a> that represents the class declaration.
   <div class="features"><span class="feature">final</span></div>
 
 </dd>
 
         <dt id="hashCode" class="property inherited">
-  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/EqualsAndHashCode/hashCode.html">hashCode</a></span>
   <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/int-class.html">int</a></span>
   
 
@@ -164,6 +225,18 @@ or type declaration.
 
 </dd>
 
+        <dt id="qualifiedName" class="property">
+  <span class="name"><a href="../lang/ClassType/qualifiedName.html">qualifiedName</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span>
+  
+
+</dt>
+<dd>
+  Contains the full URI of the class with the class name.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
         <dt id="runtimeType" class="property inherited">
   <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/runtimeType.html">runtimeType</a></span>
   <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Type-class.html">Type</a></span>
@@ -185,6 +258,32 @@ or type declaration.
       id="instance-methods">
     <h2>Methods</h2>
     <dl class="callables">
+        <dt id="equalizedProperties" class="callable">
+  <span class="name"><a href="../lang/ClassType/equalizedProperties.html">equalizedProperties</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Provides the properties used for equality comparison and hash code generation.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="getType" class="callable">
+  <span class="name"><a href="../lang/ClassType/getType.html">getType</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Type-class.html">Type</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the compile-time generic type parameter <code>T</code> of this <a href="../lang/ClassType-class.html">ClassType</a>.
+  
+
+</dd>
+
         <dt id="noSuchMethod" class="callable inherited">
   <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
     <span class="returntype parameter">&#8594; dynamic</span>
@@ -206,13 +305,13 @@ or type declaration.
 
 </dt>
 <dd>
-  Converts this <a href="../lang/ClassType-class.html">ClassType</a> into a <a href="../lang/Class-class.html">Class</a> instance used by Jetleaf.
-  
+  Converts this <a href="../lang/ClassType-class.html">ClassType</a> into a <a href="../lang/Class-class.html">Class</a> instance for use by Jetleaf.
+  <div class="features"><span class="feature">override</span></div>
 
 </dd>
 
         <dt id="toString" class="callable inherited">
-  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/toString.html">toString</a></span><span class="signature">(<wbr>)
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/EqualsAndHashCode/toString.html">toString</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
   </span>
   
@@ -233,7 +332,7 @@ or type declaration.
     <h2>Operators</h2>
     <dl class="callables">
         <dt id="operator ==" class="callable inherited">
-  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/EqualsAndHashCode/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
   </span>
   
@@ -274,7 +373,7 @@ or type declaration.
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

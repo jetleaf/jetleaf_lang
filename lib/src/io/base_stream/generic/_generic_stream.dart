@@ -12,9 +12,10 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../../../exceptions.dart';
 import '../../../commons/typedefs.dart';
-import '../../../annotations.dart';
 import '../int/int_stream.dart';
 import '../double/double_stream.dart';
 import 'generic_stream.dart';
@@ -46,32 +47,32 @@ import '../double/_double_stream.dart';
 /// Streams are auto-closeable, meaning that they can be used as resources in
 /// a [try]-[finally] statement. When a stream is closed, all of its
 /// resources are released.
-@Generic(GenericStreamImplementation)
-class GenericStreamImplementation<T> implements GenericStream<T> {
+@Generic(StandardGenericStream)
+class StandardGenericStream<T> implements GenericStream<T> {
   final Iterable<T> _source;
   final bool _parallel;
   final List<void Function()> _closeHandlers;
 
-  GenericStreamImplementation(this._source, [this._parallel = false, this._closeHandlers = const []]);
+  StandardGenericStream(this._source, [this._parallel = false, this._closeHandlers = const []]);
 
-  factory GenericStreamImplementation.of(Iterable<T> values) {
-    return GenericStreamImplementation(values);
+  factory StandardGenericStream.of(Iterable<T> values) {
+    return StandardGenericStream(values);
   }
 
-  factory GenericStreamImplementation.empty() {
-    return GenericStreamImplementation(<T>[]);
+  factory StandardGenericStream.empty() {
+    return StandardGenericStream(<T>[]);
   }
 
-  factory GenericStreamImplementation.ofSingle(T value) {
-    return GenericStreamImplementation([value]);
+  factory StandardGenericStream.ofSingle(T value) {
+    return StandardGenericStream([value]);
   }
 
-  factory GenericStreamImplementation.iterate(T seed, T Function(T) f) {
-    return GenericStreamImplementation(_IterateIterable(seed, f));
+  factory StandardGenericStream.iterate(T seed, T Function(T) f) {
+    return StandardGenericStream(_IterateIterable(seed, f));
   }
 
-  factory GenericStreamImplementation.generate(T Function() supplier) {
-    return GenericStreamImplementation(_GenerateIterable(supplier));
+  factory StandardGenericStream.generate(T Function() supplier) {
+    return StandardGenericStream(_GenerateIterable(supplier));
   }
 
   @override
@@ -84,17 +85,17 @@ class GenericStreamImplementation<T> implements GenericStream<T> {
   bool isParallel() => _parallel;
 
   @override
-  GenericStream<T> sequential() => _parallel ? GenericStreamImplementation(_source, false, _closeHandlers) : this;
+  GenericStream<T> sequential() => _parallel ? StandardGenericStream(_source, false, _closeHandlers) : this;
 
   @override
-  GenericStream<T> parallel() => !_parallel ? GenericStreamImplementation(_source, true, _closeHandlers) : this;
+  GenericStream<T> parallel() => !_parallel ? StandardGenericStream(_source, true, _closeHandlers) : this;
 
   @override
   GenericStream<T> unordered() => this; // For simplicity, return this
 
   @override
   GenericStream<T> onClose(void Function() closeHandler) {
-    return GenericStreamImplementation(_source, _parallel, [..._closeHandlers, closeHandler]);
+    return StandardGenericStream(_source, _parallel, [..._closeHandlers, closeHandler]);
   }
 
   @override
@@ -110,27 +111,27 @@ class GenericStreamImplementation<T> implements GenericStream<T> {
 
   @override
   GenericStream<T> filter(bool Function(T) predicate) {
-    return GenericStreamImplementation(_source.where(predicate), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.where(predicate), _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<R> map<R>(R Function(T) mapper) {
-    return GenericStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   IntStream mapToInt(int Function(T) mapper) {
-    return IntStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardIntStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream mapToDouble(double Function(T) mapper) {
-    return DoubleStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<R> flatMap<R>(GenericStream<R> Function(T) mapper) {
-    return GenericStreamImplementation(
+    return StandardGenericStream(
       _source.expand((element) => mapper(element).iterable()),
       _parallel,
       _closeHandlers,
@@ -139,7 +140,7 @@ class GenericStreamImplementation<T> implements GenericStream<T> {
 
   @override
   GenericStream<T> distinct() {
-    return GenericStreamImplementation(_source.toSet(), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.toSet(), _parallel, _closeHandlers);
   }
 
   @override
@@ -150,12 +151,12 @@ class GenericStreamImplementation<T> implements GenericStream<T> {
     } else {
       list.sort();
     }
-    return GenericStreamImplementation(list, _parallel, _closeHandlers);
+    return StandardGenericStream(list, _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<T> peek(void Function(T) action) {
-    return GenericStreamImplementation(
+    return StandardGenericStream(
       _source.map((element) {
         action(element);
         return element;
@@ -167,22 +168,22 @@ class GenericStreamImplementation<T> implements GenericStream<T> {
 
   @override
   GenericStream<T> limit(int maxSize) {
-    return GenericStreamImplementation(_source.take(maxSize), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.take(maxSize), _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<T> skip(int n) {
-    return GenericStreamImplementation(_source.skip(n), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.skip(n), _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<T> takeWhile(bool Function(T) predicate) {
-    return GenericStreamImplementation(_source.takeWhile(predicate), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.takeWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override
   GenericStream<T> dropWhile(bool Function(T) predicate) {
-    return GenericStreamImplementation(_source.skipWhile(predicate), _parallel, _closeHandlers);
+    return StandardGenericStream(_source.skipWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override

@@ -14,8 +14,9 @@
 
 import 'dart:math';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 /// {@template linked_list}
 /// A custom implementation of a **doubly linked list** that implements the standard `List<E>` interface.

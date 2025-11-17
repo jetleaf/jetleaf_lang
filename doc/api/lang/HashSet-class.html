@@ -95,6 +95,10 @@ print(set); // {apple, banana}
   </dd>
         
 
+          <dt>Implementers</dt>
+          <dd><ul class="comma-separated clazz-relationships">
+              <li><a href="../lang/AdaptableSet-class.html">AdaptableSet</a></li>
+          </ul></dd>
 
         
   <dt>Available extensions</dt>
@@ -103,8 +107,8 @@ print(set); // {apple, banana}
       <li><a href="https://api.dart.dev/stable/3.9.2/dart-core/FutureIterable.html">FutureIterable</a></li>
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension.html">IterableComparableExtension</a></li>
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableDoubleExtension.html">IterableDoubleExtension</a></li>
-      <li><a href="../lang/IterableExtension.html">IterableExtension</a></li>
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension.html">IterableExtension</a></li>
+      <li><a href="../lang/IterableExtension.html">IterableExtension</a></li>
       <li><a href="https://api.dart.dev/stable/3.9.2/dart-core/IterableExtensions.html">IterableExtensions</a></li>
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableIntegerExtension.html">IterableIntegerExtension</a></li>
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableIterableExtension.html">IterableIterableExtension</a></li>
@@ -112,13 +116,13 @@ print(set); // {apple, banana}
       <li><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableNumberExtension.html">IterableNumberExtension</a></li>
       <li><a href="https://api.dart.dev/stable/3.9.2/dart-core/NullableIterableExtensions.html">NullableIterableExtensions</a></li>
       <li><a href="../lang/SetUtils.html">SetUtils</a></li>
-      <li><a href="../lang/SortByPublic.html">SortByPublic</a></li>
+      <li><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/SortByPublic.html">SortByPublic</a></li>
   </ul></dd>
         
   <dt>Annotations</dt>
   <dd>
     <ul class="annotation-list clazz-relationships">
-        <li>@<a href="../lang/Generic-class.html">Generic</a>(HashSet)</li>
+        <li>@<a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Generic-class.html">Generic</a>(HashSet)</li>
     </ul>
   </dd>
 
@@ -1133,23 +1137,6 @@ print(set); // {apple, banana}
 </dd>
 
         <dt id="firstWhereOrNull" class="callable">
-  <span class="name"><a href="../lang/IterableExtension/firstWhereOrNull.html">firstWhereOrNull</a></span><span class="signature">(<wbr><span class="parameter" id="firstWhereOrNull-param-test"><span class="type-annotation"><a href="../lang/ConditionTester.html">ConditionTester</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">test</span></span>)
-    <span class="returntype parameter">&#8594; T?</span>
-  </span>
-  
-
-</dt>
-<dd>
-      <p class="from-extension">
-        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
-        provided by the <a href="../lang/IterableExtension.html">IterableExtension</a> extension</span>
-      </p>
-  Returns the first element that satisfies the predicate or <code>null</code> if none match.
-  
-
-</dd>
-
-        <dt id="firstWhereOrNull" class="callable">
   <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension/firstWhereOrNull.html">firstWhereOrNull</a></span><span class="signature">(<wbr><span class="parameter" id="firstWhereOrNull-param-test"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">test</span>(<span class="parameter" id="param-element"><span class="type-annotation">T</span> <span class="parameter-name">element</span></span>)</span>)
     <span class="returntype parameter">&#8594; T?</span>
   </span>
@@ -1162,6 +1149,23 @@ print(set); // {apple, banana}
         provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension.html">IterableExtension</a> extension</span>
       </p>
   The first element satisfying <code>test</code>, or <code>null</code> if there are none.
+  
+
+</dd>
+
+        <dt id="firstWhereOrNull" class="callable">
+  <span class="name"><a href="../lang/IterableExtension/firstWhereOrNull.html">firstWhereOrNull</a></span><span class="signature">(<wbr><span class="parameter" id="firstWhereOrNull-param-test"><span class="type-annotation"><a href="../lang/ConditionTester.html">ConditionTester</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">test</span></span>)
+    <span class="returntype parameter">&#8594; T?</span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
+        provided by the <a href="../lang/IterableExtension.html">IterableExtension</a> extension</span>
+      </p>
+  Returns the first element that satisfies the predicate or <code>null</code> if none match.
   
 
 </dd>
@@ -1699,23 +1703,6 @@ and applies <code>valueSelector</code> to each element before storing it.
 </dd>
 
         <dt id="isSorted" class="callable">
-  <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension/isSorted.html">isSorted</a></span><span class="signature">(<wbr>[<span class="parameter" id="isSorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span> <span class="parameter-name">compare</span></span>])
-    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
-  </span>
-  
-
-</dt>
-<dd>
-      <p class="from-extension">
-        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
-        provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension.html">IterableComparableExtension</a> extension</span>
-      </p>
-  Whether the elements are sorted by the <code>compare</code> ordering.
-  
-
-</dd>
-
-        <dt id="isSorted" class="callable">
   <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension/isSorted.html">isSorted</a></span><span class="signature">(<wbr><span class="parameter" id="isSorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">compare</span></span>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
   </span>
@@ -1726,6 +1713,23 @@ and applies <code>valueSelector</code> to each element before storing it.
       <p class="from-extension">
         <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
         provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension.html">IterableExtension</a> extension</span>
+      </p>
+  Whether the elements are sorted by the <code>compare</code> ordering.
+  
+
+</dd>
+
+        <dt id="isSorted" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension/isSorted.html">isSorted</a></span><span class="signature">(<wbr>[<span class="parameter" id="isSorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span> <span class="parameter-name">compare</span></span>])
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
+        provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension.html">IterableComparableExtension</a> extension</span>
       </p>
   Whether the elements are sorted by the <code>compare</code> ordering.
   
@@ -1937,8 +1941,8 @@ and applies <code>valueSelector</code> to each element before storing it.
 
 </dd>
 
-        <dt id="none" class="callable">
-  <span class="name"><a href="../lang/IterableExtension/none.html">none</a></span><span class="signature">(<wbr><span class="parameter" id="none-param-test"><span class="type-annotation"><a href="../lang/ConditionTester.html">ConditionTester</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">test</span></span>)
+        <dt id="matches" class="callable">
+  <span class="name"><a href="../lang/IterableExtension/matches.html">matches</a></span><span class="signature">(<wbr><span class="parameter" id="matches-param-items"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">items</span></span>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
   </span>
   
@@ -1949,7 +1953,7 @@ and applies <code>valueSelector</code> to each element before storing it.
         <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
         provided by the <a href="../lang/IterableExtension.html">IterableExtension</a> extension</span>
       </p>
-  Checks if no element matches the predicate.
+  Checks whether all elements in <code>items</code> are contained in this collection.
   
 
 </dd>
@@ -1967,6 +1971,23 @@ and applies <code>valueSelector</code> to each element before storing it.
         provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension.html">IterableExtension</a> extension</span>
       </p>
   Whether no element satisfies <code>test</code>.
+  
+
+</dd>
+
+        <dt id="none" class="callable">
+  <span class="name"><a href="../lang/IterableExtension/none.html">none</a></span><span class="signature">(<wbr><span class="parameter" id="none-param-test"><span class="type-annotation"><a href="../lang/ConditionTester.html">ConditionTester</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">test</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
+        provided by the <a href="../lang/IterableExtension.html">IterableExtension</a> extension</span>
+      </p>
+  Checks if no element matches the predicate.
   
 
 </dd>
@@ -2239,23 +2260,6 @@ of the collection using the provided function.
 </dd>
 
         <dt id="sorted" class="callable">
-  <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension/sorted.html">sorted</a></span><span class="signature">(<wbr>[<span class="parameter" id="sorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span> <span class="parameter-name">compare</span></span>])
-    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
-  </span>
-  
-
-</dt>
-<dd>
-      <p class="from-extension">
-        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
-        provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension.html">IterableComparableExtension</a> extension</span>
-      </p>
-  Creates a sorted list of the elements of the iterable.
-  
-
-</dd>
-
-        <dt id="sorted" class="callable">
   <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension/sorted.html">sorted</a></span><span class="signature">(<wbr><span class="parameter" id="sorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">compare</span></span>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
   </span>
@@ -2266,6 +2270,23 @@ of the collection using the provided function.
       <p class="from-extension">
         <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
         provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableExtension.html">IterableExtension</a> extension</span>
+      </p>
+  Creates a sorted list of the elements of the iterable.
+  
+
+</dd>
+
+        <dt id="sorted" class="callable">
+  <span class="name"><a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension/sorted.html">sorted</a></span><span class="signature">(<wbr>[<span class="parameter" id="sorted-param-compare"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Comparator.html">Comparator</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>?</span> <span class="parameter-name">compare</span></span>])
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+      <p class="from-extension">
+        <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
+        provided by the <a href="https://pub.dev/documentation/collection/1.19.1/collection/IterableComparableExtension.html">IterableComparableExtension</a> extension</span>
       </p>
   Creates a sorted list of the elements of the iterable.
   
@@ -2307,7 +2328,7 @@ of the collection using the provided function.
 </dd>
 
         <dt id="sortedByPublicFirst" class="callable">
-  <span class="name"><a href="../lang/SortByPublic/sortedByPublicFirst.html">sortedByPublicFirst</a></span><span class="signature">(<wbr>)
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/SortByPublic/sortedByPublicFirst.html">sortedByPublicFirst</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
   </span>
   
@@ -2316,7 +2337,7 @@ of the collection using the provided function.
 <dd>
       <p class="from-extension">
         <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
-        provided by the <a href="../lang/SortByPublic.html">SortByPublic</a> extension</span>
+        provided by the <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/SortByPublic.html">SortByPublic</a> extension</span>
       </p>
   Sorts declarations with public visibility before private ones.
   
@@ -2324,7 +2345,7 @@ of the collection using the provided function.
 </dd>
 
         <dt id="sortedByPublicFirstThenSyntheticLast" class="callable">
-  <span class="name"><a href="../lang/SortByPublic/sortedByPublicFirstThenSyntheticLast.html">sortedByPublicFirstThenSyntheticLast</a></span><span class="signature">(<wbr>)
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/SortByPublic/sortedByPublicFirstThenSyntheticLast.html">sortedByPublicFirstThenSyntheticLast</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
   </span>
   
@@ -2333,7 +2354,7 @@ of the collection using the provided function.
 <dd>
       <p class="from-extension">
         <span>Available on <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span>,
-        provided by the <a href="../lang/SortByPublic.html">SortByPublic</a> extension</span>
+        provided by the <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/SortByPublic.html">SortByPublic</a> extension</span>
       </p>
   Sorts declarations with public visibility first and synthetic declarations last.
   
@@ -2733,7 +2754,7 @@ predicate <code>test</code>.
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

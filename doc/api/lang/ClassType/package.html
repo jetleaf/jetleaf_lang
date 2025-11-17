@@ -63,7 +63,14 @@
       
 <section class="desc markdown">
   <p>The package the class belongs to, if any.</p>
-<p>Optional. Used by <a href="../../lang/ClassType/toClass.html">toClass</a> to resolve the fully qualified class name.</p>
+<p>Optional. Used by <a href="../../lang/ClassType/toClass.html">toClass</a> to resolve the fully qualified class name.
+This should follow Dart's package URI format (e.g., 'package:example/services').</p>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final classType = ClassType(
+  name: 'UserService',
+  package: 'package:example/services'
+);
+</code></pre>
 </section>
 
       
@@ -98,7 +105,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

@@ -88,6 +88,21 @@ class NetworkOutputStream extends OutputStream {
   }
 
   @override
+  Future<void> writeObject(Object? obj) async {
+    checkClosed();
+
+    try {
+      _request.write(obj);
+    } on io.SocketException catch (e) {
+      throw IOException('Network write error: ${e.message}', cause: e);
+    } on io.HttpException catch (e) {
+      throw IOException('HTTP write error: ${e.message}', cause: e);
+    } catch (e) {
+      throw IOException('Unknown error writing bytes to network: $e', cause: e);
+    }
+  }
+
+  @override
   Future<void> flush() async {
     checkClosed();
     try {

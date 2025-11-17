@@ -13,15 +13,12 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import 'package:jetleaf_lang/lang.dart';
-import 'package:jetleaf_lang/src/runtime/type_discovery.dart';
 import 'package:test/test.dart';
-
-import '../_dependencies.dart';
 
 void main() {
   setUpAll(() async {
     TypeDiscovery.clearCaches();
-    await setupRuntime();
+    await runTestScan();
     return Future<void>.value();
   });
 

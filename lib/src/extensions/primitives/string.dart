@@ -932,6 +932,8 @@ extension StringExtensions on String {
   }
 
   /// snake_case
+  /// 
+  /// Turns a word into snake case design. username = user_name
   String snakeCase({String separator = '_'}) {
     if (isEmpty) {
       return "";

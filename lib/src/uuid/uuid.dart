@@ -26,11 +26,11 @@
 //
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 
 import '../exceptions.dart';
+import '../io/base.dart';
 import '../math/big_integer.dart';
 import 'uuid_range_builder.dart';
 
@@ -72,7 +72,7 @@ import 'uuid_range_builder.dart';
 /// 
 /// // Generate name-based UUID (version 5)
 /// final namespace = Uuid.NAMESPACE_DNS;
-/// final uuid3 = Uuid.nameUuidFromBytes(namespace, utf8.encode('example.com'));
+/// final uuid3 = Uuid.nameUuidFromBytes(namespace, Closeable.DEFAULT_ENCODING.encode('example.com'));
 /// 
 /// // Generate time-based UUID (version 1)
 /// final uuid4 = Uuid.timeBasedUuid();
@@ -303,7 +303,7 @@ class Uuid implements Comparable<Uuid> {
   /// ## Example
   /// ```dart
   /// final namespace = Uuid.NAMESPACE_DNS;
-  /// final name = utf8.encode('example.com');
+  /// final name = Closeable.DEFAULT_ENCODING.encode('example.com');
   /// final uuid1 = Uuid.nameUuidFromBytes(namespace, name);
   /// final uuid2 = Uuid.nameUuidFromBytes(namespace, name);
   /// print(uuid1 == uuid2); // true (deterministic)
@@ -347,7 +347,7 @@ class Uuid implements Comparable<Uuid> {
   /// ```
   /// {@endtemplate}
   factory Uuid.nameUuidFromString(Uuid namespace, String name) {
-    return Uuid.nameUuidFromBytes(namespace, utf8.encode(name));
+    return Uuid.nameUuidFromBytes(namespace, Closeable.DEFAULT_ENCODING.encode(name));
   }
 
   /// Validates if a string is a valid UUID format.

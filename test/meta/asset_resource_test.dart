@@ -1,9 +1,7 @@
 // test/asset_resource_test.dart
-import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:jetleaf_lang/src/declaration/declaration.dart';
-import 'package:jetleaf_lang/src/meta/asset_resource.dart';
+import 'package:jetleaf_lang/lang.dart';
 import 'package:test/test.dart';
 
 class MockAsset extends Asset {
@@ -12,7 +10,7 @@ class MockAsset extends Asset {
   final String content;
   
   MockAsset({this.filePath, this.fileName, required this.content}) : super(
-    filePath: '', fileName: '', packageName: '', contentBytes: Uint8List.fromList(utf8.encode(content)));
+    filePath: '', fileName: '', packageName: '', contentBytes: Uint8List.fromList(Closeable.DEFAULT_ENCODING.encode(content)));
 
   @override
   String getFileName() => fileName ?? 'mock_file.txt';

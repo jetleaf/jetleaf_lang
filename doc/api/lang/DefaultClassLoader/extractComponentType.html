@@ -93,9 +93,9 @@ Type? extractComponentType(Class parentClass) {
   &#47;&#47; Handle generic classes with type arguments
   final typeArgs = parentClass.getTypeDeclaration().getTypeArguments();
   if (typeArgs.isNotEmpty &amp;&amp; typeArgs.length == 1) {
-    return _getFromLink(typeArgs.first, parentClass.getProtectionDomain()).getType();
+    return getFromLink(typeArgs.first, parentClass.getProtectionDomain()).getType();
   } else if (typeArgs.length &gt;= 2) {
-    return _getFromLink(typeArgs[1], parentClass.getProtectionDomain()).getType();
+    return getFromLink(typeArgs[1], parentClass.getProtectionDomain()).getType();
   }
 
   return null;
@@ -127,7 +127,7 @@ Type? extractComponentType(Class parentClass) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

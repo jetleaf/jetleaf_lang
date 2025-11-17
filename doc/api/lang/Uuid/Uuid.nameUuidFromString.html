@@ -83,7 +83,7 @@ print(uuid.version); // 5
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">factory Uuid.nameUuidFromString(Uuid namespace, String name) {
-  return Uuid.nameUuidFromBytes(namespace, utf8.encode(name));
+  return Uuid.nameUuidFromBytes(namespace, Closeable.DEFAULT_ENCODING.encode(name));
 }</code></pre>
 </section>
 
@@ -112,7 +112,7 @@ print(uuid.version); // 5
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

@@ -54,8 +54,8 @@
 
     <section class="multi-line-signature">
       
-<span class="returntype">T?</span>
-<span class="name ">orElse</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="orElse-param-other"><span class="type-annotation">T?</span> <span class="parameter-name">other</span></span></li>
+<span class="returntype">T</span>
+<span class="name ">orElse</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="orElse-param-other"><span class="type-annotation">T</span> <span class="parameter-name">other</span></span></li>
 </ol>)
 
       
@@ -99,7 +99,7 @@ Config config = userConfig.orElse(defaultConfig);
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">T? orElse(T? other) {
+  <pre class="language-dart"><code class="language-dart">T orElse(T other) {
   return _value != null ? _value as T : other;
 }</code></pre>
 </section>
@@ -129,7 +129,7 @@ Config config = userConfig.orElse(defaultConfig);
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

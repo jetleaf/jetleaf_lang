@@ -56,7 +56,8 @@
       
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
 <span class="name ">fromQualifiedName</span>&lt;<wbr><span class="type-parameter">C</span>&gt;(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="fromQualifiedName-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">qualifiedName</span>, [</span></li>
-<li><span class="parameter" id="fromQualifiedName-param-domain"><span class="type-annotation"><a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span></li>
+<li><span class="parameter" id="fromQualifiedName-param-domain"><span class="type-annotation"><a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span></li>
+<li><span class="parameter" id="fromQualifiedName-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span></li>
 </ol>])
 
       
@@ -76,7 +77,7 @@
 </ul>
 <p>Throws:</p>
 <ul>
-<li><code>ReflectionException</code> if type cannot be resolved</li>
+<li><a href="../../lang/ClassNotFoundException-class.html">ClassNotFoundException</a> if type cannot be resolved</li>
 </ul>
 </section>
 
@@ -84,8 +85,8 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">static Class&lt;C&gt; fromQualifiedName&lt;C&gt;(String qualifiedName, [ProtectionDomain? domain]) {
-  return _Class&lt;C&gt;.fromQualifiedName(qualifiedName, domain ?? ProtectionDomain.current());
+  <pre class="language-dart"><code class="language-dart">static Class&lt;C&gt; fromQualifiedName&lt;C&gt;(String qualifiedName, [ProtectionDomain? domain, LinkDeclaration? link]) {
+  return _Class&lt;C&gt;.fromQualifiedName(qualifiedName, domain ?? ProtectionDomain.current(), link);
 }</code></pre>
 </section>
 
@@ -114,7 +115,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

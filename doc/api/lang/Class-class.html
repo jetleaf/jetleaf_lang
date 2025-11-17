@@ -130,7 +130,7 @@ if (userClass.isSubclassOf(Class.forType&lt;Person&gt;())) {
   <dt>Annotations</dt>
   <dd>
     <ul class="annotation-list clazz-relationships">
-        <li>@<a href="../lang/Generic-class.html">Generic</a>(Class)</li>
+        <li>@<a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Generic-class.html">Generic</a>(Class)</li>
     </ul>
   </dd>
 
@@ -143,7 +143,7 @@ if (userClass.isSubclassOf(Class.forType&lt;Person&gt;())) {
     <h2>Constructors</h2>
     <dl class="constructor-summary-list">
         <dt id="Class.new" class="callable">
-          <span class="name"><a href="../lang/Class/Class.html">Class.new</a></span><span class="signature">([<span class="parameter" id="-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])</span>
+          <span class="name"><a href="../lang/Class/Class.html">Class.new</a></span><span class="signature">([<span class="parameter" id="-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])</span>
         </dt>
         <dd>
           Represents a reflected Dart class and all of its metadata, including
@@ -192,19 +192,6 @@ declaration-level modifiers (abstract, sealed, etc.).
       id="instance-methods">
     <h2>Methods</h2>
     <dl class="callables">
-        <dt id="annotationMatches" class="callable inherited">
-  <span class="name"><a href="../lang/Source/annotationMatches.html">annotationMatches</a></span><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="annotationMatches-param-annotation"><span class="type-annotation"><a href="../lang/Annotation-class.html">Annotation</a></span> <span class="parameter-name">annotation</span></span>)
-    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
-  </span>
-  
-
-</dt>
-<dd class="inherited">
-  
-  <div class="features"><span class="feature">inherited</span></div>
-
-</dd>
-
         <dt id="checkAccess" class="callable inherited">
   <span class="name"><a href="../lang/PermissionManager/checkAccess.html">checkAccess</a></span><span class="signature">(<wbr><span class="parameter" id="checkAccess-param-operation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">operation</span>, </span><span class="parameter" id="checkAccess-param-permission"><span class="type-annotation"><a href="../lang/DomainPermission.html">DomainPermission</a></span> <span class="parameter-name">permission</span></span>)
     <span class="returntype parameter">&#8594; void</span>
@@ -218,21 +205,22 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
-        <dt id="componentType" class="callable">
+        <dt id="componentType" class="callable inherited">
   <span class="name"><a href="../lang/Class/componentType.html">componentType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span>?</span>
   </span>
   
 
 </dt>
-<dd>
-  Gets the component type for collection-like generic classes.
-  
+<dd class="inherited">
+  Retrieves the element or value type (<code>C</code>) of a <strong>collection-like</strong>
+or <strong>container-like</strong> generic structure.
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
         <dt id="equalizedProperties" class="callable inherited">
-  <span class="name"><a href="../lang/EqualsAndHashCode/equalizedProperties.html">equalizedProperties</a></span><span class="signature">(<wbr>)
+  <span class="name"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/EqualsAndHashCode/equalizedProperties.html">equalizedProperties</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span>&gt;</span></span>
   </span>
   
@@ -480,7 +468,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 
         <dt id="getDeclaration" class="callable">
   <span class="name"><a href="../lang/Class/getDeclaration.html">getDeclaration</a></span><span class="signature">(<wbr>)
-    <span class="returntype parameter">&#8594; <a href="../lang/Declaration-class.html">Declaration</a></span>
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Declaration-class.html">Declaration</a></span>
   </span>
   
 
@@ -816,6 +804,19 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
+        <dt id="getModifiers" class="callable inherited">
+  <span class="name"><a href="../lang/Source/getModifiers.html">getModifiers</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns the list of <strong>modifiers</strong> associated with this source element.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
         <dt id="getName" class="callable inherited">
   <span class="name"><a href="../lang/Source/getName.html">getName</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
@@ -909,7 +910,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 
         <dt id="getPackage" class="callable">
   <span class="name"><a href="../lang/Class/getPackage.html">getPackage</a></span><span class="signature">(<wbr>)
-    <span class="returntype parameter">&#8594; <a href="../lang/Package-class.html">Package</a>?</span>
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Package-class.html">Package</a>?</span>
   </span>
   
 
@@ -1091,7 +1092,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 
         <dt id="getTypeDeclaration" class="callable">
   <span class="name"><a href="../lang/Class/getTypeDeclaration.html">getTypeDeclaration</a></span><span class="signature">(<wbr>)
-    <span class="returntype parameter">&#8594; <a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a></span>
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a></span>
   </span>
   
 
@@ -1102,16 +1103,17 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
-        <dt id="getTypeParameters" class="callable">
+        <dt id="getTypeParameters" class="callable inherited">
   <span class="name"><a href="../lang/Class/getTypeParameters.html">getTypeParameters</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../lang/Class-class.html">Class</a></span>&gt;</span></span>
   </span>
   
 
 </dt>
-<dd>
-  Gets all generic type parameters of this class.
-  
+<dd class="inherited">
+  Returns all declared type parameters of this class in the order
+they appear in the class declaration.
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -1141,16 +1143,16 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
-        <dt id="hasGenerics" class="callable">
+        <dt id="hasGenerics" class="callable inherited">
   <span class="name"><a href="../lang/Class/hasGenerics.html">hasGenerics</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
   </span>
   
 
 </dt>
-<dd>
+<dd class="inherited">
   Checks if this class has generic type parameters.
-  
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -1228,6 +1230,20 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dt>
 <dd>
   Checks if this type is assignable to another type.
+  
+
+</dd>
+
+        <dt id="isAsync" class="callable">
+  <span class="name"><a href="../lang/Class/isAsync.html">isAsync</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Determines whether this method is <strong>asynchronous</strong> — i.e., declared using
+the <code>async</code> keyword or returning a <a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a>-like type.
   
 
 </dd>
@@ -1349,16 +1365,16 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
-        <dt id="isKeyValuePaired" class="callable">
+        <dt id="isKeyValuePaired" class="callable inherited">
   <span class="name"><a href="../lang/Class/isKeyValuePaired.html">isKeyValuePaired</a></span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
   </span>
   
 
 </dt>
-<dd>
+<dd class="inherited">
   Checks if this class represents a key-value pair type.
-  
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -1466,16 +1482,16 @@ declaration-level modifiers (abstract, sealed, etc.).
 
 </dd>
 
-        <dt id="keyType" class="callable">
+        <dt id="keyType" class="callable inherited">
   <span class="name"><a href="../lang/Class/keyType.html">keyType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">K</span>&gt;</span><span class="signature">(<wbr>)
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">K</span>&gt;</span>?</span>
   </span>
   
 
 </dt>
-<dd>
-  Gets the key type for map-like generic classes.
-  
+<dd class="inherited">
+  Retrieves the key type (<code>K</code>) of a <strong>map-like</strong> or <strong>pair-like</strong> generic structure.
+  <div class="features"><span class="feature">inherited</span></div>
 
 </dd>
 
@@ -1547,7 +1563,7 @@ declaration-level modifiers (abstract, sealed, etc.).
     <h2>Static Methods</h2>
     <dl class="callables">
         <dt id="declared" class="callable">
-  <span class="name"><a href="../lang/Class/declared.html">declared</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="declared-param-declaration"><span class="type-annotation"><a href="../lang/TypeDeclaration-class.html">TypeDeclaration</a></span> <span class="parameter-name">declaration</span>, </span><span class="parameter" id="declared-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a></span> <span class="parameter-name">domain</span></span>)
+  <span class="name"><a href="../lang/Class/declared.html">declared</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="declared-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a></span> <span class="parameter-name">declaration</span>, </span><span class="parameter" id="declared-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a></span> <span class="parameter-name">domain</span></span>)
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
   </span>
   
@@ -1560,7 +1576,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dd>
 
         <dt id="forName" class="callable">
-  <span class="name"><a href="../lang/Class/forName.html">forName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forName-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span>, [</span><span class="parameter" id="forName-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forName-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])
+  <span class="name"><a href="../lang/Class/forName.html">forName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forName-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span>, [</span><span class="parameter" id="forName-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forName-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="forName-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
   </span>
   
@@ -1573,7 +1589,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dd>
 
         <dt id="forObject" class="callable">
-  <span class="name"><a href="../lang/Class/forObject.html">forObject</a></span><span class="signature">(<wbr><span class="parameter" id="forObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">obj</span>, [</span><span class="parameter" id="forObject-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forObject-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])
+  <span class="name"><a href="../lang/Class/forObject.html">forObject</a></span><span class="signature">(<wbr><span class="parameter" id="forObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">obj</span>, [</span><span class="parameter" id="forObject-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forObject-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="forObject-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
   </span>
   
@@ -1586,7 +1602,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dd>
 
         <dt id="forType" class="callable">
-  <span class="name"><a href="../lang/Class/forType.html">forType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forType-param-type"><span class="type-annotation">C</span> <span class="parameter-name">type</span>, [</span><span class="parameter" id="forType-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forType-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])
+  <span class="name"><a href="../lang/Class/forType.html">forType</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="forType-param-type"><span class="type-annotation">C</span> <span class="parameter-name">type</span>, [</span><span class="parameter" id="forType-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="forType-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="forType-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
   </span>
   
@@ -1599,7 +1615,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dd>
 
         <dt id="fromQualifiedName" class="callable">
-  <span class="name"><a href="../lang/Class/fromQualifiedName.html">fromQualifiedName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="fromQualifiedName-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">qualifiedName</span>, [</span><span class="parameter" id="fromQualifiedName-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span></span>])
+  <span class="name"><a href="../lang/Class/fromQualifiedName.html">fromQualifiedName</a></span><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="fromQualifiedName-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">qualifiedName</span>, [</span><span class="parameter" id="fromQualifiedName-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="fromQualifiedName-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
   </span>
   
@@ -1612,7 +1628,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 </dd>
 
         <dt id="of" class="callable">
-  <span class="name"><a href="../lang/Class/of.html">of</a></span><span class="signature">&lt;<wbr><span class="type-parameter">F</span>&gt;</span><span class="signature">(<wbr>[<span class="parameter" id="of-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="of-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span>])
+  <span class="name"><a href="../lang/Class/of.html">of</a></span><span class="signature">&lt;<wbr><span class="type-parameter">F</span>&gt;</span><span class="signature">(<wbr>[<span class="parameter" id="of-param-domain"><span class="type-annotation"><a href="../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span><span class="parameter" id="of-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span><span class="parameter" id="of-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span></span>])
     <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">F</span>&gt;</span></span>
   </span>
   
@@ -1651,7 +1667,7 @@ declaration-level modifiers (abstract, sealed, etc.).
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

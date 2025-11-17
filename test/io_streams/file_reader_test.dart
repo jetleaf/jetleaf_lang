@@ -12,7 +12,6 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:jetleaf_lang/lang.dart';
@@ -102,7 +101,7 @@ void main() {
 
     test('file and encoding getters', () {
       expect(reader.file, equals(file));
-      expect(reader.encoding, equals(utf8));
+      expect(reader.encoding, equals(Closeable.DEFAULT_ENCODING));
     });
 
     test('throws IOException on invalid file', () async {

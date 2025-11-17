@@ -1,8 +1,6 @@
 import 'package:jetleaf_lang/lang.dart';
 import 'package:test/test.dart';
 
-import '../_dependencies.dart';
-
 class TestUser {
   final String name;
   TestUser(this.name);
@@ -15,7 +13,7 @@ void main() {
     late DefaultClassPathResource resource;
 
     setUpAll(() async {
-      await setupRuntime();
+      await runTestScan();
       resource = DefaultClassPathResource("test/meta/class_path_resource_test.dart");
     });
 

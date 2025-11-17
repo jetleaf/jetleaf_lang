@@ -1,8 +1,7 @@
 import 'dart:typed_data';
+import 'package:jetleaf_build/jetleaf_build.dart';
 import 'package:jetleaf_lang/lang.dart';
 import 'package:test/test.dart';
-
-import '../_dependencies.dart';
 
 /// Fake implementation for testing the abstract AssetPathResource contract.
 class _FakeAssetPathResource extends AssetPathResource {
@@ -51,7 +50,7 @@ void main() {
     late AssetPathResource resource;
 
     setUpAll(() async {
-      await setupRuntime();
+      await runTestScan();
       final allAssets = Runtime.getAllAssets();
       expect(allAssets, isNotEmpty);
       asset = allAssets.first;

@@ -12,11 +12,51 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../declaration/declaration.dart';
-import 'annotation.dart';
-import 'class.dart';
-import 'parameter.dart';
-import 'protection_domain.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
+import 'annotation/annotation.dart';
+import 'class/class.dart';
+import 'parameter/parameter.dart';
+import 'protection_domain/protection_domain.dart';
+
+/// {@template jetleaf_void_base}
+/// Abstract base class representing a **marker or placeholder type** in the
+/// JetLeaf type system.
+///
+/// The [Void] base class is intended to serve as a generic type parameter
+/// or sentinel type where no actual value is expected or needed. It is often
+/// used in APIs or frameworks that require a `Class<T>` reference but do
+/// not need to store a concrete instance.
+///
+/// ### Purpose
+/// - Provide a first-class type representation for "no-value" or placeholder scenarios.
+/// - Enable generic programming patterns where a type parameter is required but no data exists.
+/// - Serve as a foundation for JetLeaf internal type-system constructs.
+///
+/// ### Features
+/// - **Abstract base:** Cannot be instantiated directly.
+/// - **Type reflection:** Provides [getClass] to retrieve a `Class<Void>` reference.
+///
+/// ### Example Usage
+/// ```dart
+/// final voidClass = Void.getClass();
+/// // voidClass can now be used as a type reference in generic APIs
+/// ```
+///
+/// This allows APIs expecting a type to accept [Void] as a valid type argument
+/// without requiring a concrete instance.
+/// {@endtemplate}
+abstract base class Void {
+  /// Returns the [Class] instance corresponding to this [Void] type.
+  ///
+  /// Example:
+  /// ```dart
+  /// final clazz = Void.getClass(); // Class<Void>
+  /// ```
+  /// 
+  /// {@macro jetleaf_void_base}
+  static Class<Void> getClass() => Class<Void>();
+}
 
 /// {@template member}
 /// Abstract base class representing a member of a class that extends [Executable].
@@ -401,7 +441,7 @@ abstract class Source extends PermissionManager {
   List<A> getDirectAnnotations<A>() {
     checkAccess('getDirectAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllDirectAnnotations();
-    return annotations.where((a) => a.getClass().getType() == A).map((a) => a.getInstance<A>()).toList();
+    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
   }
   
   /// Checks if this element has a specific annotation.

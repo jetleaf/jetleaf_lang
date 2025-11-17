@@ -13,10 +13,11 @@
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
 import 'dart:async';
-import 'dart:convert' show ByteConversionSink, Encoding, utf8;
+import 'dart:convert' show ByteConversionSink, Encoding;
 import 'dart:typed_data';
 
 import '../exceptions.dart';
+import '../io/base.dart';
 
 /// {@template byte_stream}
 /// A stream of bytes similar to Java's InputStream/OutputStream.
@@ -257,7 +258,7 @@ class ByteStream {
   /// Converts the byte stream to a string using UTF-8 or the given [encoding].
   /// 
   /// [encoding] the encoding to use (defaults to UTF-8)
-  Future<String> bytesToString([Encoding encoding = utf8]) => encoding.decodeStream(_stream);
+  Future<String> bytesToString([Encoding encoding = Closeable.DEFAULT_ENCODING]) => encoding.decodeStream(_stream);
 
   /// Returns the length of the stream (consumes the stream).
   /// 

@@ -23,23 +23,23 @@ import '../int/_int_stream.dart';
 /// existing [Iterable] of doubles, and also provides methods for performing
 /// operations on the stream.
 ///
-/// [DoubleStreamImplementation] is designed to be used as a private
+/// [StandardDoubleStream] is designed to be used as a private
 /// implementation of [DoubleStream], and should not be used directly.
 ///
 /// See [DoubleStream] for more information on using streams of doubles.
-class DoubleStreamImplementation implements DoubleStream {
+class StandardDoubleStream implements DoubleStream {
   final Iterable<double> _source;
   final bool _parallel;
   final List<void Function()> _closeHandlers;
 
-  DoubleStreamImplementation(this._source, [this._parallel = false, this._closeHandlers = const []]);
+  StandardDoubleStream(this._source, [this._parallel = false, this._closeHandlers = const []]);
 
-  factory DoubleStreamImplementation.of(Iterable<double> values) {
-    return DoubleStreamImplementation(values);
+  factory StandardDoubleStream.of(Iterable<double> values) {
+    return StandardDoubleStream(values);
   }
 
-  factory DoubleStreamImplementation.empty() {
-    return DoubleStreamImplementation(<double>[]);
+  factory StandardDoubleStream.empty() {
+    return StandardDoubleStream(<double>[]);
   }
 
   @override
@@ -52,17 +52,17 @@ class DoubleStreamImplementation implements DoubleStream {
   bool isParallel() => _parallel;
 
   @override
-  DoubleStream sequential() => _parallel ? DoubleStreamImplementation(_source, false, _closeHandlers) : this;
+  DoubleStream sequential() => _parallel ? StandardDoubleStream(_source, false, _closeHandlers) : this;
 
   @override
-  DoubleStream parallel() => !_parallel ? DoubleStreamImplementation(_source, true, _closeHandlers) : this;
+  DoubleStream parallel() => !_parallel ? StandardDoubleStream(_source, true, _closeHandlers) : this;
 
   @override
   DoubleStream unordered() => this; // For simplicity, return this
 
   @override
   DoubleStream onClose(void Function() closeHandler) {
-    return DoubleStreamImplementation(_source, _parallel, [..._closeHandlers, closeHandler]);
+    return StandardDoubleStream(_source, _parallel, [..._closeHandlers, closeHandler]);
   }
 
   @override
@@ -78,22 +78,22 @@ class DoubleStreamImplementation implements DoubleStream {
 
   @override
   DoubleStream filter(bool Function(double) predicate) {
-    return DoubleStreamImplementation(_source.where(predicate), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.where(predicate), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream map(double Function(double) mapper) {
-    return DoubleStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   IntStream mapToInt(int Function(double) mapper) {
-    return IntStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardIntStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream flatMap(DoubleStream Function(double) mapper) {
-    return DoubleStreamImplementation(
+    return StandardDoubleStream(
       _source.expand((element) => mapper(element).iterable()),
       _parallel,
       _closeHandlers,
@@ -102,18 +102,18 @@ class DoubleStreamImplementation implements DoubleStream {
 
   @override
   DoubleStream distinct() {
-    return DoubleStreamImplementation(_source.toSet(), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.toSet(), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream sorted() {
     final list = _source.toList()..sort();
-    return DoubleStreamImplementation(list, _parallel, _closeHandlers);
+    return StandardDoubleStream(list, _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream peek(void Function(double) action) {
-    return DoubleStreamImplementation(
+    return StandardDoubleStream(
       _source.map((element) {
         action(element);
         return element;
@@ -125,22 +125,22 @@ class DoubleStreamImplementation implements DoubleStream {
 
   @override
   DoubleStream limit(int maxSize) {
-    return DoubleStreamImplementation(_source.take(maxSize), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.take(maxSize), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream skip(int n) {
-    return DoubleStreamImplementation(_source.skip(n), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.skip(n), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream takeWhile(bool Function(double) predicate) {
-    return DoubleStreamImplementation(_source.takeWhile(predicate), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.takeWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream dropWhile(bool Function(double) predicate) {
-    return DoubleStreamImplementation(_source.skipWhile(predicate), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.skipWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override

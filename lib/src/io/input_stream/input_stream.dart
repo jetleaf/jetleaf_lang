@@ -12,11 +12,12 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 
-import '../closeable.dart';
+import '../base.dart';
 import '../../exceptions.dart';
 
 /// {@template input_stream}
@@ -170,6 +171,44 @@ abstract class InputStream implements Closeable {
     }
     
     return bytesRead;
+  }
+
+  /// Reads all remaining bytes from this input stream and decodes them into a [String].
+  ///
+  /// This method reads the entire stream from the current position until the end
+  /// and then converts the bytes to a string using the specified [encoding].
+  /// 
+  /// The default encoding is [Closeable.DEFAULT_ENCODING].
+  ///
+  /// ## Parameters
+  /// - [encoding]: The [Encoding] used to decode the byte data. Defaults to [Closeable.DEFAULT_ENCODING].
+  ///
+  /// ## Returns
+  /// A [String] representing the decoded contents of the input stream.
+  ///
+  /// ## Example
+  /// ```dart
+  /// final input = FileInputStream('message.txt');
+  /// try {
+  ///   final text = await input.readAsString(encoding: Closeable.DEFAULT_ENCODING);
+  ///   print('File contents: $text');
+  /// } finally {
+  ///   await input.close();
+  /// }
+  /// ```
+  ///
+  /// ## Throws
+  /// - [StreamClosedException] if the stream has been closed.
+  /// - [IOException] if an I/O or decoding error occurs.
+  Future<String> readAsString([Encoding encoding = Closeable.DEFAULT_ENCODING]) async {
+    checkClosed();
+
+    try {
+      final bytes = await readAll();
+      return encoding.decode(bytes);
+    } on FormatException catch (e) {
+      throw IOException('Failed to decode stream: ${e.message}');
+    }
   }
   
   /// Reads exactly [length] bytes from the input stream.

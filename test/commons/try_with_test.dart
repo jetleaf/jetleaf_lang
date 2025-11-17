@@ -15,7 +15,7 @@
 import 'package:jetleaf_lang/lang.dart';
 import 'package:test/test.dart';
 
-class _TestResource implements AutoCloseable {
+class _TestResource implements Closeable {
   bool closed = false;
   final List<String> log;
 
@@ -28,7 +28,7 @@ class _TestResource implements AutoCloseable {
   }
 }
 
-class _SyncCloseResource implements AutoCloseable {
+class _SyncCloseResource implements Closeable {
   bool closed = false;
   final List<String> log;
 

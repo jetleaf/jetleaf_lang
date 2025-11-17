@@ -93,7 +93,7 @@ Type? extractKeyType(Class parentClass) {
   &#47;&#47; Handle generic classes with type arguments (Map&lt;K,V&gt; pattern)
   final typeArgs = parentClass.getTypeDeclaration().getTypeArguments();
   if (typeArgs.length &gt;= 2) {
-    return _getFromLink(typeArgs[0], parentClass.getProtectionDomain()).getType();
+    return getFromLink(typeArgs[0], parentClass.getProtectionDomain()).getType();
   }
 
   return null;
@@ -125,7 +125,7 @@ Type? extractKeyType(Class parentClass) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

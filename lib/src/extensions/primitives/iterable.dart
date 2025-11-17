@@ -86,6 +86,19 @@ extension IterableExtension<T> on Iterable<T> {
     return true;
   }
 
+  /// Checks whether all elements in [items] are contained in this collection.
+  ///
+  /// Returns `true` if every element of [items] exists in this collection; 
+  /// otherwise returns `false`.
+  ///
+  /// Example:
+  /// ```dart
+  /// final mySet = {1, 2, 3};
+  /// print(mySet.matches([1, 2])); // true
+  /// print(mySet.matches([1, 4])); // false
+  /// ```
+  bool matches(Iterable<T> items) => every(items.contains);
+
   /// Finds the index of the first element that satisfies the given predicate.
   ///
   /// Returns the index of the first element in the iterable

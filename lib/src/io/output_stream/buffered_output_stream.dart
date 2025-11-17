@@ -77,8 +77,7 @@ class BufferedOutputStream extends OutputStream {
   /// 
   /// {@macro buffered_output_stream}
   BufferedOutputStream(OutputStream output, {int bufferSize = _defaultBufferSize})
-      : _output = output,
-        _buffer = Uint8List(bufferSize);
+    : _output = output, _buffer = Uint8List(bufferSize);
   
   /// Flushes the internal buffer to the underlying output stream.
   Future<void> _flushBuffer() async {
@@ -128,6 +127,12 @@ class BufferedOutputStream extends OutputStream {
     // Copy data to buffer
     _buffer.setRange(_count, _count + length, b, offset);
     _count += length;
+  }
+
+  @override
+  Future<void> writeObject(Object? obj) async {
+    checkClosed();
+    writeString(obj.toString());
   }
   
   @override

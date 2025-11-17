@@ -15,10 +15,10 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
 import 'package:meta/meta.dart';
 
 import '../commons/typedefs.dart';
-import '../annotations.dart';
 
 part 'local_thread_key.dart';
 part 'local_thread_registry.dart';
@@ -86,6 +86,42 @@ final class LocalThread<T> {
   T? get() {
     final bucket = isolateLocalValueStore.getBucket<T>(Isolate.current, _key);
     return bucket.get();
+  }
+
+  /// Returns the current value associated with this [LocalThread],
+  /// or stores and returns [value] if no value has been set yet.
+  ///
+  /// This is a convenient helper that ensures a value always exists for
+  /// the current [Isolate].  
+  /// If the value is already present, it is returned unchanged.  
+  /// If the value is absent, [value] is stored using [set] and then returned.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final local = ThreadLocal<int>();
+  ///
+  /// print(local.get()); // null
+  ///
+  /// // Sets the value because none exists yet.
+  /// final first = local.getOrPut(42);
+  /// print(first); // 42
+  ///
+  /// // Returns the existing value without overwriting it.
+  /// final second = local.getOrPut(99);
+  /// print(second); // 42
+  /// ```
+  ///
+  /// Returns the existing or newly stored [value].
+  T getOrPut(T value) {
+    final bucket = isolateLocalValueStore.getBucket<T>(Isolate.current, _key);
+    final result = bucket.get();
+
+    if (result != null) {
+      return result;
+    }
+
+    set(value);
+    return value;
   }
 
   /// Sets a value for this [LocalThread] in the current [Isolate].

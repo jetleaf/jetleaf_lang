@@ -14,8 +14,9 @@
 
 import 'dart:collection';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 /// {@template queue}
 /// A first-in-first-out (FIFO) queue interface implementation, mimicking Java's Queue.

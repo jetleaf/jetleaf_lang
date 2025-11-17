@@ -1,4 +1,5 @@
-import '../annotations.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import 'obs_enums.dart';
 import 'obs_event.dart';
 

@@ -85,11 +85,6 @@ void main() {
       expect(empty.orElse('default'), equals('default'));
     });
 
-    test('orElse() can return null as default', () {
-      final empty = Optional.empty<String>();
-      expect(empty.orElse(null), isNull);
-    });
-
     test('orElseGet() returns value when present', () {
       final optional = Optional.of('original');
       var supplierCalled = false;

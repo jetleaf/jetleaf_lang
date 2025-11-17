@@ -55,7 +55,7 @@
     <section class="multi-line-signature">
       
       <span class="name ">FileReader.fromFile</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="fromFile-param-file"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-io/File-class.html">File</a></span> <span class="parameter-name">file</span>, {</span></li>
-<li><span class="parameter" id="fromFile-param-encoding"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-convert/Encoding-class.html">Encoding</a></span> <span class="parameter-name">encoding</span> = <span class="default-value">utf8</span>, </span></li>
+<li><span class="parameter" id="fromFile-param-encoding"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-convert/Encoding-class.html">Encoding</a></span> <span class="parameter-name">encoding</span> = <span class="default-value">Closeable.DEFAULT_ENCODING</span>, </span></li>
 </ol>})
     </section>
     
@@ -64,7 +64,7 @@
 <h2 id="parameters">Parameters</h2>
 <ul>
 <li><code>file</code>: The <a href="https://api.dart.dev/stable/3.9.2/dart-io/File-class.html">File</a> to read from</li>
-<li><code>encoding</code>: The character encoding to use (default: utf8)</li>
+<li><code>encoding</code>: The character encoding to use (default: Closeable.DEFAULT_ENCODING)</li>
 </ul>
 <h2 id="example">Example</h2>
 <pre class="language-dart"><code class="language-dart">final file = File('document.txt');
@@ -107,7 +107,7 @@ try {
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">FileReader.fromFile(File file, {Encoding encoding = utf8})
+  <pre class="language-dart"><code class="language-dart">FileReader.fromFile(File file, {Encoding encoding = Closeable.DEFAULT_ENCODING})
     : _file = file, _encoding = encoding;</code></pre>
 </section>
 
@@ -136,7 +136,7 @@ try {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

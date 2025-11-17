@@ -232,9 +232,7 @@ never itself be <code>null</code>; it should always point to an <a href="../../l
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">static Optional&lt;T&gt; ofNullable&lt;T&gt;(T? value) {
-  return value == null ? empty&lt;T&gt;() : Optional&lt;T&gt;._(value);
-}</code></pre>
+  <pre class="language-dart"><code class="language-dart">static Optional&lt;T&gt; ofNullable&lt;T&gt;(T? value) =&gt; value == null ? empty&lt;T&gt;() : Optional&lt;T&gt;._(value);</code></pre>
 </section>
 
 
@@ -262,7 +260,7 @@ never itself be <code>null</code>; it should always point to an <a href="../../l
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

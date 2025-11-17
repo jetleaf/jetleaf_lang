@@ -59,7 +59,7 @@ abstract class DoubleStream extends BaseStream<double, DoubleStream> {
   /// ```
   /// 
   /// {@macro double_stream}
-  factory DoubleStream.of(Iterable<double> values) = DoubleStreamImplementation.of;
+  factory DoubleStream.of(Iterable<double> values) = StandardDoubleStream.of;
 
   /// Creates an empty [DoubleStream].
   /// 
@@ -70,7 +70,7 @@ abstract class DoubleStream extends BaseStream<double, DoubleStream> {
   /// ```
   /// 
   /// {@macro double_stream}
-  factory DoubleStream.empty() = DoubleStreamImplementation.empty;
+  factory DoubleStream.empty() = StandardDoubleStream.empty;
 
   // Intermediate operations
 

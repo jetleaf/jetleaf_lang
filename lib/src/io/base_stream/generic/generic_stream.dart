@@ -12,9 +12,10 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../../../exceptions.dart';
 import '../../../commons/typedefs.dart';
-import '../../../annotations.dart';
 import '../base_stream.dart';
 import '../int/int_stream.dart';
 import '../double/double_stream.dart';
@@ -98,7 +99,7 @@ abstract class GenericStream<T> extends BaseStream<T, GenericStream<T>> {
   /// final stream = GenericStream.of([1, 2, 3, 4, 5]);
   /// ```
   /// {@macro generic_stream}
-  factory GenericStream.of(Iterable<T> values) = GenericStreamImplementation<T>.of;
+  factory GenericStream.of(Iterable<T> values) = StandardGenericStream<T>.of;
 
   /// Creates an empty [GenericStream].
   /// 
@@ -109,7 +110,7 @@ abstract class GenericStream<T> extends BaseStream<T, GenericStream<T>> {
   /// ```
   /// 
   /// {@macro generic_stream}
-  factory GenericStream.empty() = GenericStreamImplementation<T>.empty;
+  factory GenericStream.empty() = StandardGenericStream<T>.empty;
 
   /// Creates a [GenericStream] from a single element.
   /// 
@@ -119,7 +120,7 @@ abstract class GenericStream<T> extends BaseStream<T, GenericStream<T>> {
   /// ```
   /// 
   /// {@macro generic_stream}
-  factory GenericStream.ofSingle(T value) = GenericStreamImplementation<T>.ofSingle;
+  factory GenericStream.ofSingle(T value) = StandardGenericStream<T>.ofSingle;
 
   /// Creates an infinite [GenericStream] by repeatedly applying a function.
   /// 
@@ -132,7 +133,7 @@ abstract class GenericStream<T> extends BaseStream<T, GenericStream<T>> {
   /// ```
   /// 
   /// {@macro generic_stream}
-  factory GenericStream.iterate(T seed, T Function(T) f) = GenericStreamImplementation<T>.iterate;
+  factory GenericStream.iterate(T seed, T Function(T) f) = StandardGenericStream<T>.iterate;
 
   /// Creates a [GenericStream] by repeatedly calling a supplier function.
   /// 
@@ -143,7 +144,7 @@ abstract class GenericStream<T> extends BaseStream<T, GenericStream<T>> {
   /// ```
   /// 
   /// {@macro generic_stream}
-  factory GenericStream.generate(T Function() supplier) = GenericStreamImplementation<T>.generate;
+  factory GenericStream.generate(T Function() supplier) = StandardGenericStream<T>.generate;
 
   /// Creates an [IntStream] from a range of integers.
   /// 

@@ -92,6 +92,8 @@ PodDefinitionValidationException if the specified static method is not found in 
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">static Method? getStaticMethod(Class target, String methodName) {
+  _ensureInitialized();
+
   Method? method = target.getMethod(methodName);
   if (method != null &amp;&amp; method.isStatic()) {
     return method;
@@ -125,7 +127,7 @@ PodDefinitionValidationException if the specified static method is not found in 
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

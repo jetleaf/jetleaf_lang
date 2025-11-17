@@ -57,24 +57,22 @@
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">K</span>&gt;</span>?</span>
 <span class="name ">keyType</span>&lt;<wbr><span class="type-parameter">K</span>&gt;(<wbr>)
 
-      
+      <div class="features"><span class="feature">inherited</span></div>
 
     </section>
     
 <section class="desc markdown">
-  <p>Gets the key type for map-like generic classes.</p>
-<p>Type Parameters:</p>
+  <p>Retrieves the key type (<code>K</code>) of a <strong>map-like</strong> or <strong>pair-like</strong> generic structure.</p>
+<h3 id="common-scenarios">Common Scenarios</h3>
 <ul>
-<li><code>K</code>: The expected key type for type safety</li>
+<li>Maps: <code>Map&lt;K, V&gt;</code> → returns <code>Class&lt;K&gt;</code></li>
+<li>Pairs: <code>Tuple&lt;K, V&gt;</code> → returns <code>Class&lt;K&gt;</code></li>
+<li>Non-map classes: returns <code>Class&lt;dynamic&gt;</code> or <code>null</code></li>
 </ul>
-<p>Returns:</p>
-<ul>
-<li>A <a href="../../lang/Class-class.html">Class&lt;K&gt;</a> representing the key type if this is a map/pair</li>
-<li><code>null</code> if type information is unavailable</li>
-<li><code>Class&lt;dynamic&gt;</code> if not a map-like type</li>
-</ul>
-<p>Example:</p>
-<pre class="language-dart"><code class="language-dart">final keyType = GenericClass(Map&lt;String, int&gt;).keyType&lt;String&gt;();
+<h3 id="example">Example</h3>
+<pre class="language-dart"><code class="language-dart">final mapClass = Class.forType&lt;Map&lt;String, int&gt;&gt;();
+final keyType = mapClass.asGenericSource().keyType&lt;String&gt;();
+print(keyType.getName()); // 'String'
 </code></pre>
 </section>
 
@@ -110,7 +108,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

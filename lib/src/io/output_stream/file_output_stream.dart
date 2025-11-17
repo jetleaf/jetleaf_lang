@@ -75,8 +75,7 @@ class FileOutputStream extends OutputStream {
   /// opened for any other reason.
   /// 
   /// {@macro file_output_stream}
-  FileOutputStream(String name, {bool append = false}) 
-      : _file = File(name), _append = append;
+  FileOutputStream(String name, {bool append = false}) : _file = File(name), _append = append;
   
   /// Creates a file output stream to write to the specified [File] object.
   /// 
@@ -99,8 +98,7 @@ class FileOutputStream extends OutputStream {
   /// opened for any other reason.
   /// 
   /// {@macro file_output_stream}
-  FileOutputStream.fromFile(File file, {bool append = false}) 
-      : _file = file, _append = append;
+  FileOutputStream.fromFile(File file, {bool append = false}) : _file = file, _append = append;
   
   /// Ensures the file is open for writing.
   Future<void> _ensureOpen() async {
@@ -150,6 +148,17 @@ class FileOutputStream extends OutputStream {
       final bytes = Uint8List.fromList(b.sublist(offset, offset + length));
       await _randomAccessFile!.writeFrom(bytes);
       _position += length;
+    } catch (e) {
+      throw IOException('Error writing to file: ${_file.path}', cause: e);
+    }
+  }
+
+  @override
+  Future<void> writeObject(Object? obj) async {
+    await _ensureOpen();
+    
+    try {
+      await _randomAccessFile!.writeString(obj.toString());
     } catch (e) {
       throw IOException('Error writing to file: ${_file.path}', cause: e);
     }

@@ -127,7 +127,7 @@ final result = GenericStream.of(people)
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">factory GenericStream.iterate(T seed, T Function(T) f) = GenericStreamImplementation&lt;T&gt;.iterate;</code></pre>
+  <pre class="language-dart"><code class="language-dart">factory GenericStream.iterate(T seed, T Function(T) f) = StandardGenericStream&lt;T&gt;.iterate;</code></pre>
 </section>
 
 
@@ -155,7 +155,7 @@ final result = GenericStream.of(people)
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

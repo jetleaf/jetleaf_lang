@@ -96,7 +96,7 @@ thread-local, even though Dart uses isolates instead of OS threads.</p>
   <dt>Annotations</dt>
   <dd>
     <ul class="annotation-list clazz-relationships">
-        <li>@<a href="../lang/Generic-class.html">Generic</a>(LocalThread)</li>
+        <li>@<a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Generic-class.html">Generic</a>(LocalThread)</li>
     </ul>
   </dd>
 
@@ -164,6 +164,20 @@ thread-local, even though Dart uses isolates instead of OS threads.</p>
 </dt>
 <dd>
   Returns the value associated with this <a href="../lang/LocalThread-class.html">LocalThread</a> in the current <a href="https://api.dart.dev/stable/3.9.2/dart-isolate/Isolate-class.html">Isolate</a>.
+  
+
+</dd>
+
+        <dt id="getOrPut" class="callable">
+  <span class="name"><a href="../lang/LocalThread/getOrPut.html">getOrPut</a></span><span class="signature">(<wbr><span class="parameter" id="getOrPut-param-value"><span class="type-annotation">T</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; T</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the current value associated with this <a href="../lang/LocalThread-class.html">LocalThread</a>,
+or stores and returns <code>value</code> if no value has been set yet.
   
 
 </dd>
@@ -283,7 +297,7 @@ thread-local, even though Dart uses isolates instead of OS threads.</p>
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

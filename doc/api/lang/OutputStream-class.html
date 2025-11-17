@@ -110,6 +110,7 @@ try {
               <li><a href="../lang/ByteArrayOutputStream-class.html">ByteArrayOutputStream</a></li>
               <li><a href="../lang/FileOutputStream-class.html">FileOutputStream</a></li>
               <li><a href="../lang/NetworkOutputStream-class.html">NetworkOutputStream</a></li>
+              <li><a href="../lang/SinkOutputStream-class.html">SinkOutputStream</a></li>
           </ul></dd>
 
         
@@ -289,8 +290,21 @@ written out.
 
 </dd>
 
+        <dt id="writeObject" class="callable">
+  <span class="name"><a href="../lang/OutputStream/writeObject.html">writeObject</a></span><span class="signature">(<wbr><span class="parameter" id="writeObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">obj</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Writes the given <code>obj</code> to the output stream.
+  
+
+</dd>
+
         <dt id="writeString" class="callable">
-  <span class="name"><a href="../lang/OutputStream/writeString.html">writeString</a></span><span class="signature">(<wbr><span class="parameter" id="writeString-param-str"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">str</span></span>)
+  <span class="name"><a href="../lang/OutputStream/writeString.html">writeString</a></span><span class="signature">(<wbr><span class="parameter" id="writeString-param-str"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">str</span>, [</span><span class="parameter" id="writeString-param-encoding"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-convert/Encoding-class.html">Encoding</a>?</span> <span class="parameter-name">encoding</span></span>])
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
   </span>
   
@@ -352,7 +366,7 @@ written out.
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

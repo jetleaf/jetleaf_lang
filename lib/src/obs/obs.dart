@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import '../annotations.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
 import 'obs_event.dart';
 import 'obs_types.dart';

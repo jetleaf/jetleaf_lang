@@ -96,9 +96,7 @@ debugOptional(empty); // Debug: Optional.empty
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">@override
-String toString() {
-  return _value != null ? &#39;Optional[$_value]&#39; : &#39;Optional.empty&#39;;
-}</code></pre>
+String toString() =&gt; _value != null ? &#39;Optional[$_value]&#39; : &#39;Optional.empty&#39;;</code></pre>
 </section>
 
 
@@ -126,7 +124,7 @@ String toString() {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

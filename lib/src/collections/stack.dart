@@ -14,8 +14,9 @@
 
 import 'dart:collection';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 /// {@template stack}
 /// A last-in-first-out (LIFO) stack implementation, mimicking Java's Stack.

@@ -182,6 +182,19 @@ for (final clazz in hierarchy) {
   <section class="summary offset-anchor" id="static-methods">
     <h2>Static Methods</h2>
     <dl class="callables">
+        <dt id="findClassesAnnotatedWith" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/findClassesAnnotatedWith.html">findClassesAnnotatedWith</a></span><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="findClassesAnnotatedWith-param-annotation"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">A</span>&gt;</span></span> <span class="parameter-name">annotation</span>, [</span><span class="parameter" id="findClassesAnnotatedWith-param-includeMeta"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">includeMeta</span> = <span class="default-value">false</span></span>])
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Finds all classes annotated with the specified annotation type.
+  
+
+</dd>
+
         <dt id="findMethodCandidatesByName" class="callable">
   <span class="name"><a href="../lang/ClassUtils/findMethodCandidatesByName.html">findMethodCandidatesByName</a></span><span class="signature">(<wbr><span class="parameter" id="findMethodCandidatesByName-param-clazz"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a></span> <span class="parameter-name">clazz</span>, </span><span class="parameter" id="findMethodCandidatesByName-param-methodName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">methodName</span></span>)
     <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Set-class.html">Set</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../lang/Method-class.html">Method</a></span>&gt;</span></span>
@@ -191,6 +204,32 @@ for (final clazz in hierarchy) {
 </dt>
 <dd>
   Retrieves the set of methods with the specified name from the given class.
+  
+
+</dd>
+
+        <dt id="getClass" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getClass.html">getClass</a></span><span class="signature">(<wbr><span class="parameter" id="getClass-param-type"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Type-class.html">Type</a></span> <span class="parameter-name">type</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns a <a href="../lang/Class-class.html">Class</a> representation of the given <code>type</code>.
+  
+
+</dd>
+
+        <dt id="getClassesAssignableTo" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getClassesAssignableTo.html">getClassesAssignableTo</a></span><span class="signature">(<wbr><span class="parameter" id="getClassesAssignableTo-param-type"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a></span> <span class="parameter-name">type</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../lang/Class-class.html">Class</a></span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves all classes in the current runtime that are assignable to the specified type.
   
 
 </dd>
@@ -235,6 +274,59 @@ all superclasses, interfaces, and special type relationships.
 
 </dd>
 
+        <dt id="getPackage" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getPackage.html">getPackage</a></span><span class="signature">(<wbr><span class="parameter" id="getPackage-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/Package-class.html">Package</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the <strong>JetLeaf package</strong> associated with the given <code>object</code>.
+  
+
+</dd>
+
+        <dt id="getPackageName" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getPackageName.html">getPackageName</a></span><span class="signature">(<wbr><span class="parameter" id="getPackageName-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the <strong>qualified package name</strong> of the given <code>object</code>.
+  
+
+</dd>
+
+        <dt id="getProxiedClass" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getProxiedClass.html">getProxiedClass</a></span><span class="signature">(<wbr><span class="parameter" id="getProxiedClass-param-proxyClass"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a></span> <span class="parameter-name">proxyClass</span>, [</span><span class="parameter" id="getProxiedClass-param-instance"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">instance</span></span>])
+    <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Retrieves the original (non-proxied) <a href="../lang/Class-class.html">Class</a> representation for a given proxy type
+or instance within the JetLeaf runtime.
+  
+
+</dd>
+
+        <dt id="getQualifiedName" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/getQualifiedName.html">getQualifiedName</a></span><span class="signature">(<wbr><span class="parameter" id="getQualifiedName-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the <strong>fully qualified JetLeaf name</strong> of the given <code>object</code>.
+  
+
+</dd>
+
         <dt id="getStaticMethod" class="callable">
   <span class="name"><a href="../lang/ClassUtils/getStaticMethod.html">getStaticMethod</a></span><span class="signature">(<wbr><span class="parameter" id="getStaticMethod-param-target"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a></span> <span class="parameter-name">target</span>, </span><span class="parameter" id="getStaticMethod-param-methodName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">methodName</span></span>)
     <span class="returntype parameter">&#8594; <a href="../lang/Method-class.html">Method</a>?</span>
@@ -261,51 +353,90 @@ all superclasses, interfaces, and special type relationships.
 
 </dd>
 
+        <dt id="isAssignableToError" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/isAssignableToError.html">isAssignableToError</a></span><span class="signature">(<wbr><span class="parameter" id="isAssignableToError-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Determines whether the given <code>object</code> represents or is assignable to a
+Dart error type within the JetLeaf runtime type system.
+  
+
+</dd>
+
+        <dt id="isAsync" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/isAsync.html">isAsync</a></span><span class="signature">(<wbr><span class="parameter" id="isAsync-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Determines whether the given <code>object</code> represents or is assignable to a
+Dart <a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a> or <a href="https://api.dart.dev/stable/3.9.2/dart-async/FutureOr-class.html">FutureOr</a> type within JetLeaf’s reflective runtime.
+  
+
+</dd>
+
+        <dt id="isClass" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/isClass.html">isClass</a></span><span class="signature">(<wbr><span class="parameter" id="isClass-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">name</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks whether a class with the given <code>name</code> exists and can be loaded.
+  
+
+</dd>
+
+        <dt id="isProxyClass" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/isProxyClass.html">isProxyClass</a></span><span class="signature">(<wbr><span class="parameter" id="isProxyClass-param-type"><span class="type-annotation"><a href="../lang/Class-class.html">Class</a></span> <span class="parameter-name">type</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks whether the given <code>type</code> represents a generated proxy class.
+  
+
+</dd>
+
+        <dt id="isVoid" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/isVoid.html">isVoid</a></span><span class="signature">(<wbr><span class="parameter" id="isVoid-param-object"><span class="type-annotation">dynamic</span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Checks whether the given <code>object</code> is of type <code>void</code>.
+  
+
+</dd>
+
+        <dt id="loadClass" class="callable">
+  <span class="name"><a href="../lang/ClassUtils/loadClass.html">loadClass</a></span><span class="signature">(<wbr><span class="parameter" id="loadClass-param-object"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">object</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../lang/Class-class.html">Class</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Attempts to resolve and load a <code>`Class`</code> instance from a given <code>object</code>.
+  
+
+</dd>
+
     </dl>
   </section>
     
 
-  <section class="summary offset-anchor" id="constants">
-    <h2>Constants</h2>
-    <dl class="properties">
-        <dt id="arrayTypeSuffix" class="constant">
-    <span class="name "><a href="../lang/ClassUtils/arrayTypeSuffix-constant.html">arrayTypeSuffix</a></span>
-  <span class="signature">&#8594; const <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
-  
-
-</dt>
-<dd>
-  Suffix for array class names: "[]"
-  
-
-</dd>
-
-        <dt id="nestedClassSeparator" class="constant">
-    <span class="name "><a href="../lang/ClassUtils/nestedClassSeparator-constant.html">nestedClassSeparator</a></span>
-  <span class="signature">&#8594; const <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
-  
-
-</dt>
-<dd>
-  The nested class separator character: '$'
-  
-
-</dd>
-
-        <dt id="packageSeparator" class="constant">
-    <span class="name "><a href="../lang/ClassUtils/packageSeparator-constant.html">packageSeparator</a></span>
-  <span class="signature">&#8594; const <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
-  
-
-</dt>
-<dd>
-  The package separator character: '.'
-  
-
-</dd>
-
-    </dl>
-  </section>
   </div> <!-- /.main-content -->
   <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
     <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
@@ -329,7 +460,7 @@ all superclasses, interfaces, and special type relationships.
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

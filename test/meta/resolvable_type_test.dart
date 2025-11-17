@@ -15,11 +15,9 @@
 import 'package:jetleaf_lang/lang.dart';
 import 'package:test/test.dart';
 
-import '../_dependencies.dart';
-
 void main() {
   setUpAll(() async {
-    await setupRuntime();
+    await runTestScan();
     ResolvableType.clearCache();
     return Future<void>.value();
   });

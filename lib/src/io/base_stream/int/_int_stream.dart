@@ -24,33 +24,33 @@ import '../double/_double_stream.dart';
 /// implementation of [IntStream].
 ///
 /// See the documentation for [IntStream] for the API specification.
-class IntStreamImplementation implements IntStream {
+class StandardIntStream implements IntStream {
   final Iterable<int> _source;
   final bool _parallel;
   final List<void Function()> _closeHandlers;
 
-  IntStreamImplementation(this._source, [this._parallel = false, this._closeHandlers = const []]);
+  StandardIntStream(this._source, [this._parallel = false, this._closeHandlers = const []]);
 
-  factory IntStreamImplementation.of(Iterable<int> values) {
-    return IntStreamImplementation(values);
+  factory StandardIntStream.of(Iterable<int> values) {
+    return StandardIntStream(values);
   }
 
-  factory IntStreamImplementation.range(int startInclusive, int endExclusive) {
-    return IntStreamImplementation(List.generate(
+  factory StandardIntStream.range(int startInclusive, int endExclusive) {
+    return StandardIntStream(List.generate(
       endExclusive - startInclusive,
       (i) => startInclusive + i,
     ));
   }
 
-  factory IntStreamImplementation.rangeClosed(int startInclusive, int endInclusive) {
-    return IntStreamImplementation(List.generate(
+  factory StandardIntStream.rangeClosed(int startInclusive, int endInclusive) {
+    return StandardIntStream(List.generate(
       endInclusive - startInclusive + 1,
       (i) => startInclusive + i,
     ));
   }
 
-  factory IntStreamImplementation.empty() {
-    return IntStreamImplementation(<int>[]);
+  factory StandardIntStream.empty() {
+    return StandardIntStream(<int>[]);
   }
 
   @override
@@ -63,17 +63,17 @@ class IntStreamImplementation implements IntStream {
   bool isParallel() => _parallel;
 
   @override
-  IntStream sequential() => _parallel ? IntStreamImplementation(_source, false, _closeHandlers) : this;
+  IntStream sequential() => _parallel ? StandardIntStream(_source, false, _closeHandlers) : this;
 
   @override
-  IntStream parallel() => !_parallel ? IntStreamImplementation(_source, true, _closeHandlers) : this;
+  IntStream parallel() => !_parallel ? StandardIntStream(_source, true, _closeHandlers) : this;
 
   @override
   IntStream unordered() => this; // For simplicity, return this
 
   @override
   IntStream onClose(void Function() closeHandler) {
-    return IntStreamImplementation(_source, _parallel, [..._closeHandlers, closeHandler]);
+    return StandardIntStream(_source, _parallel, [..._closeHandlers, closeHandler]);
   }
 
   @override
@@ -89,22 +89,22 @@ class IntStreamImplementation implements IntStream {
 
   @override
   IntStream filter(bool Function(int) predicate) {
-    return IntStreamImplementation(_source.where(predicate), _parallel, _closeHandlers);
+    return StandardIntStream(_source.where(predicate), _parallel, _closeHandlers);
   }
 
   @override
   IntStream map(int Function(int) mapper) {
-    return IntStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardIntStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   DoubleStream mapToDouble(double Function(int) mapper) {
-    return DoubleStreamImplementation(_source.map(mapper), _parallel, _closeHandlers);
+    return StandardDoubleStream(_source.map(mapper), _parallel, _closeHandlers);
   }
 
   @override
   IntStream flatMap(IntStream Function(int) mapper) {
-    return IntStreamImplementation(
+    return StandardIntStream(
       _source.expand((element) => mapper(element).iterable()),
       _parallel,
       _closeHandlers,
@@ -113,18 +113,18 @@ class IntStreamImplementation implements IntStream {
 
   @override
   IntStream distinct() {
-    return IntStreamImplementation(_source.toSet(), _parallel, _closeHandlers);
+    return StandardIntStream(_source.toSet(), _parallel, _closeHandlers);
   }
 
   @override
   IntStream sorted() {
     final list = _source.toList()..sort();
-    return IntStreamImplementation(list, _parallel, _closeHandlers);
+    return StandardIntStream(list, _parallel, _closeHandlers);
   }
 
   @override
   IntStream peek(void Function(int) action) {
-    return IntStreamImplementation(
+    return StandardIntStream(
       _source.map((element) {
         action(element);
         return element;
@@ -136,22 +136,22 @@ class IntStreamImplementation implements IntStream {
 
   @override
   IntStream limit(int maxSize) {
-    return IntStreamImplementation(_source.take(maxSize), _parallel, _closeHandlers);
+    return StandardIntStream(_source.take(maxSize), _parallel, _closeHandlers);
   }
 
   @override
   IntStream skip(int n) {
-    return IntStreamImplementation(_source.skip(n), _parallel, _closeHandlers);
+    return StandardIntStream(_source.skip(n), _parallel, _closeHandlers);
   }
 
   @override
   IntStream takeWhile(bool Function(int) predicate) {
-    return IntStreamImplementation(_source.takeWhile(predicate), _parallel, _closeHandlers);
+    return StandardIntStream(_source.takeWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override
   IntStream dropWhile(bool Function(int) predicate) {
-    return IntStreamImplementation(_source.skipWhile(predicate), _parallel, _closeHandlers);
+    return StandardIntStream(_source.skipWhile(predicate), _parallel, _closeHandlers);
   }
 
   @override

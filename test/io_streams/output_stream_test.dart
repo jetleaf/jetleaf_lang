@@ -29,6 +29,12 @@ class MockOutputStream extends OutputStream {
     if (isClosed) throw StreamClosedException();
     _written.add(b & 0xFF);
   }
+
+  @override
+  Future<void> writeObject(Object? obj) async {
+    if (isClosed) throw StreamClosedException();
+    writeString(obj.toString());
+  }
 }
 
 void main() {

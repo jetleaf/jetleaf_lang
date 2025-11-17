@@ -108,9 +108,7 @@ Throws <a href="../../lang/StreamClosedException-class.html">StreamClosedExcepti
 Future&lt;void&gt; write(List&lt;int&gt; b, [int offset = 0, int? length]) async {
   checkClosed();
 
-
   length ??= b.length - offset;
-
   if (offset &lt; 0 || length &lt; 0 || offset + length &gt; b.length) {
     throw InvalidArgumentException(&#39;Invalid offset or length&#39;);
   }
@@ -154,7 +152,7 @@ Future&lt;void&gt; write(List&lt;int&gt; b, [int offset = 0, int? length]) async
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

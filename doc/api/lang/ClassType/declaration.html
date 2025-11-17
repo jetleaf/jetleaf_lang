@@ -55,16 +55,21 @@
     
       <section class="multi-line-signature">
         
-        <a href="../../lang/TypeDeclaration-class.html">TypeDeclaration</a>?
+        <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?
         <span class="name ">declaration</span>
         <div class="features"><span class="feature">final</span></div>
 
       </section>
       
 <section class="desc markdown">
-  <p>Optional <a href="../../lang/TypeDeclaration-class.html">TypeDeclaration</a> that represents the class declaration.</p>
+  <p>Optional <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a> that represents the class declaration.</p>
 <p>If provided, <a href="../../lang/ClassType/toClass.html">toClass</a> will use this declaration to create a <a href="../../lang/Class-class.html">Class</a>
-instance.</p>
+instance. This is the most precise way to reference a class as it
+includes complete declaration metadata.</p>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final declaration = TypeDeclaration.from(UserService);
+final classType = ClassType(declaration: declaration);
+</code></pre>
 </section>
 
       
@@ -99,7 +104,7 @@ instance.</p>
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

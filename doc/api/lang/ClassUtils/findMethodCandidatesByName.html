@@ -92,6 +92,8 @@ PodDefinitionValidationException if the specified method name is not found in th
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">static Set&lt;Method&gt; findMethodCandidatesByName(Class clazz, String methodName) {
+  _ensureInitialized();
+
   Set&lt;Method&gt; candidates = HashSet();
 		final methods = clazz.getMethods();
 		for (Method method in methods) {
@@ -99,6 +101,7 @@ PodDefinitionValidationException if the specified method name is not found in th
 				candidates.add(method);
 			}
 		}
+
 		return candidates;
 }</code></pre>
 </section>
@@ -128,7 +131,7 @@ PodDefinitionValidationException if the specified method name is not found in th
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

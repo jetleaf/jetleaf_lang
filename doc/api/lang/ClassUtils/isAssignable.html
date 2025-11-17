@@ -84,6 +84,8 @@ right: the source type (right-hand side (RHS) type)</p>
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">static bool isAssignable(Class left, Class right) {
+  _ensureInitialized();
+
   if (left.isAssignableFrom(right)) {
 			return true;
 		}
@@ -125,7 +127,7 @@ right: the source type (right-hand side (RHS) type)</p>
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

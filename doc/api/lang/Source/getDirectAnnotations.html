@@ -89,7 +89,7 @@ for (final route in routes) {
   <pre class="language-dart"><code class="language-dart">List&lt;A&gt; getDirectAnnotations&lt;A&gt;() {
   checkAccess(&#39;getDirectAnnotations&#39;, DomainPermission.READ_ANNOTATIONS);
   final annotations = getAllDirectAnnotations();
-  return annotations.where((a) =&gt; a.getClass().getType() == A).map((a) =&gt; a.getInstance&lt;A&gt;()).toList();
+  return annotations.where((a) =&gt; a.matches&lt;A&gt;()).map((a) =&gt; a.getInstance&lt;A&gt;()).toList();
 }</code></pre>
 </section>
 
@@ -118,7 +118,7 @@ for (final route in routes) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

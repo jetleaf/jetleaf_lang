@@ -12,12 +12,12 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 
-import '../closeable.dart';
-import '../flushable.dart';
+import '../base.dart';
 import '../../exceptions.dart';
 
 /// {@template output_stream}
@@ -187,10 +187,34 @@ abstract class OutputStream implements Closeable, Flushable {
   /// 
   /// Throws [IOException] if an I/O error occurs.
   /// Throws [StreamClosedException] if the stream has been closed.
-  Future<void> writeString(String str) async {
+  Future<void> writeString(String str, [Encoding? encoding]) async {
     final bytes = Uint8List.fromList(str.codeUnits);
     await writeBytes(bytes);
   }
+
+  /// Writes the given [obj] to the output stream.
+  ///
+  /// This method serializes or converts the object into a form that can be
+  /// transmitted or stored by the underlying stream implementation.
+  /// The exact behavior depends on the concrete [OutputStream] implementation
+  /// (e.g., writing bytes, text, or structured data).
+  ///
+  /// Example:
+  /// ```dart
+  /// final out = OutputStream();
+  ///
+  /// // Write a string or number
+  /// await out.writeObject('Hello, world!');
+  /// await out.writeObject(42);
+  ///
+  /// // Write a custom object, depending on stream support
+  /// await out.writeObject({'key': 'value'});
+  /// ```
+  ///
+  /// [obj] – The object to write. Can be `null`.
+  ///
+  /// Throws an exception if writing fails or the stream is closed.
+  Future<void> writeObject(Object? obj);
   
   /// Flushes this output stream and forces any buffered output bytes to be
   /// written out.

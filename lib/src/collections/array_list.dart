@@ -14,7 +14,7 @@
 
 import 'dart:math';
 
-import '../annotations.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
 
 /// {@template array_list}
 /// A resizable array implementation similar to Java's ArrayList.

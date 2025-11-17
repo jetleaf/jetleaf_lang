@@ -55,9 +55,10 @@
     <section class="multi-line-signature">
       
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span></span>
-<span class="name ">forType</span>&lt;<wbr><span class="type-parameter">C</span>&gt;(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="forType-param-type"><span class="type-annotation">C</span> <span class="parameter-name">type</span>, [</span></li>
+<span class="name ">forType</span>&lt;<wbr><span class="type-parameter">C</span>&gt;(<wbr><ol class="parameter-list"> <li><span class="parameter" id="forType-param-type"><span class="type-annotation">C</span> <span class="parameter-name">type</span>, [</span></li>
 <li><span class="parameter" id="forType-param-domain"><span class="type-annotation"><a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span></li>
-<li><span class="parameter" id="forType-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span></li>
+<li><span class="parameter" id="forType-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="forType-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span>, </span></li>
 </ol>])
 
       
@@ -88,8 +89,8 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">static Class&lt;C&gt; forType&lt;C&gt;(C type, [ProtectionDomain? domain, String? package]) {
-  return _Class&lt;C&gt;(type.toString(), domain ?? ProtectionDomain.current(), package);
+  <pre class="language-dart"><code class="language-dart">static Class&lt;C&gt; forType&lt;C&gt;(C type, [ProtectionDomain? domain, String? package, LinkDeclaration? link]) {
+  return _Class&lt;C&gt;(type.toString(), domain ?? ProtectionDomain.current(), package, link);
 }</code></pre>
 </section>
 
@@ -118,7 +119,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

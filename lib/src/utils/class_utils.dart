@@ -16,23 +16,23 @@
 
 import 'dart:async';
 
-import '../constant.dart';
-import '../declaration/declaration.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../extensions/primitives/string.dart';
 import '../collections/hash_set.dart';
 import '../commons/optional.dart';
 import '../extensions/primitives/map.dart';
 import '../math/big_integer.dart';
-import '../meta/protection_domain.dart';
+import '../meta/class/class_gettable.dart';
+import '../meta/class/class_type.dart';
+import '../meta/protection_domain/protection_domain.dart';
 import '../primitives/boolean.dart';
 import '../primitives/character.dart';
 import '../primitives/double.dart';
 import '../primitives/float.dart';
 import '../primitives/integer.dart';
-import '../runtime/runtime_provider/meta_runtime_provider.dart';
-import '../throwable.dart';
-import '../meta/method.dart';
-import '../meta/class.dart';
+import '../meta/method/method.dart';
+import '../meta/class/class.dart';
 
 bool _initialized = false;
 
@@ -983,5 +983,200 @@ final class ClassUtils {
 
     final clazz = object.getClass();
     return isAsync(clazz);
+  }
+
+  /// Checks whether the given [type] represents a generated proxy class.
+  ///
+  /// A proxy class in JetLeaf is identified by its name starting with
+  /// the constant prefix defined in [Constant.PROXY_IDENTIFIER].
+  ///
+  /// - [type]: The [Class] object representing the type to check.
+  /// 
+  /// Returns `true` if the type's name starts with the proxy prefix,
+  /// otherwise returns `false`.
+  static bool isProxyClass(Class type) => type.getName().startsWith(Constant.PROXY_IDENTIFIER);
+
+  /// Retrieves the original (non-proxied) [Class] representation for a given proxy type
+  /// or instance within the JetLeaf runtime.
+  ///
+  /// This method is used to resolve the *real* class behind a generated proxy. It ensures
+  /// that even when dealing with a proxied instance or type, JetLeaf can correctly
+  /// identify and access the underlying class metadata for reflection, interception,
+  /// and validation.
+  ///
+  /// The resolution logic follows this order:
+  /// 1. **Instance check** – If [instance] is provided:
+  ///    - If the instance is itself a proxy (`runtimeType` starts with
+  ///      [Constant.PROXY_IDENTIFIER]) and implements [ClassGettable],
+  ///      it directly returns `instance.toClass()`.
+  ///    - Otherwise, if it’s a normal runtime object (not `"Type"` and not a proxy),
+  ///      it resolves the class using its qualified name derived from
+  ///      [ReflectionUtils.findQualifiedNameFromType].
+  ///
+  /// 2. **Static method check** – If no instance or proxy mapping is found,
+  ///    it attempts to invoke the proxy’s static
+  ///    [Constant.STATIC_REAL_CLASS_METHOD_NAME] (i.e., `getRealClass`)
+  ///    to retrieve the original class reference.
+  ///
+  /// 3. **Fallback** – If neither of the above applies, it returns
+  ///    the declared interface of [proxyClass] (if available), otherwise the
+  ///    [proxyClass] itself.
+  ///
+  /// This method guarantees that JetLeaf always operates on the actual logical
+  /// class definition, even when proxies are introduced for interception or lifecycle
+  /// management.
+  ///
+  /// Example:
+  /// ```dart
+  /// final realClass = ClassUtils.getProxiedClass(proxyClass, instance);
+  /// print('Resolved class: ${realClass.getName()}');
+  /// ```
+  static Class getProxiedClass(Class proxyClass, [Object? instance]) {
+    _ensureInitialized();
+
+    if (instance != null) {
+      final string = instance.runtimeType.toString();
+
+      if (string.startsWith(Constant.PROXY_IDENTIFIER) && instance is ClassGettable) {
+        return instance.toClass();
+      }
+
+      if (string.notEqualsIgnoreCase("type") && !string.startsWith(Constant.PROXY_IDENTIFIER)) {
+        return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(instance.runtimeType));
+      }
+    }
+
+    final method = proxyClass.getMethod(Constant.STATIC_REAL_CLASS_METHOD_NAME);
+    if (method != null) {
+      return method.invoke(null);
+    }
+
+    return proxyClass.getDeclaredInterface() ?? proxyClass;
+  }
+
+  /// Checks whether a class with the given [name] exists and can be loaded.
+  ///
+  /// This attempts to resolve the class using `Class.fromQualifiedName(name)`.
+  /// If the class is found, returns `true`. If any exception occurs (class not found,
+  /// invalid name, etc.), returns `false`.
+  ///
+  /// Example:
+  /// ```dart
+  /// bool exists = Utils.isClass('dart.core.String'); // true
+  /// bool missing = Utils.isClass('non.existent.Class'); // false
+  /// ```
+  static bool isClass(String name) {
+    _ensureInitialized();
+
+    try {
+      Class.fromQualifiedName(name);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Returns a [Class] representation of the given [type].
+  ///
+  /// This method performs runtime reflection to resolve the fully qualified
+  /// name of the type and returns a [Class] instance representing it.
+  /// It allows inspecting metadata, annotations, and other class-level
+  /// information at runtime.
+  ///
+  /// Example:
+  /// ```dart
+  /// final clazz = ClassUtils.getClass(User);
+  /// print(clazz.name); // Output: 'User'
+  /// print(clazz.qualifiedName); // Output: 'package:example/example/src/user.dart.User'
+  /// ```
+  ///
+  /// [type] – The Dart [Type] to resolve into a [Class] representation.
+  ///
+  /// Returns a [Class] instance corresponding to the provided type.
+  static Class getClass(Type type) {
+    _ensureInitialized();
+    return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(type));
+  }
+
+  /// Attempts to resolve and load a [`Class`] instance from a given [object].
+  ///
+  /// This utility provides a unified way to dynamically convert different forms
+  /// of class references — such as [`ClassType`], Dart [`Type`], or a qualified
+  /// class name [`String`] — into a reflectable [`Class`] representation used
+  /// within JetLeaf's type system.
+  ///
+  /// ### Resolution Rules
+  ///
+  /// The method evaluates the runtime type of [object] in the following order:
+  ///
+  /// 1. **[`ClassType`]** → Converts directly using [`ClassType.toClass()`].
+  /// 2. **[`Type`]** → Resolved reflectively using [`ClassUtils.getClass()`].
+  /// 3. **[`String`]** → If recognized as a qualified class name (via
+  ///    [`ClassUtils.isClass()`]), it is converted using
+  ///    [`Class.fromQualifiedName()`].
+  ///
+  /// If [object] does not match any of these recognized types, or if the string
+  /// is not a valid qualified class name, the method returns `null`.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final c1 = ClassUtils.loadClass(ClassType<UserService>());
+  /// final c2 = ClassUtils.loadClass(UserService);
+  /// final c3 = ClassUtils.loadClass('package:app/services.dart.UserService');
+  ///
+  /// // All of the above yield equivalent Class representations.
+  /// final c4 = ClassUtils.loadClass('userService'); // → null (not a class name)
+  /// ```
+  ///
+  /// ### Returns
+  /// A [`Class`] instance if successfully resolved, otherwise `null`.
+  ///
+  /// ### See Also
+  /// - [`ClassUtils.getClass`] — Resolves from a Dart [Type].
+  /// - [`ClassType`] — Type-safe wrapper used in annotation-based metadata.
+  /// - [`Class.fromQualifiedName`] — Builds a [`Class`] from a qualified name.
+  static Class? loadClass(Object object) {
+    try {
+      if (object is ClassType) {
+        return object.toClass();
+      } else if (object is Type) {
+        return ClassUtils.getClass(object);
+      } else if (object is String && ClassUtils.isClass(object)) {
+        return Class.fromQualifiedName(object);
+      }
+    } catch (_) {
+      return null;
+    }
+
+    return null;
+  }
+
+  /// Checks whether the given [object] is of type `void`.
+  ///
+  /// This is useful when dealing with reflective method return types,
+  /// to determine if a method returns `void` (i.e., does not return a value).
+  ///
+  /// ### Parameters
+  /// - [object]: The object to inspect. Can be any value or `null`.
+  ///
+  /// ### Returns
+  /// - `true` if the object represents a `void` return type (no value).
+  /// - `false` otherwise.
+  ///
+  /// ### Example
+  /// ```dart
+  /// void doSomething() {}
+  /// int sum(int a, int b) => a + b;
+  ///
+  /// print(ClassUtils.isVoid(doSomething())); // true
+  /// print(ClassUtils.isVoid(sum(1, 2))); // false
+  /// ```
+  static bool isVoid(dynamic object) {
+    try {
+      Class.forObject(object);
+      return false;
+    } catch (_) {
+      return true;
+    }
   }
 }

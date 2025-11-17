@@ -96,9 +96,7 @@ print(counts[Optional.empty()]); // 0
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">@override
-int get hashCode {
-  return _value?.hashCode ?? 0;
-}</code></pre>
+int get hashCode =&gt; _value?.hashCode ?? 0;</code></pre>
 </section>
 
   </section>
@@ -128,7 +126,7 @@ int get hashCode {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

@@ -89,7 +89,7 @@ if (deprecated != null) {
 
   final annotations = getAllDirectAnnotations();
   for (final annotation in annotations) {
-    if (annotationMatches&lt;A&gt;(annotation)) {
+    if (annotation.matches&lt;A&gt;()) {
       try {
         return annotation.getInstance&lt;A&gt;();
       } catch (_) {
@@ -127,7 +127,7 @@ if (deprecated != null) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

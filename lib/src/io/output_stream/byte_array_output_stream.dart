@@ -58,8 +58,7 @@ class ByteArrayOutputStream extends OutputStream {
   /// If not provided, defaults to `32` bytes.
   ///
   /// The internal buffer will automatically grow when needed.
-  ByteArrayOutputStream([int initialCapacity = _defaultInitialCapacity])
-      : _buffer = Uint8List(initialCapacity);
+  ByteArrayOutputStream([int initialCapacity = _defaultInitialCapacity]) : _buffer = Uint8List(initialCapacity);
   
   @override
   Future<void> writeByte(int b) async {
@@ -68,14 +67,18 @@ class ByteArrayOutputStream extends OutputStream {
     _ensureCapacity(_count + 1);
     _buffer[_count++] = b & 0xFF;
   }
+
+  @override
+  Future<void> writeObject(Object? obj) async {
+    checkClosed();
+    writeString(obj.toString());
+  }
   
   @override
   Future<void> write(List<int> b, [int offset = 0, int? length]) async {
     checkClosed();
 
-    
-    length ??= b.length - offset;
-    
+    length ??= b.length - offset;    
     if (offset < 0 || length < 0 || offset + length > b.length) {
       throw InvalidArgumentException('Invalid offset or length');
     }
@@ -105,9 +108,7 @@ class ByteArrayOutputStream extends OutputStream {
   /// Returns a copy of the current contents as a byte array.
   /// 
   /// Returns a new Uint8List containing the written data.
-  Uint8List toByteArray() {
-    return Uint8List.fromList(_buffer.take(_count).toList());
-  }
+  Uint8List toByteArray() => Uint8List.fromList(_buffer.take(_count).toList());
   
   /// Returns the current size of the buffer (number of bytes written).
   int size() => _count;
@@ -118,9 +119,7 @@ class ByteArrayOutputStream extends OutputStream {
   /// 
   /// Returns the contents as a string.
   @override
-  String toString([String encoding = 'utf-8']) {
-    return String.fromCharCodes(_buffer.take(_count));
-  }
+  String toString([String encoding = 'utf-8']) => String.fromCharCodes(_buffer.take(_count));
   
   /// Resets the buffer to empty, discarding all written data.
   void reset() {

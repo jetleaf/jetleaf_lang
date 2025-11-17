@@ -1,8 +1,7 @@
-import '../annotations.dart';
-import '../declaration/declaration.dart';
-import '../meta/method.dart';
-import '../meta/protection_domain.dart';
-import '../runtime/runtime_provider/meta_runtime_provider.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
+import '../meta/method/method.dart';
+import '../meta/protection_domain/protection_domain.dart';
 
 /// A cached list of all method declarations visible to the JetLeaf [Runtime].
 /// 
@@ -199,4 +198,38 @@ final class MethodUtils {
 
     return result;
   }
+
+  /// Returns a list of method names that are considered *default* or
+  /// *framework-intrinsic* and should typically be ignored when scanning
+  /// for repository operations.
+  ///
+  /// These methods originate from `Object` or the Dart runtime and are not
+  /// user-defined behaviors relevant to repository processing.
+  ///
+  /// ### Returned method names:
+  /// - `"=="` – Equality operator
+  /// - `"hashCode"` – Hash code getter
+  /// - `"toString"` – String representation
+  /// - `"noSuchMethod"` – Fallback for missing invocations
+  /// - `"runtimeType"` – Reflective access to the object's type
+  ///
+  /// ### Use Cases
+  /// - Filtering out non-repository methods when building repository
+  ///   definitions.
+  /// - Avoiding accidental interception of built-in Dart object methods.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final ignored = getDefaultMethodNames();
+  /// if (!ignored.contains(method.name)) {
+  ///   processRepositoryMethod(method);
+  /// }
+  /// ```
+  static List<String> getDefaultMethodNames() => [
+    "==",
+    "hashCode",
+    "toString",
+    "noSuchMethod",
+    "runtimeType",
+  ];
 }

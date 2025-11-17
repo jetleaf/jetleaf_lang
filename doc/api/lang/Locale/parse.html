@@ -63,24 +63,15 @@
     </section>
     
 <section class="desc markdown">
-  <p>Parses a locale string of the form <code>"language[-country[-variant]]"</code>.</p>
-<p>This factory method creates a <a href="../../lang/Locale-class.html">Locale</a> instance from a string representation.
-The string should follow the standard locale format with components
-separated by hyphens.</p>
-<p>Throws <a href="../../lang/InvalidFormatException-class.html">InvalidFormatException</a> if the locale string is empty or invalid.</p>
+  <p>Parses a language range string that may include weight.</p>
+<p>Format: <code>language-range[;q=weight]</code>
+Weight format follows HTTP Accept-Language header convention.</p>
 <p>Example:</p>
-<pre class="language-dart"><code class="language-dart">// Parse language only
-final locale1 = Locale.parse('en');
-print(locale1.getLanguageTag()); // Output: "en"
+<pre class="language-dart"><code class="language-dart">final range1 = LanguageRange.parse('en-US;q=0.9');
+print(range1.getWeight()); // Output: 0.9
 
-// Parse language and country
-final locale2 = Locale.parse('fr-CA');
-print(locale2.getLanguage()); // Output: "fr"
-print(locale2.getCountry()); // Output: "CA"
-
-// Parse language, country, and variant
-final locale3 = Locale.parse('de-DE-Bavaria');
-print(locale3.getVariant()); // Output: "Bavaria"
+final range2 = LanguageRange.parse('fr');
+print(range2.getWeight()); // Output: 1.0
 </code></pre>
 </section>
 
@@ -116,7 +107,7 @@ print(locale3.getVariant()); // Output: "Bavaria"
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

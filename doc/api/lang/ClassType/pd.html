@@ -63,7 +63,16 @@
       
 <section class="desc markdown">
   <p>The <a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a> associated with this class reference.</p>
-<p>If not provided, defaults to <a href="../../lang/ProtectionDomain/current.html">ProtectionDomain.current</a> when calling <a href="../../lang/ClassType/toClass.html">toClass</a>.</p>
+<p>If not provided, defaults to <a href="../../lang/ProtectionDomain/current.html">ProtectionDomain.current</a> when calling <a href="../../lang/ClassType/toClass.html">toClass</a>.
+The protection domain controls access permissions and security context
+for class loading and reflection operations.</p>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final secureDomain = ProtectionDomain.secure();
+final classType = ClassType(
+  name: 'SecureService',
+  pd: secureDomain
+);
+</code></pre>
 </section>
 
       
@@ -98,7 +107,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

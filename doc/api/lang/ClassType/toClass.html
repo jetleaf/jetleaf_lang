@@ -54,41 +54,66 @@
 
     <section class="multi-line-signature">
       
+  <div>
+    <ol class="annotation-list">
+        <li>@<a href="https://api.dart.dev/stable/3.9.2/dart-core/override-constant.html">override</a></li>
+    </ol>
+  </div>
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
 <span class="name ">toClass</span>(<wbr>)
 
-      
+      <div class="features"><span class="feature">override</span></div>
 
     </section>
     
 <section class="desc markdown">
-  <p>Converts this <a href="../../lang/ClassType-class.html">ClassType</a> into a <a href="../../lang/Class-class.html">Class</a> instance used by Jetleaf.</p>
-<p>Logic:</p>
+  <p>Converts this <a href="../../lang/ClassType-class.html">ClassType</a> into a <a href="../../lang/Class-class.html">Class</a> instance for use by Jetleaf.</p>
+<p>This method resolves the class reference into a concrete <a href="../../lang/Class-class.html">Class</a> instance
+that can be used for reflection, method invocation, and other runtime
+operations. The resolution follows a specific priority order to ensure
+the most precise class information is used.</p>
+<h3 id="resolution-order">Resolution order:</h3>
 <ol>
-<li>If <a href="../../lang/ClassType/declaration.html">declaration</a> is provided, returns <code>Class.declared(declaration, pd)</code>.</li>
-<li>If <a href="../../lang/ClassType/name.html">name</a> is provided, returns <code>Class.forName(name, pd, package)</code>.</li>
-<li>Otherwise, returns a generic <code>Class&lt;T&gt;</code> with the given <a href="../../lang/ClassType/pd.html">pd</a> and <a href="../../lang/ClassType/package.html">package</a>.</li>
+<li>If <a href="../../lang/ClassType/declaration.html">declaration</a> is provided → returns <code>Class.declared(declaration, pd)</code>.</li>
+<li>Else if <a href="../../lang/ClassType/name.html">name</a> is provided → returns <code>Class.forName(name, pd, package)</code>.</li>
+<li>Else if <a href="../../lang/ClassType/qualifiedName.html">qualifiedName</a> is provided → returns <code>Class.fromQualifiedName(qualifiedName)</code>.</li>
+<li>Otherwise → returns a generic <code>Class&lt;T&gt;</code> with the resolved <a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>.</li>
 </ol>
 <h3 id="example">Example:</h3>
-<pre class="language-dart"><code class="language-dart">final classRef = ClassType(name: 'UserService');
-final userClass = classRef.toClass();
+<pre class="language-dart"><code class="language-dart">void demonstrateClassResolution() {
+  // From declaration (most precise)
+  final fromDecl = ClassType.declared(UserService).toClass();
 
-final declaredClassRef = ClassType(declaration: someTypeDeclaration);
-final declaredClass = declaredClassRef.toClass();
+  // From name and package
+  final named = ClassType.named('UserService', 'example').toClass();
+
+  // From qualified name
+  final fromQualified = ClassType.qualified('package:example/services.dart.UserService').toClass();
+
+  // Generic type parameter
+  final fromGeneric = ClassType&lt;UserService&gt;().toClass();
+}
 </code></pre>
+<p>@return A <a href="../../lang/Class-class.html">Class&lt;T&gt;</a> instance representing the referenced class
+@throws ClassNotFoundException if the class cannot be resolved</p>
 </section>
 
 
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Class&lt;T&gt; toClass() {
+  <pre class="language-dart"><code class="language-dart">@override
+Class&lt;T&gt; toClass() {
   if (declaration != null) {
     return Class.declared(declaration!, pd ?? ProtectionDomain.current());
   }
 
   if (name != null) {
     return Class.forName(name!, pd ?? ProtectionDomain.current(), package);
+  }
+
+  if (qualifiedName != null) {
+    return Class.fromQualifiedName(qualifiedName!);
   }
 
   return Class&lt;T&gt;(pd ?? ProtectionDomain.current(), package);
@@ -120,7 +145,7 @@ final declaredClass = declaredClassRef.toClass();
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

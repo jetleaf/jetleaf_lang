@@ -54,11 +54,12 @@
 
     <section class="multi-line-signature">
       const
-      <span class="name ">ClassType&lt;<wbr><span class="type-parameter">T</span>&gt;</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span></li>
-<li><span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span></li>
+      <span class="name ">ClassType&lt;<wbr><span class="type-parameter">T</span>&gt;</span>(<wbr>[<ol class="parameter-list"> <li><span class="parameter" id="-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="-param-name"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">name</span>, </span></li>
 <li><span class="parameter" id="-param-pd"><span class="type-annotation"><a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">pd</span>, </span></li>
-<li><span class="parameter" id="-param-declaration"><span class="type-annotation"><a href="../../lang/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span>, </span></li>
-</ol>})
+<li><span class="parameter" id="-param-declaration"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>?</span> <span class="parameter-name">declaration</span>, </span></li>
+<li><span class="parameter" id="-param-qualifiedName"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">qualifiedName</span>, </span></li>
+</ol>])
     </section>
     
 <section class="desc markdown">
@@ -67,12 +68,16 @@ class, optionally including metadata such as package, protection domain,
 or type declaration.</p>
 <p>It provides a convenient way to convert a class reference into a <a href="../../lang/Class-class.html">Class</a>
 instance used by the Jetleaf framework for reflection, conditional
-processing, or pod registration.</p>
+processing, or pod registration. ClassType serves as a bridge between
+compile-time type information and runtime class metadata in JetLeaf's
+type system infrastructure.</p>
 <h3 id="key-features">Key Features:</h3>
 <ul>
-<li>Supports optional class <a href="../../lang/ClassType/name.html">name</a>, <a href="../../lang/ClassType/package.html">package</a>, <a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>, and <a href="../../lang/TypeDeclaration-class.html">TypeDeclaration</a>.</li>
+<li>Supports optional class <a href="../../lang/ClassType/name.html">name</a>, <a href="../../lang/ClassType/package.html">package</a>, <a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>, and <a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/TypeDeclaration-class.html">TypeDeclaration</a>.</li>
 <li>Can convert itself into a <a href="../../lang/Class-class.html">Class</a> instance using <a href="../../lang/ClassType/toClass.html">toClass</a>.</li>
 <li>Integrates with Jetleaf's type system for dynamic class handling.</li>
+<li>Provides multiple factory constructors for flexible class reference creation.</li>
+<li>Supports equality and hash code operations for use in collections.</li>
 </ul>
 <h3 id="usage-example">Usage Example:</h3>
 <pre class="language-dart"><code class="language-dart">import 'package:jetleaf/jetleaf.dart';
@@ -86,14 +91,30 @@ final userClass = simpleClass.toClass();
 // Create a ClassType with a TypeDeclaration
 final declaredClass = ClassType(declaration: someTypeDeclaration);
 final declaredClassInstance = declaredClass.toClass();
+
+// Use in pod registration
+@Pod
+class ServiceConfiguration {
+  @Provide
+  UserService userService() =&gt; UserService();
+
+  @Provide
+  ClassType&lt;UserService&gt; userServiceType() =&gt; ClassType&lt;UserService&gt;();
+}
 </code></pre>
+<p>Creates a ClassType with optional components for flexible class referencing.</p>
+<p>@param package The package URI containing the class
+@param name The simple name of the class
+@param pd The protection domain for class access
+@param declaration The type declaration metadata
+@param qualifiedName The fully qualified class name with URI</p>
 </section>
 
 
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">const ClassType({this.name, this.package, this.pd, this.declaration});</code></pre>
+  <pre class="language-dart"><code class="language-dart">const ClassType([this.package, this.name, this.pd, this.declaration, this.qualifiedName]);</code></pre>
 </section>
 
 
@@ -121,7 +142,7 @@ final declaredClassInstance = declaredClass.toClass();
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

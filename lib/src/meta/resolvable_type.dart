@@ -12,10 +12,10 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../declaration/declaration.dart';
-import 'class.dart';
-import '../runtime/type_discovery.dart';
-import 'protection_domain.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
+import 'class/class.dart';
+import 'protection_domain/protection_domain.dart';
 
 /// {@template resolvable_type}
 /// A comprehensive type resolution system for Dart that provides advanced type introspection,

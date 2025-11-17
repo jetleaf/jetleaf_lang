@@ -105,7 +105,7 @@ List&lt;Class&gt; findTypeParameters(Class parentClass) {
 
   &#47;&#47; Compute classes
   final args = parentClass.getTypeDeclaration().getTypeArguments();
-  final classes = args.map((tp) =&gt; _getFromLink(tp, parentClass.getProtectionDomain(), useType: true)).toList();
+  final classes = args.map((tp) =&gt; getFromLink(tp, parentClass.getProtectionDomain(), useType: true)).toList();
 
   &#47;&#47; Cache result
   _typeParameterCache[cacheKey] = classes;
@@ -139,7 +139,7 @@ List&lt;Class&gt; findTypeParameters(Class parentClass) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

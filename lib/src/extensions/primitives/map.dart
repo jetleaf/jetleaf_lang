@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../../commons/instance.dart';
+import '../../commons/commons.dart';
 import '../others/t.dart';
 
 extension MapExtensions<K, V> on Map<K, V> {

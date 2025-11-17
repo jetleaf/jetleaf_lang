@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'throwable.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
 
 /// {@template thread_interrupted_exception}
 /// Exception thrown when an Isolate (thread) is unexpectedly interrupted during
@@ -395,41 +395,6 @@ class UnsupportedOperationException extends RuntimeException {
   }
 }
 
-/// {@template not_implemented_resolver_exception}
-/// Exception thrown when an operation in the [ExecutableResolver] is not implemented
-/// or cannot be resolved at runtime.
-///
-/// This exception is used to signal unsupported operations, typically due to the
-/// current execution mode (e.g., trying to use `dart:mirrors` in an AOT environment).
-///
-/// ## Example
-/// ```dart
-/// final resolver = MyAOTResolver();
-/// try {
-///   resolver.newInstance('MyClass');
-/// } catch (e) {
-///   if (e is UnImplementedResolverException) {
-///     print('Operation not supported in AOT mode');
-///   }
-/// }
-/// ```
-/// {@endtemplate}
-class UnImplementedResolverException extends RuntimeException {
-  /// The type that the operation was attempted on.
-  final Type type;
-
-  /// {@macro not_implemented_resolver_exception}
-  UnImplementedResolverException(this.type, super.message, {super.cause});
-
-  @override
-  String toString() {
-    if (cause != null) {
-      return 'UnImplementedResolverException: $message ($type) (Cause: $cause)';
-    }
-    return 'UnImplementedResolverException: $message ($type)';
-  }
-}
-
 /// {@template uri_path_matching_exception}
 /// Exception thrown when a URI or route path fails to match a defined template
 /// in a path matcher.
@@ -627,4 +592,43 @@ class ClassNotFoundException extends RuntimeException {
   @override
   String toString() =>
       'ClassNotFoundException: Class "$className" was not found in the runtime provider.';
+}
+
+/// {@template bundler_exception}
+/// An exception thrown when an asset cannot be loaded by the JetLeaf bundler.
+///
+/// This exception typically occurs when trying to read or resolve a file
+/// that does not exist, is inaccessible, or fails during the bundling process.
+///
+/// The [assetPath] provides the full relative or absolute path of the asset
+/// that failed to load, and the optional [cause] can point to the underlying
+/// exception that triggered the failure.
+///
+/// Example usage:
+/// ```dart
+/// throw AssetLoaderException('Failed to load template', 'templates/home.html');
+/// ```
+/// {@endtemplate}
+class AssetLoaderException extends RuntimeException {
+  /// The full path to the asset that could not be loaded.
+  final String assetPath;
+
+  /// {@macro bundler_exception}
+  ///
+  /// - [message]: A human-readable error message describing the failure.
+  /// - [assetPath]: The relative or absolute path of the asset.
+  /// - [cause]: (Optional) The underlying cause of the error.
+  AssetLoaderException(super.message, this.assetPath, {super.cause});
+
+  /// Returns a human-readable string representation of the exception,
+  /// including the asset path and the underlying cause, if present.
+  @override
+  String toString() {
+    final buffer = StringBuffer('AssetLoaderException: $message');
+    buffer.writeln('\nAsset path: $assetPath');
+    if (cause != null) {
+      buffer.writeln('Caused by: $cause');
+    }
+    return buffer.toString();
+  }
 }

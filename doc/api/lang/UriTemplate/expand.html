@@ -55,8 +55,9 @@
     <section class="multi-line-signature">
       
 <span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
-<span class="name ">expand</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="expand-param-variables"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">variables</span></span></li>
-</ol>)
+<span class="name ">expand</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="expand-param-variables"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">variables</span>, [</span></li>
+<li><span class="parameter" id="expand-param-throwIfNotFound"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">throwIfNotFound</span> = <span class="default-value">true</span></span></li>
+</ol>])
 
       
 
@@ -65,7 +66,7 @@
 <section class="desc markdown">
   <p>Replaces all variable placeholders in the template with actual values
 provided in the <code>variables</code> map.</p>
-<p>Throws a <code>PathMatchingException</code> if any required variable is missing.</p>
+<p>Throws a <a href="../../lang/UriPathMatchingException-class.html">UriPathMatchingException</a> if any required variable is missing.</p>
 <hr>
 <h3 id="example">Example:</h3>
 <pre class="language-dart"><code class="language-dart">final template = UriTemplate('/docs/{section}/{page}');
@@ -78,10 +79,10 @@ print(url); // /docs/guide/intro
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">String expand(Map&lt;String, String&gt; variables) {
+  <pre class="language-dart"><code class="language-dart">String expand(Map&lt;String, String&gt; variables, [bool throwIfNotFound = true]) {
   String expandedPath = template;
   for (final varName in _variableNames) {
-    if (!variables.containsKey(varName)) {
+    if (!variables.containsKey(varName) &amp;&amp; throwIfNotFound) {
       throw UriPathMatchingException(&#39;Missing required URI template variable: $varName&#39;);
     }
     expandedPath = expandedPath.replaceAll(&#39;{$varName}&#39;, variables[varName]!);
@@ -116,7 +117,7 @@ print(url); // /docs/guide/intro
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

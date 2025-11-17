@@ -94,6 +94,8 @@ PodDefinitionValidationException if the specified method is not found in the giv
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">static Method? getMethodOrNull(Class clazz, String methodName, List&lt;Class&gt; paramTypes) {
+  _ensureInitialized();
+
   return clazz.getMethodBySignature(methodName, paramTypes);
 }</code></pre>
 </section>
@@ -123,7 +125,7 @@ PodDefinitionValidationException if the specified method is not found in the giv
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

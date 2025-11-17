@@ -12,8 +12,9 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 part '_reversed_comparator.dart';
 part '_natural_order_comparator.dart';

@@ -64,28 +64,17 @@
     </section>
     
 <section class="desc markdown">
-  <p>Check if this locale matches another (optionally ignoring variant).</p>
-<p>This method performs a flexible comparison between locales, allowing
-you to ignore the variant component for broader matching. Useful
-for finding compatible locales in internationalization scenarios.</p>
-<p>Parameters:</p>
-<ul>
-<li><code>other</code>: The locale to compare against</li>
-<li><code>ignoreVariant</code>: Whether to ignore variant differences (default: true)</li>
-</ul>
+  <p>Check if this language range matches a given language tag or Locale.</p>
+<p>This performs RFC 4647 basic filtering: the range matches the tag if
+it exactly equals the tag, or if it exactly equals a prefix of the tag
+such that the first character following the prefix is "-".</p>
 <p>Example:</p>
-<pre class="language-dart"><code class="language-dart">final locale1 = Locale('en', 'US', 'POSIX');
-final locale2 = Locale('en', 'US', 'UTF8');
-final locale3 = Locale('en', 'CA');
-
-// Matches ignoring variant (default)
-print(locale1.matches(locale2)); // Output: true
-
-// Exact match including variant
-print(locale1.matches(locale2, ignoreVariant: false)); // Output: false
-
-// Different countries don't match
-print(locale1.matches(locale3)); // Output: false
+<pre class="language-dart"><code class="language-dart">final range = LanguageRange('en');
+print(range.matches('en')); // Output: true
+print(range.matches('en-US')); // Output: true
+print(range.matches('en-US-x-twain')); // Output: true
+print(range.matches('fr')); // Output: false
+print(range.matches('eng')); // Output: false
 </code></pre>
 </section>
 
@@ -121,7 +110,7 @@ print(locale1.matches(locale3)); // Output: false
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

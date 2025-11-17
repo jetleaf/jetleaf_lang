@@ -55,7 +55,7 @@
     <section class="multi-line-signature">
       
 <span class="returntype"><a href="../../lang/Optional-class.html">Optional</a><span class="signature">&lt;<wbr><span class="type-parameter">U</span>&gt;</span></span>
-<span class="name ">map</span>&lt;<wbr><span class="type-parameter">U</span>&gt;(<wbr>[<ol class="parameter-list single-line"> <li><span class="parameter" id="map-param-mapper"><span class="type-annotation">U?</span> <span class="parameter-name">mapper</span>(<ol class="parameter-list single-line"> <li><span class="parameter" id="param-"><span class="type-annotation">T</span></span></li>
+<span class="name ">map</span>&lt;<wbr><span class="type-parameter">U</span>&gt;(<wbr>[<ol class="parameter-list single-line"> <li><span class="parameter" id="map-param-mapper"><span class="type-annotation">U</span> <span class="parameter-name">mapper</span>(<ol class="parameter-list single-line"> <li><span class="parameter" id="param-"><span class="type-annotation">T</span></span></li>
 </ol>)?</span></li>
 </ol>])
 
@@ -125,7 +125,7 @@ print(wordCount.get()); // {hello: 2, world: 1}
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Optional&lt;U&gt; map&lt;U&gt;([U? Function(T)? mapper]) {
+  <pre class="language-dart"><code class="language-dart">Optional&lt;U&gt; map&lt;U&gt;([U Function(T)? mapper]) {
   if (mapper == null) {
     throw InvalidArgumentException(&#39;mapper cannot be null&#39;);
   }
@@ -162,7 +162,7 @@ print(wordCount.get()); // {hello: 2, world: 1}
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

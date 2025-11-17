@@ -55,9 +55,10 @@
     <section class="multi-line-signature">
       
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
-<span class="name ">forObject</span>(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="forObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">obj</span>, [</span></li>
+<span class="name ">forObject</span>(<wbr><ol class="parameter-list"> <li><span class="parameter" id="forObject-param-obj"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">obj</span>, [</span></li>
 <li><span class="parameter" id="forObject-param-domain"><span class="type-annotation"><a href="../../lang/ProtectionDomain-class.html">ProtectionDomain</a>?</span> <span class="parameter-name">domain</span>, </span></li>
-<li><span class="parameter" id="forObject-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span></span></li>
+<li><span class="parameter" id="forObject-param-package"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a>?</span> <span class="parameter-name">package</span>, </span></li>
+<li><span class="parameter" id="forObject-param-link"><span class="type-annotation"><a href="https://pub.dev/documentation/jetleaf_build/1.0.0/jetleaf_build/LinkDeclaration-class.html">LinkDeclaration</a>?</span> <span class="parameter-name">link</span>, </span></li>
 </ol>])
 
       
@@ -82,15 +83,19 @@
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">static Class&lt;Object&gt; forObject(Object obj, [ProtectionDomain? domain, String? package]) {
+  <pre class="language-dart"><code class="language-dart">static Class&lt;Object&gt; forObject(Object obj, [ProtectionDomain? domain, String? package, LinkDeclaration? link]) {
   try {
-    return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(obj), domain ?? ProtectionDomain.system());
-  } on ClassNotFoundException catch (_) {
-    if(obj.runtimeType.toString().notEqualsIgnoreCase(&quot;type&quot;)) {
-      return _Class&lt;Object&gt;(obj.runtimeType.toString(), domain ?? ProtectionDomain.current(), package);
+    if(obj.runtimeType.toString().notEqualsIgnoreCase(&quot;type&quot;) || obj.runtimeType.toString().notEqualsIgnoreCase(&quot;dynamic&quot;)) {
+      return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(obj.runtimeType), domain ?? ProtectionDomain.system(), link);
     }
 
-    return _Class&lt;Object&gt;(obj.toString(), domain ?? ProtectionDomain.current(), package);
+    return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(obj), domain ?? ProtectionDomain.system(), link);
+  } on ClassNotFoundException catch (_) {
+    if(obj.runtimeType.toString().notEqualsIgnoreCase(&quot;type&quot;)) {
+      return _Class&lt;Object&gt;(obj.runtimeType.toString(), domain ?? ProtectionDomain.current(), package, link);
+    }
+
+    return _Class&lt;Object&gt;(obj.toString(), domain ?? ProtectionDomain.current(), package, link);
   }
 }</code></pre>
 </section>
@@ -120,7 +125,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

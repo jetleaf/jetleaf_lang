@@ -79,7 +79,7 @@
 </ul>
 <h2 id="example">Example</h2>
 <pre class="language-dart"><code class="language-dart">final namespace = Uuid.NAMESPACE_DNS;
-final name = utf8.encode('example.com');
+final name = Closeable.DEFAULT_ENCODING.encode('example.com');
 final uuid1 = Uuid.nameUuidFromBytes(namespace, name);
 final uuid2 = Uuid.nameUuidFromBytes(namespace, name);
 print(uuid1 == uuid2); // true (deterministic)
@@ -134,7 +134,7 @@ print(uuid1.version); // 5
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

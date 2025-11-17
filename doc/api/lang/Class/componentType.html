@@ -57,29 +57,25 @@
 <span class="returntype"><a href="../../lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">C</span>&gt;</span>?</span>
 <span class="name ">componentType</span>&lt;<wbr><span class="type-parameter">C</span>&gt;(<wbr>)
 
-      
+      <div class="features"><span class="feature">inherited</span></div>
 
     </section>
     
 <section class="desc markdown">
-  <p>Gets the component type for collection-like generic classes.</p>
-<p>Type Parameters:</p>
+  <p>Retrieves the element or value type (<code>C</code>) of a <strong>collection-like</strong>
+or <strong>container-like</strong> generic structure.</p>
+<h3 id="supported-generic-types">Supported Generic Types</h3>
 <ul>
-<li><code>C</code>: The expected component type for type safety</li>
+<li>Lists: <code>List&lt;T&gt;</code> → returns <code>Class&lt;T&gt;</code></li>
+<li>Sets: <code>Set&lt;T&gt;</code> → returns <code>Class&lt;T&gt;</code></li>
+<li>Maps: <code>Map&lt;K, V&gt;</code> → returns <code>Class&lt;V&gt;</code></li>
+<li>Queues, Streams, or any class with a single generic parameter.</li>
 </ul>
-<p>Returns:</p>
-<ul>
-<li>A <a href="../../lang/Class-class.html">Class&lt;C&gt;</a> representing the element type</li>
-<li><code>null</code> if type information is unavailable</li>
-<li><code>Class&lt;dynamic&gt;</code> if not a collection-like type</li>
-</ul>
-<p>Works with:</p>
-<ul>
-<li>Lists (<code>List&lt;T&gt;</code> → <code>T</code>)</li>
-<li>Sets (<code>Set&lt;T&gt;</code> → <code>T</code>)</li>
-<li>Maps (<code>Map&lt;K,V&gt;</code> → <code>V</code>)</li>
-<li>Other generic collections</li>
-</ul>
+<h3 id="example">Example</h3>
+<pre class="language-dart"><code class="language-dart">final listClass = Class.forType&lt;List&lt;double&gt;&gt;();
+final componentType = listClass.asGenericSource().componentType&lt;double&gt;();
+print(componentType.getName()); // 'double'
+</code></pre>
 </section>
 
 
@@ -114,7 +110,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

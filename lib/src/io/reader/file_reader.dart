@@ -15,6 +15,7 @@
 import 'dart:io';
 import 'dart:convert';
 
+import '../base.dart';
 import 'reader.dart';
 import '../../exceptions.dart';
 
@@ -66,7 +67,7 @@ class FileReader extends Reader {
   /// 
   /// ## Parameters
   /// - [fileName]: The name of the file to read from
-  /// - [encoding]: The character encoding to use (default: utf8)
+  /// - [encoding]: The character encoding to use (default: Closeable.DEFAULT_ENCODING)
   /// 
   /// ## Example
   /// ```dart
@@ -79,14 +80,14 @@ class FileReader extends Reader {
   /// for reading.
   /// 
   /// {@macro file_reader}
-  FileReader(String fileName, {Encoding encoding = utf8}) 
+  FileReader(String fileName, {Encoding encoding = Closeable.DEFAULT_ENCODING}) 
       : _file = File(fileName), _encoding = encoding;
   
   /// Creates a new [FileReader], given the [File] to read from.
   /// 
   /// ## Parameters
   /// - [file]: The [File] to read from
-  /// - [encoding]: The character encoding to use (default: utf8)
+  /// - [encoding]: The character encoding to use (default: Closeable.DEFAULT_ENCODING)
   /// 
   /// ## Example
   /// ```dart
@@ -98,7 +99,7 @@ class FileReader extends Reader {
   /// than a regular file, or for some other reason cannot be opened for reading.
   /// 
   /// {@macro file_reader}
-  FileReader.fromFile(File file, {Encoding encoding = utf8}) 
+  FileReader.fromFile(File file, {Encoding encoding = Closeable.DEFAULT_ENCODING}) 
       : _file = file, _encoding = encoding;
   
   /// Ensures the file is open and the buffer is loaded.

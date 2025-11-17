@@ -115,7 +115,7 @@ Class? findSuperClass(Class parentClass, [bool declared = true]) {
   final link = parentClass.getTypeDeclaration().asClass()?.getSuperClass();
   if (link == null) return null;
 
-  final result = _getFromLink(link, parentClass.getProtectionDomain(), useType: declared);
+  final result = getFromLink(link, parentClass.getProtectionDomain(), useType: declared);
 
   &#47;&#47; Cache result
   _superClassCache[cacheKey] = result;
@@ -149,7 +149,7 @@ Class? findSuperClass(Class parentClass, [bool declared = true]) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

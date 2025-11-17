@@ -92,7 +92,7 @@ class UriTemplate {
   /// Replaces all variable placeholders in the template with actual values
   /// provided in the [variables] map.
   ///
-  /// Throws a [PathMatchingException] if any required variable is missing.
+  /// Throws a [UriPathMatchingException] if any required variable is missing.
   ///
   /// ---
   ///
@@ -103,10 +103,10 @@ class UriTemplate {
   /// print(url); // /docs/guide/intro
   /// ```
   /// {@endtemplate}
-  String expand(Map<String, String> variables) {
+  String expand(Map<String, String> variables, [bool throwIfNotFound = true]) {
     String expandedPath = template;
     for (final varName in _variableNames) {
-      if (!variables.containsKey(varName)) {
+      if (!variables.containsKey(varName) && throwIfNotFound) {
         throw UriPathMatchingException('Missing required URI template variable: $varName');
       }
       expandedPath = expandedPath.replaceAll('{$varName}', variables[varName]!);

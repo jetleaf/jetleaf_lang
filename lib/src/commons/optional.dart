@@ -12,8 +12,26 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
+
+/// Wraps the given [value] in an [Optional] container.
+///
+/// This allows representing a value that **may or may not be present**,
+/// providing a consistent API for optional handling instead of using `null`.
+///
+/// Example:
+/// ```dart
+/// final opt = optional(42);
+/// if (opt.isPresent()) {
+///   print('Value is ${opt.get()}');
+/// }
+/// ```
+///
+/// - [value]: The value to wrap. Can be `null`.
+/// - Returns: An [Optional] containing the provided [value].
+Optional<T> optional<T>(T? value) => Optional._(value);
 
 /// {@template optional}
 /// A container object which may or may not contain a non-null value.
@@ -272,9 +290,7 @@ final class Optional<T> {
   /// ```
   /// 
   /// {@macro optional}
-  static Optional<T> ofNullable<T>(T? value) {
-    return value == null ? empty<T>() : Optional<T>._(value);
-  }
+  static Optional<T> ofNullable<T>(T? value) => value == null ? empty<T>() : Optional<T>._(value);
 
   /// If a value is present, returns the value, otherwise throws [InvalidArgumentException].
   /// 
@@ -321,9 +337,7 @@ final class Optional<T> {
   ///   print("Name is: ${name.get()}");
   /// }
   /// ```
-  bool isPresent() {
-    return _value != null;
-  }
+  bool isPresent() => _value != null;
 
   /// If a value is not present, returns `true`, otherwise `false`.
   /// 
@@ -342,9 +356,7 @@ final class Optional<T> {
   ///   return "No data available";
   /// }
   /// ```
-  bool isEmpty() {
-    return _value == null;
-  }
+  bool isEmpty() => _value == null;
 
   /// If a value is present, performs the given action with the value,
   /// otherwise does nothing.
@@ -529,7 +541,7 @@ final class Optional<T> {
   ///     });
   /// print(wordCount.get()); // {hello: 2, world: 1}
   /// ```
-  Optional<U> map<U>([U? Function(T)? mapper]) {
+  Optional<U> map<U>([U Function(T)? mapper]) {
     if (mapper == null) {
       throw InvalidArgumentException('mapper cannot be null');
     }
@@ -760,7 +772,7 @@ final class Optional<T> {
   /// Config defaultConfig = Config("localhost", 8080);
   /// Config config = userConfig.orElse(defaultConfig);
   /// ```
-  T? orElse(T? other) {
+  T orElse(T other) {
     return _value != null ? _value as T : other;
   }
 
@@ -978,9 +990,7 @@ final class Optional<T> {
   /// print(counts[Optional.empty()]); // 0
   /// ```
   @override
-  int get hashCode {
-    return _value?.hashCode ?? 0;
-  }
+  int get hashCode => _value?.hashCode ?? 0;
 
   /// Returns a non-empty string representation of this [Optional]
   /// suitable for debugging.
@@ -1009,7 +1019,5 @@ final class Optional<T> {
   /// debugOptional(empty); // Debug: Optional.empty
   /// ```
   @override
-  String toString() {
-    return _value != null ? 'Optional[$_value]' : 'Optional.empty';
-  }
+  String toString() => _value != null ? 'Optional[$_value]' : 'Optional.empty';
 }

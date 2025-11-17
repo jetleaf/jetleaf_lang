@@ -15,8 +15,9 @@
 import 'dart:async';
 import 'dart:isolate';
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 import 'local_thread.dart';
 
 part 'thread_registry.dart';

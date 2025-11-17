@@ -12,8 +12,9 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../exceptions.dart';
-import '../annotations.dart';
 
 /// {@template hash_map}
 /// A custom implementation of a hash map that implements the `Map<K, V>` interface.

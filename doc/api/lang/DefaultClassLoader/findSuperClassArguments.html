@@ -109,7 +109,7 @@ List&lt;Class&gt; findSuperClassArguments(Class parentClass, [bool declared = tr
   final superType = parentClass.getTypeDeclaration().asClass()?.getSuperClass();
   if(superType == null) return [];
 
-  final result = superType.getTypeArguments().map((t) =&gt; _getFromLink(t, parentClass.getProtectionDomain(), useType: declared)).toList();
+  final result = superType.getTypeArguments().map((t) =&gt; getFromLink(t, parentClass.getProtectionDomain(), useType: declared)).toList();
 
   &#47;&#47; Cache result
   _superClassArgumentCache[cacheKey] = result;
@@ -143,7 +143,7 @@ List&lt;Class&gt; findSuperClassArguments(Class parentClass, [bool declared = tr
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

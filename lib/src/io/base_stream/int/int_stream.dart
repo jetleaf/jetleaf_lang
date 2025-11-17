@@ -60,7 +60,7 @@ abstract class IntStream extends BaseStream<int, IntStream> {
   /// ```
   /// 
   /// {@macro int_stream}
-  factory IntStream.of(Iterable<int> values) = IntStreamImplementation.of;
+  factory IntStream.of(Iterable<int> values) = StandardIntStream.of;
 
   /// Creates an [IntStream] from a range of integers.
   /// 
@@ -71,7 +71,7 @@ abstract class IntStream extends BaseStream<int, IntStream> {
   /// final stream = IntStream.range(1, 10); // 1, 2, 3, 4, 5, 6, 7, 8, 9
   /// ```
   /// {@macro int_stream}
-  factory IntStream.range(int startInclusive, int endExclusive) = IntStreamImplementation.range;
+  factory IntStream.range(int startInclusive, int endExclusive) = StandardIntStream.range;
 
   /// Creates an [IntStream] from a closed range of integers.
   /// 
@@ -82,7 +82,7 @@ abstract class IntStream extends BaseStream<int, IntStream> {
   /// final stream = IntStream.rangeClosed(1, 5); // 1, 2, 3, 4, 5
   /// ```
   /// {@macro int_stream}
-  factory IntStream.rangeClosed(int startInclusive, int endInclusive) = IntStreamImplementation.rangeClosed;
+  factory IntStream.rangeClosed(int startInclusive, int endInclusive) = StandardIntStream.rangeClosed;
 
   /// Creates an empty [IntStream].
   /// 
@@ -92,7 +92,7 @@ abstract class IntStream extends BaseStream<int, IntStream> {
   /// print(stream.count()); // 0
   /// ```
   /// {@macro int_stream}
-  factory IntStream.empty() = IntStreamImplementation.empty;
+  factory IntStream.empty() = StandardIntStream.empty;
 
   // Intermediate operations
 

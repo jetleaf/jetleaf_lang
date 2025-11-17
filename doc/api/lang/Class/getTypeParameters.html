@@ -57,22 +57,25 @@
 <span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../../lang/Class-class.html">Class</a></span>&gt;</span></span>
 <span class="name ">getTypeParameters</span>(<wbr>)
 
-      
+      <div class="features"><span class="feature">inherited</span></div>
 
     </section>
     
 <section class="desc markdown">
-  <p>Gets all generic type parameters of this class.</p>
-<p>Returns:</p>
-<ul>
-<li>List of type parameters in declaration order</li>
-<li>Empty list for non-generic classes</li>
-</ul>
-<p>Example:</p>
-<pre class="language-dart"><code class="language-dart">class Box&lt;T, V&gt; {}
-final params = Class.forType&lt;Box&gt;().getTypeParameters();
-print(params.length); // 2
+  <p>Returns all declared type parameters of this class in the order
+they appear in the class declaration.</p>
+<h3 id="example">Example</h3>
+<pre class="language-dart"><code class="language-dart">class Pair&lt;K, V&gt; {}
+final clazz = Class.forType&lt;Pair&gt;();
+final params = clazz.getTypeParameters();
+
+print(params.map((p) =&gt; p.getName())); // ['K', 'V']
 </code></pre>
+<h3 id="returns">Returns</h3>
+<ul>
+<li>A list of <a href="../../lang/Class-class.html">Class</a> objects representing each generic parameter.</li>
+<li>Returns an empty list for non-generic types.</li>
+</ul>
 </section>
 
 
@@ -107,7 +110,7 @@ print(params.length); // 2
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

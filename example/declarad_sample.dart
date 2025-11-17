@@ -14,8 +14,6 @@
 
 import 'package:jetleaf_lang/lang.dart';
 
-import '../test/_dependencies.dart';
-
 // ============================================================================
 // TEST DECLARATIONS - LIBRARY 1: Core Types
 // ============================================================================
@@ -436,7 +434,7 @@ class AuditLogger {
 
 void main() async {
   print('Setting up comprehensive reflection test environment...');
-  await setupRuntime(filesToLoad: [
+  await runTestScan(filesToLoad: [
     "/Users/mac/Documents/Hapnium/jetleaf/test/lang/reflect/declaration_test.dart",
     "/Users/mac/Documents/Hapnium/jetleaf/test/lang/reflect/class_test.dart",
   ]);

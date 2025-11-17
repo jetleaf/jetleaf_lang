@@ -26,7 +26,7 @@
   <ol class="breadcrumbs gt-separated dark hidden-xs">
     <li><a href="../index.html">jetleaf_lang</a></li>
     <li><a href="../lang/">lang.dart</a></li>
-    <li class="self-crumb">tryWith&lt;<wbr><span class="type-parameter">T extends AutoCloseable</span>&gt; function</li>
+    <li class="self-crumb">tryWith&lt;<wbr><span class="type-parameter">T extends Closeable</span>&gt; function</li>
   </ol>
   <div class="self-name">tryWith</div>
   <form class="search navbar-right" role="search">
@@ -48,14 +48,14 @@
       data-above-sidebar="lang&#47;lang-library-sidebar.html"
       data-below-sidebar="">
       <div>
-<h1><span class="kind-function">tryWith&lt;<wbr><span class="type-parameter">T extends AutoCloseable</span>&gt;</span> function 
+<h1><span class="kind-function">tryWith&lt;<wbr><span class="type-parameter">T extends Closeable</span>&gt;</span> function 
  
 </h1></div>
 
     <section class="multi-line-signature">
         
 <span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
-<span class="name ">tryWith</span>&lt;<wbr><span class="type-parameter">T extends AutoCloseable</span>&gt;(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="tryWith-param-resource"><span class="type-annotation">T</span> <span class="parameter-name">resource</span>, </span></li>
+<span class="name ">tryWith</span>&lt;<wbr><span class="type-parameter">T extends Closeable</span>&gt;(<wbr><ol class="parameter-list single-line"> <li><span class="parameter" id="tryWith-param-resource"><span class="type-annotation">T</span> <span class="parameter-name">resource</span>, </span></li>
 <li><span class="parameter" id="tryWith-param-action"><span class="type-annotation">TryWithAction<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span> <span class="parameter-name">action</span></span></li>
 </ol>)
 
@@ -96,7 +96,7 @@ void main() async {
     
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
-  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; tryWith&lt;T extends AutoCloseable&gt;(T resource, TryWithAction&lt;T&gt; action) async {
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; tryWith&lt;T extends Closeable&gt;(T resource, TryWithAction&lt;T&gt; action) async {
   try {
     await action(resource);
   } finally {
@@ -117,7 +117,7 @@ void main() async {
 <ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
     <li><a href="../index.html">jetleaf_lang</a></li>
     <li><a href="../lang/">lang</a></li>
-    <li class="self-crumb">tryWith&lt;<wbr><span class="type-parameter">T extends AutoCloseable</span>&gt; function</li>
+    <li class="self-crumb">tryWith&lt;<wbr><span class="type-parameter">T extends Closeable</span>&gt; function</li>
 </ol>
 
     <h5>lang library</h5>
@@ -129,7 +129,7 @@ void main() async {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

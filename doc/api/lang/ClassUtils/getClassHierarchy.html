@@ -125,6 +125,8 @@ final hierarchy = ClassUtils.getClassHierarchy(Class.of&lt;Color&gt;());
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">static List&lt;Class&gt; getClassHierarchy(Class type) {
+  _ensureInitialized();
+
   final result = _classHierarchy[type];
   if(result != null) {
     return result;
@@ -209,7 +211,7 @@ final hierarchy = ClassUtils.getClassHierarchy(Class.of&lt;Color&gt;());
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

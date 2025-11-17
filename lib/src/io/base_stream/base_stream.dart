@@ -12,8 +12,9 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../../annotations.dart';
-import '../auto_closeable.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
+
+import '../base.dart';
 
 /// {@template base_stream}
 /// Base interface for streams, which are sequences of elements supporting
@@ -40,7 +41,7 @@ import '../auto_closeable.dart';
 /// 
 /// {@endtemplate}
 @Generic(BaseStream)
-abstract class BaseStream<T, S extends BaseStream<T, S>> implements AutoCloseable {
+abstract class BaseStream<T, S extends BaseStream<T, S>> implements Closeable {
   /// {@macro base_stream}
   BaseStream();
 

@@ -120,6 +120,10 @@
   }
 
   try {
+    if(self.runtimeType.toString().notEqualsIgnoreCase(&quot;type&quot;) || self.runtimeType.toString().notEqualsIgnoreCase(&quot;dynamic&quot;)) {
+      return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(self.runtimeType), domain ?? ProtectionDomain.system());
+    }
+
     return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(self), domain ?? ProtectionDomain.system());
   } on ClassNotFoundException catch (_) {
     return Class.forObject(self, domain ?? ProtectionDomain.system(), package);
@@ -152,7 +156,7 @@
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

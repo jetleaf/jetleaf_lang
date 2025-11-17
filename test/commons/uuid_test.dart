@@ -26,7 +26,6 @@
 //
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:jetleaf_lang/lang.dart';
@@ -127,7 +126,7 @@ void main() {
     group('Name-based UUID Generation', () {
       test('should generate version 5 UUIDs from bytes', () {
         final namespace = Uuid.NAMESPACE_DNS;
-        final nameBytes = utf8.encode('example.com');
+        final nameBytes = Closeable.DEFAULT_ENCODING.encode('example.com');
         final uuid = Uuid.nameUuidFromBytes(namespace, nameBytes);
         expect(uuid.version, equals(5));
         expect(uuid.variant, equals(2));

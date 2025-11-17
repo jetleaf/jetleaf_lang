@@ -78,9 +78,7 @@
 <section class="summary source-code" id="source">
   <h2><span>Implementation</span></h2>
   <pre class="language-dart"><code class="language-dart">@override
-String toString([String encoding = &#39;utf-8&#39;]) {
-  return String.fromCharCodes(_buffer.take(_count));
-}</code></pre>
+String toString([String encoding = &#39;utf-8&#39;]) =&gt; String.fromCharCodes(_buffer.take(_count));</code></pre>
 </section>
 
 
@@ -108,7 +106,7 @@ String toString([String encoding = &#39;utf-8&#39;]) {
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

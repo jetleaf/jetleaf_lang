@@ -91,7 +91,7 @@ final uuid2 = Uuid.fromString('550e8400-e29b-41d4-a716-446655440000');
 
 // Generate name-based UUID (version 5)
 final namespace = Uuid.NAMESPACE_DNS;
-final uuid3 = Uuid.nameUuidFromBytes(namespace, utf8.encode('example.com'));
+final uuid3 = Uuid.nameUuidFromBytes(namespace, Closeable.DEFAULT_ENCODING.encode('example.com'));
 
 // Generate time-based UUID (version 1)
 final uuid4 = Uuid.timeBasedUuid();
@@ -512,7 +512,7 @@ concurrently.</p>
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>

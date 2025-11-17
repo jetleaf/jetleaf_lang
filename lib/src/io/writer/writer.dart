@@ -14,8 +14,7 @@
 
 import 'package:meta/meta.dart';
 
-import '../closeable.dart';
-import '../flushable.dart';
+import '../base.dart';
 import '../../exceptions.dart';
 
 /// {@template writer}

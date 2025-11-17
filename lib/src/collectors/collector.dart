@@ -12,7 +12,7 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import '../annotations.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
 
 /// {@template collector}
 /// A mutable reduction operation that accumulates input elements into a mutable

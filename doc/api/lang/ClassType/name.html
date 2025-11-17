@@ -64,7 +64,11 @@
 <section class="desc markdown">
   <p>The simple name of the class.</p>
 <p>Optional. If not provided, the <a href="../../lang/ClassType/toClass.html">toClass</a> method will use the declaration
-or create a generic class instance.</p>
+or create a generic class instance. The name should match the actual
+class name as declared in Dart source code.</p>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final classType = ClassType(name: 'UserService');
+</code></pre>
 </section>
 
       
@@ -99,7 +103,7 @@ or create a generic class instance.</p>
 <footer>
   <span class="no-break">
     jetleaf_lang
-      1.0.0
+      1.0.0+2
   </span>
   
 </footer>
