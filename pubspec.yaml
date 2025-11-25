@@ -1,6 +1,6 @@
 name: jetleaf_lang
 description: Language utilities for JetLeaf — provides extended Dart primitives, collections, I/O, date/time, math, and regex types.
-version: 1.0.1+1
+version: 1.0.2
 
 homepage: https://jetleaf.hapnium.com
 repository: https://github.com/jetleaf/jetleaf_lang
