@@ -1,3 +1,7 @@
+## [1.0.1+1] - 2025-11-25
+
+- Updated dependencies
+
 ## [1.0.1] - 2025-11-17
 
 - Improved application scanner filtering logic to provide finer-grained package and path exclusion rules and reduce false positives during runtime scans. This improves scan performance and accuracy when scanning large workspaces or mixed-package repositories.

@@ -141,10 +141,10 @@ packages:
     dependency: "direct main"
     description:
       name: jetleaf_build
-      sha256: "0c86d6ed735c17b5357a848ca6cb27639d5c8c81fbb77bf592463cfce2286085"
+      sha256: e91125d72ddbb6600a7d1047a49efaa0c9131db082ba4c0edb9024a4a211768b
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.0.1"
   js:
     dependency: transitive
     description:

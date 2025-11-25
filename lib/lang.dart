@@ -12,26 +12,136 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-/// {@template lang_library}
-/// 🔡 JetLeaf Language & Utility Core
-/// 
-/// This library exposes extended Dart primitives, collections, optional types,
-/// I/O streams, date/time utilities, math types, regex, and more.
-/// 
-/// ---
-/// 
-/// ### 🧩 Key Areas:
-/// - Extended primitives and collections
-/// - Custom numeric types (Integer, BigDecimal, etc.)
-/// - I/O abstractions (InputStream, OutputStream, FileReader)
-/// - Streams API similar to Java's Stream
-/// - Date and time (LocalDateTime, ZonedDateTime)
-/// 
-/// {@endtemplate}
-/// 
-/// @author Evaristus Adimonyemma
-/// @emailAddress evaristusadimonyemma@hapnium.com
-/// @organization Hapnium
+/// 🍃 **JetLeaf Standard Library**
+///
+/// This library exposes the core foundational utilities of the JetLeaf
+/// framework—providing rich APIs for resource handling, I/O streams,
+/// collections, math, reflection, system access, time utilities, and more.
+///
+/// It functions as the **general-purpose toolkit** for JetLeaf applications,
+/// similar to a standard library or runtime utility layer.
+///
+///
+/// ## 🧩 Major Capability Areas
+///
+/// ### 📦 Resource & Asset Loading
+/// Supports resolving and loading resources from:
+/// - application bundles
+/// - asset paths
+/// - classpath locations  
+/// Includes loaders, resource abstractions, and path utilities.
+///
+///
+/// ### 🔢 Byte & Stream Utilities
+/// Low-level binary and streaming primitives:
+/// - `Byte`, `ByteArray`, `ByteStream`
+/// - Input & output streams (buffered, file, network, in-memory)
+/// - Stream builders and adapters
+///
+/// Enables efficient data processing and I/O pipelines.
+///
+///
+/// ### 📚 Collections Framework
+/// Enhanced data structures beyond core Dart:
+/// - `ArrayList`, `LinkedList`, `Stack`, `Queue`
+/// - `HashMap`, `HashSet`
+/// - case-insensitive maps
+/// - collectors (inspired by Java Streams)
+///
+///
+/// ### 🧮 Math & Big Numbers
+/// Arbitrary-precision numeric types:
+/// - `BigDecimal`
+/// - `BigInteger`
+///
+///
+/// ### 🌐 Networking
+/// Lightweight networking primitives:
+/// - `Url`
+/// - `UrlConnection`
+/// - extension helpers
+///
+///
+/// ### 🔤 Primitive Wrappers
+/// Object-style number and boolean types:
+/// - `Integer`, `Long`, `Float`, `Double`, `Short`, `Boolean`, `Character`
+///
+/// Useful for reflection, typed metadata, and JVM-style APIs.
+///
+///
+/// ### 🖥 System & Properties
+/// Runtime system inspection and configuration:
+/// - platform detectors
+/// - system properties
+/// - environment-driven behavior
+///
+///
+/// ### ⏱ Time & Date API
+/// Inspired by Java Time:
+/// - `ZonedDateTime`
+/// - `LocalDateTime`, `LocalDate`, `LocalTime`
+/// - `ZoneId`
+/// - `DateTimeFormatter`
+///
+///
+/// ### 🧵 Threading & Synchronization
+/// Cooperative thread abstractions:
+/// - logical thread model
+/// - synchronization primitives
+/// - locks
+///
+/// *Note:* hides internal `LocalThreadKey`.
+///
+///
+/// ### 🔍 Reflection & Metadata
+/// Full meta-modeling capabilities:
+/// - classes, fields, methods, parameters
+/// - annotations
+/// - class loaders
+/// - qualified names & package identifiers
+/// - `ResolvableType`
+///
+/// Powers dependency injection, introspection, and runtime type modeling.
+///
+///
+/// ### 🗂 URI Tools
+/// - URI templates
+/// - validators and validation rules
+///
+///
+/// ### 🔔 Observability (OBS)
+/// Eventing system:
+/// - observables
+/// - event types & enums
+///
+///
+/// ### 🧰 Common Utilities
+/// - `Optional`
+/// - `StringBuilder`
+/// - regex utilities
+/// - typedef helpers
+///
+///
+/// ### 🆔 Other Features
+/// - locale & language ranges
+/// - currency utilities
+/// - UUID generation
+/// - exception hierarchy
+///
+///
+/// ### 🏗 Build Integration
+/// Re-exports JetLeaf build-time support:
+/// - `jetleaf_build` package
+///
+///
+/// ## ✅ Intended Usage
+///
+/// Import once for broad utility access:
+/// ```dart
+/// import 'package:jetleaf_lang/lang.dart';
+/// ```
+///
+/// Designed for framework-level and advanced application use.
 library;
 
 export 'src/meta/resource/asset_loader/_bundler.dart';

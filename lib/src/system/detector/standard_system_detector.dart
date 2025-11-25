@@ -86,7 +86,13 @@ class StandardSystemDetector implements SystemDetector {
 
   /// Returns true if running with AOT compilation
   bool _isRunningAot() {
-    return const bool.fromEnvironment('dart.vm.product');
+    final entry = io.Platform.script.toFilePath();
+
+    if (entry.endsWith('.dill') || entry.endsWith('.dart')) {
+      return false; // JIT environments
+    }
+
+    return io.Platform.version.toLowerCase().contains('precompiled');
   }
 
   /// Builds the launch command string
