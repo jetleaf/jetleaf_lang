@@ -170,6 +170,9 @@ export 'src/collectors/collectors.dart';
 export 'src/collectors/collector.dart';
 
 export 'src/comparator/comparator.dart';
+export 'src/comparator/order_comparator.dart';
+export 'src/comparator/ordered.dart';
+export 'src/comparator/package_order_comparator.dart';
 
 export 'src/extensions/others/date_time.dart';
 export 'src/extensions/others/duration.dart';
@@ -259,9 +262,6 @@ export 'src/thread/local_thread.dart' hide LocalThreadKey;
 export 'src/synchronized/synchronized.dart';
 export 'src/synchronized/synchronized_lock.dart';
 
-export 'src/comparator/order_comparator.dart';
-export 'src/comparator/ordered.dart';
-
 export 'src/commons/optional.dart';
 export 'src/commons/string_builder.dart';
 export 'src/commons/commons.dart' hide TryWithAction;
@@ -287,6 +287,11 @@ export 'src/meta/resolvable_type.dart';
 export 'src/meta/qualified_name/qualified_name.dart';
 export 'src/meta/package_identifier.dart';
 export 'src/meta/core.dart';
+
+export 'src/meta/executable/executable_argument_resolver.dart';
+export 'src/meta/executable/executable_argument.dart';
+export 'src/meta/executable/executable_selector.dart';
+export 'src/meta/executable/executable_instantiator.dart';
 
 export 'src/uri/uri_template.dart';
 export 'src/uri/uri_validators.dart';
