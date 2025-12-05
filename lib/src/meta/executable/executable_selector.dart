@@ -1,4 +1,7 @@
-import 'package:jetleaf_lang/lang.dart';
+import '../../commons/typedefs.dart';
+import '../class/class.dart';
+import '../core.dart';
+import '../parameter/parameter.dart';
 
 part '_executable_selector.dart';
 

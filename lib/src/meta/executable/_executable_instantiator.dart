@@ -54,7 +54,7 @@ final class _ExecutableInstantiator implements ExecutableInstantiator {
   }
 
   @override
-  Executed? newInstance<Executed>([bool checkNoArgFirst = true]) {
+  Executed? newInstance<Executed>({bool checkNoArgFirst = true, bool tryDefault = false}) {
     Constructor? constructor;
 
     if (checkNoArgFirst) {
@@ -64,6 +64,11 @@ final class _ExecutableInstantiator implements ExecutableInstantiator {
 
     // If no no-arg constructor or checkNoArgFirst is false, use selector
     constructor ??= _selector.select(_class.getConstructors());
+
+    // If no constructor is selected, use default constructor
+    if (tryDefault && constructor == null) {
+      constructor ??= _class.getDefaultConstructor();
+    }
 
     if (constructor != null) {
       final args = _resolver.resolve(constructor);
