@@ -1,5 +1,9 @@
 ## [1.0.6]
 
+- Updated dependencies - `jetleaf_build`
+
+## [1.0.6]
+
 - Updated dependencies
 - Added executable DSL classes
 
