@@ -1,4 +1,4 @@
-## [1.0.6]
+## [1.0.7]
 
 - Updated dependencies - `jetleaf_build`
 
