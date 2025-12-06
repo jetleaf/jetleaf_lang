@@ -1,5 +1,5 @@
-import 'package:jetleaf_lang/lang.dart';
-
+import '../class/class.dart';
+import '../constructor/constructor.dart';
 import 'executable_argument_resolver.dart';
 import 'executable_selector.dart';
 
@@ -108,11 +108,14 @@ abstract interface class ExecutableInstantiator {
   ///    before applying selectors and argument resolution.
   /// 2. Selects the best matching constructor using the configured selector.
   /// 3. Resolves constructor arguments using the argument resolver.
+  /// 4. If [tryDefault] is `true`, attempts to invoke the default constructor of the class
+  ///    when all fails.
   ///
   /// ### Parameters
   /// - [checkNoArgFirst]: If true, prioritizes no-argument constructor invocation.
+  /// - [tryDefault]: If true, it will try with default constructor if there is no arg and no best constructor found.
   ///
   /// ### Returns
   /// The newly instantiated object cast to [Executed], or `null` if instantiation fails.
-  Executed? newInstance<Executed>([bool checkNoArgFirst = true]);
+  Executed? newInstance<Executed>({bool checkNoArgFirst = true, bool tryDefault = false});
 }

@@ -1,5 +1,10 @@
-import 'package:jetleaf_lang/lang.dart';
+import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/typedefs.dart';
+import '../../exceptions.dart';
+import '../class/class.dart';
+import '../core.dart';
+import '../parameter/parameter.dart';
 import 'executable_argument.dart';
 
 part '_executable_argument_resolver.dart';
@@ -99,7 +104,7 @@ abstract interface class ExecutableArgumentResolver {
   ///   .and(Class<Foo>(), foo)
   ///   .and(Class<Bar>(), bar);
   /// ```
-  ExecutableArgumentResolver and(Class type, Object? instance, [bool isAssignableFrom = true]);
+  ExecutableArgumentResolver and<T>(Class<T> type, T? instance, [bool isAssignableFrom = true]);
 
   /// Registers a **conditional parameter matcher** that supplies [instance]
   /// whenever the provided [matcher] function returns `true` for a parameter.

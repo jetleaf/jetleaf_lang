@@ -56,7 +56,11 @@ final class _ExecutableArgumentResolver implements ExecutableArgumentResolver {
   _ExecutableArgumentResolver();
 
   @override
-  ExecutableArgumentResolver and(Class type, Object? instance, [bool isAssignableFrom = true]) {
+  ExecutableArgumentResolver and<T>(Class<T> type, T? instance, [bool isAssignableFrom = true]) {
+    if (!type.isInstance(instance)) {
+      throw IllegalStateException("Instance '${instance.runtimeType}' cannot be assigned to parameter of type '${type.getQualifiedName()}'");
+    }
+
     _typeBindings.add(_TypeBinding(type, instance, isAssignableFrom));
     return this;
   }
@@ -80,17 +84,19 @@ final class _ExecutableArgumentResolver implements ExecutableArgumentResolver {
       // -------------------------------------------------------------
       // 1. Predicate bindings have highest specificity — evaluate first.
       // -------------------------------------------------------------
-      for (final binding in _predicateBindings) {
-        if (binding.matcher(param)) {
-          resolved = binding.instance;
-          break;
+      if (_predicateBindings.isNotEmpty) {
+        for (final binding in _predicateBindings) {
+          if (binding.matcher(param)) {
+            resolved = binding.instance;
+            break;
+          }
         }
       }
 
       // -------------------------------------------------------------
       // 2. If no predicate matched, try type bindings.
       // -------------------------------------------------------------
-      if (resolved == null) {
+      if (resolved == null && _typeBindings.isNotEmpty) {
         for (final binding in _typeBindings) {
           if (binding.matches(paramClass)) {
             resolved = binding.instance;
