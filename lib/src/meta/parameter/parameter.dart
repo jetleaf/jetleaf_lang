@@ -101,7 +101,7 @@ abstract interface class Parameter extends Source {
   ///   - Named parameter in curly braces `{param}`
   /// - `false` for required parameters
   /// {@endtemplate}
-  bool isOptional();
+  bool isNullable();
   
   /// Checks if this is a named parameter.
   ///
@@ -129,7 +129,7 @@ abstract interface class Parameter extends Source {
   /// - `false` for optional parameters
   ///
   /// Note:
-  /// Differs from [isOptional] as some named parameters may be required.
+  /// Differs from [isNullable] as some named parameters may be required.
   /// {@endtemplate}
   bool isRequired();
   

@@ -299,7 +299,7 @@ class _Method extends Method with EqualsAndHashCode {
 
     // Check if all required parameters are provided
     for (final param in parameters) {
-      if (!param.getIsOptional() && !arguments.containsKey(param.getName())) {
+      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
         return false;
       }
     }
@@ -318,7 +318,7 @@ class _Method extends Method with EqualsAndHashCode {
     checkAccess('canAcceptPositionalArguments', DomainPermission.READ_METHODS);
     final parameters = _declaration.getParameters();
     final positionalParams = parameters.where((p) => !p.getIsNamed()).toList();
-    final requiredPositionalCount = positionalParams.where((p) => !p.getIsOptional()).length;
+    final requiredPositionalCount = positionalParams.where((p) => !p.getIsNullable()).length;
     return args.length >= requiredPositionalCount && args.length <= positionalParams.length;
   }
 
@@ -329,7 +329,7 @@ class _Method extends Method with EqualsAndHashCode {
     
     // Check if all required parameters are provided
     for (final param in parameters) {
-      if (!param.getIsOptional() && !arguments.containsKey(param.getName())) {
+      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
         return false;
       }
     }
@@ -557,7 +557,7 @@ class _Method extends Method with EqualsAndHashCode {
     
     for (final param in parameters) {
       final paramName = param.getName();
-      final isOptional = param.getIsOptional();
+      final isOptional = param.getIsNullable();
       final isNamed = param.getIsNamed();
       
       String paramSignature = param.getLinkDeclaration().getName();
@@ -638,7 +638,7 @@ extension MethodOverrideExtensions on MethodDeclaration {
       }
       
       // Check parameter modifiers
-      if (thisParam.getIsOptional() != otherParam.getIsOptional()) {
+      if (thisParam.getIsNullable() != otherParam.getIsNullable()) {
         return false;
       }
       
