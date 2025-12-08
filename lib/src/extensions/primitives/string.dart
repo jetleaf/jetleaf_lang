@@ -14,7 +14,10 @@
 
 import 'dart:convert' show json;
 
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../../commons/regex_utils.dart';
+import '../../meta/resource/asset_path/asset_resource.dart';
 import 'iterable.dart';
 import 'map.dart';
 import 'int.dart';
@@ -1300,4 +1303,22 @@ extension StringExtensions on String {
         return placeholder;
     }
   }
+
+  /// Converts this string into an [Asset] by wrapping it inside an
+  /// [AssetResource].
+  ///
+  /// This provides a convenience API allowing any string—typically a file path,
+  /// asset identifier, or resource key—to be treated directly as an asset
+  /// reference without manually constructing an `AssetResource`.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final asset = 'images/logo.png'.getAsset();
+  /// // Equivalent to:
+  /// // final asset = AssetResource('images/logo.png');
+  /// ```
+  ///
+  /// This method does **not** validate whether the underlying asset exists;
+  /// it merely returns the appropriate wrapper object.
+  Asset getAsset() => AssetResource(this);
 }

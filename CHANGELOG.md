@@ -1,3 +1,8 @@
+## [1.0.8]
+
+- Updated dependencies - `jetleaf_build`
+- Added `getAsset` method in `StringExtension`
+
 ## [1.0.7]
 
 - Updated dependencies - `jetleaf_build`

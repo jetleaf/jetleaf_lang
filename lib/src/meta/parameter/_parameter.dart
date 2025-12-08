@@ -94,16 +94,16 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   List<String> getModifiers() => [
     if (isPublic()) 'PUBLIC',
     if (!isPublic()) 'PRIVATE',
-    if (isOptional()) 'OPTIONAL',
+    if (isNullable()) 'OPTIONAL',
     if (isNamed()) 'NAMED',
     if (isPositional()) 'POSITIONAL',
     if (isRequired()) 'REQUIRED',
   ];
   
   @override
-  bool isOptional() {
+  bool isNullable() {
     checkAccess('isOptional', DomainPermission.READ_METHODS);
-    return _declaration.getIsOptional();
+    return _declaration.getIsNullable();
   }
   
   @override
@@ -121,7 +121,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   @override
   bool isRequired() {
     checkAccess('isRequired', DomainPermission.READ_METHODS);
-    return !_declaration.getIsOptional();
+    return !_declaration.getIsNullable();
   }
 
   @override
@@ -150,7 +150,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
     
     if (isNamed()) {
       return '{$typeStr $nameStr}';
-    } else if (isOptional()) {
+    } else if (isNullable()) {
       return '[$typeStr $nameStr]';
     } else {
       return '$typeStr $nameStr';
@@ -162,7 +162,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
     return [
       _declaration.getName(),
       getSignature(),
-      _declaration.getIsOptional(),
+      _declaration.getIsNullable(),
       _declaration.getIsNamed(),
       _declaration.getIsSynthetic(),
       _declaration.getIndex(),

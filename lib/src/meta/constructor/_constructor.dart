@@ -153,7 +153,7 @@ class _Constructor extends Constructor with EqualsAndHashCode {
     
     // Check if all required parameters are provided
     for (final param in parameters) {
-      if (!param.getIsOptional() && !arguments.containsKey(param.getName())) {
+      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
         return false;
       }
     }
@@ -174,7 +174,7 @@ class _Constructor extends Constructor with EqualsAndHashCode {
 
     final parameters = _declaration.getParameters();
     final positionalParams = parameters.where((p) => !p.getIsNamed()).toList();
-    final requiredPositionalCount = positionalParams.where((p) => !p.getIsOptional()).length;
+    final requiredPositionalCount = positionalParams.where((p) => !p.getIsNullable()).length;
     
     return args.length >= requiredPositionalCount && args.length <= positionalParams.length;
   }
@@ -187,7 +187,7 @@ class _Constructor extends Constructor with EqualsAndHashCode {
     
     // Check if all required parameters are provided
     for (final param in parameters) {
-      if (!param.getIsOptional() && !arguments.containsKey(param.getName())) {
+      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
         return false;
       }
     }

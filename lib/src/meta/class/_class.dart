@@ -1297,7 +1297,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
             score += 2; // assignable (subclass)
           } else {
             // If param is nullable (type allows null), still accept but lower score if provided is null-type?
-            if (param.isOptional() || param.isPositional() && !param.isRequired()) {
+            if (param.isNullable() || param.isPositional() && !param.isRequired()) {
               // optional positional with non-matching type — reject for type mismatch
               fits = false;
               break;
@@ -1374,7 +1374,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     ConstructorDeclaration? dc = constructors.firstWhereOrNull((c) => c.getParameters().isEmpty);
 
     if(acceptWhenAllParametersAreOptional && dc == null) {
-      dc = constructors.find((c) => c.getParameters().all((p) => p.getIsOptional()));
+      dc = constructors.find((c) => c.getParameters().all((p) => p.getIsNullable()));
     }
 
     return dc != null ? Constructor.declared(dc, _pd) : null;
