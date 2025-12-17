@@ -1,21 +1,26 @@
 import 'dart:async';
+import 'dart:collection';
 
-import 'package:dart_internal/extract_type_arguments.dart';
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/version.dart';
 import '../../extensions/primitives/iterable.dart';
 import '../../extensions/primitives/string.dart';
 import '../../exceptions.dart';
+import '../../utils/lang_utils.dart';
 import '../class_loader/default_class_loader.dart';
 import '../annotation/annotation.dart';
 import '../constructor/constructor.dart';
+import '../enum/enum_value.dart';
 import '../field/field.dart';
 import '../core.dart';
+import '../function/function_class.dart';
 import '../generic_source.dart';
 import '../method/method.dart';
-import '../parameter/parameter.dart';
 import '../protection_domain/protection_domain.dart';
 import '../qualified_name/qualified_name.dart';
+import '../record/record_class.dart';
+import 'class_type.dart';
 
 part '_class.dart';
 
@@ -69,16 +74,19 @@ part '_class.dart';
 @Generic(Class)
 abstract class Class<T> extends Source implements FieldAccess, QualifiedName, GenericSource {
   @override
-  Declaration getDeclaration() => getTypeDeclaration();
+  Declaration getDeclaration() {
+    checkAccess("getDeclaration", DomainPermission.READ_TYPE_INFO);
+    return getClassDeclaration();
+  }
 
   /// Gets the type declaration of this class.
   ///
   /// {@template class_get_type_declaration}
   /// Returns:
-  /// - The [TypeDeclaration] representing the class
+  /// - The [ClassDeclaration] representing the class
   /// - `null` for core types or unavailable declarations
   /// {@endtemplate}
-  TypeDeclaration getTypeDeclaration();
+  ClassDeclaration getClassDeclaration();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Name Information ===
@@ -128,73 +136,232 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   // === Package Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets the package URI where this class is defined.
+  /// Retrieves the **package URI** where this class is defined.
   ///
   /// {@template class_package_uri}
-  /// Returns:
-  /// - The package URI (e.g., `package:myapp/models.dart`)
-  /// - `dart:core` for core types
-  /// - May be empty for dynamic types
+  /// This method returns a string identifying the package location of the
+  /// class source. It is typically used for diagnostics, reflection, or
+  /// resolving resources relative to the package.
+  ///
+  /// ### Returns
+  /// - The package URI as a string, e.g., `package:myapp/models.dart`.
+  /// - `dart:core` for Dart core types (e.g., `int`, `String`).
+  /// - May be empty for dynamically generated or runtime-only types.
+  ///
+  /// ### Usage
+  /// ```dart
+  /// print(myClass.getPackageUri()); // → package:myapp/models.dart
+  /// ```
+  ///
   /// {@endtemplate}
   String getPackageUri();
 
-  /// Gets the package metadata for this class.
+  /// Retrieves the **package metadata** object containing this class.
   ///
   /// {@template class_get_package}
-  /// Returns:
-  /// - The [Package] containing this class
-  /// - `null` for core types or unavailable packages
+  /// Provides access to higher-level package information such as name,
+  /// version, and other metadata tracked by JetLeaf’s reflection system.
+  ///
+  /// ### Returns
+  /// - A [Package] object representing the package containing the class.
+  /// - `null` if the class belongs to Dart core types or if package
+  ///   information is unavailable.
+  ///
+  /// ### Usage
+  /// ```dart
+  /// final package = myClass.getPackage();
+  /// if (package != null) {
+  ///   print(package.getName());
+  /// }
+  /// ```
+  ///
   /// {@endtemplate}
   Package? getPackage();
+
+  /// Returns the concrete generic type arguments declared on this class.
+  ///
+  /// {@template class_get_type_arguments}
+  /// This method exposes the resolved generic parameters associated with
+  /// this [Class] instance.
+  ///
+  /// For example, given:
+  /// ```dart
+  /// class Box<T> {}
+  /// class StringBox extends Box<String> {}
+  /// ```
+  /// Calling `getTypeArguments()` on `Class<StringBox>` would return a list
+  /// containing `Class<String>`.
+  ///
+  /// ### Behavior
+  /// - Returns an empty list if the class is not generic.
+  /// - The order of elements matches the declaration order of the
+  ///   type parameters.
+  /// - Returned [Class] objects represent the *actual* resolved types,
+  ///   not just the formal type variables.
+  ///
+  /// ### Returns
+  /// - A list of [Class<Object>] representing the resolved type arguments.
+  /// {@endtemplate}
+  List<Class<Object>> getTypeArguments();
+
+  /// Returns metadata links describing how generic type arguments are bound.
+  ///
+  /// {@template class_get_type_argument_links}
+  /// This method provides structural information about the relationship
+  /// between declared type parameters and their resolved arguments.
+  ///
+  /// [LinkDeclaration] instances may encode:
+  /// - The source type parameter,
+  /// - The target concrete type,
+  /// - Variance or positional binding information,
+  /// - Indirections through inherited or delegated generic declarations.
+  ///
+  /// This is primarily intended for advanced reflection, diagnostics,
+  /// and framework-level type resolution.
+  ///
+  /// ### Behavior
+  /// - Returns an empty list if no generic linkage information is available.
+  /// - The order corresponds to the declaration order of type parameters.
+  ///
+  /// ### Returns
+  /// - A list of [LinkDeclaration] objects describing generic bindings.
+  /// {@endtemplate}
+  List<LinkDeclaration> getTypeArgumentLinks();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Type Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets the runtime type of this generic class.
+  /// Returns the **runtime-resolved Dart type** represented by this [Class].
   ///
-  /// {@template generic_class_get_type}
-  /// Returns:
-  /// - The Dart [Type] object representing the generic class
-  /// - Includes generic parameters if preserved at runtime
+  /// {@template class_get_type}
+  /// This method exposes the `Type` object as it exists at runtime after
+  /// Dart’s generic resolution and potential type erasure have been applied.
   ///
-  /// Note:
-  /// For some runtime environments, generic parameters may be erased.
+  /// ### Returns
+  /// - A Dart [Type] instance corresponding to the resolved runtime type.
+  /// - Generic parameters are included *only if* they are preserved by the
+  ///   runtime and available through reflection.
+  ///
+  /// ### Usage
+  /// ```dart
+  /// final type = clazz.getType();
+  /// print(type); // e.g. List<String> or List<dynamic>
+  /// ```
+  ///
+  /// ### Notes
+  /// - Due to Dart’s runtime model, generic information may be partially or
+  ///   fully erased depending on context.
+  /// - This method reflects what Dart itself recognizes as the type at
+  ///   runtime, not necessarily the type originally requested by JetLeaf.
+  ///
   /// {@endtemplate}
   Type getType();
 
-  /// Gets the underlying type requested by [Class]
-  /// 
-  /// Often at times, [getType] can differ from [getOriginal].
-  /// This mostly happens since Jetleaf employs a different mechanism in resolving type erasure by dart.
-  /// 
-  /// So, in such situations, [T] can be different from [Type]
+  /// Returns the **original, JetLeaf-resolved type** requested by this [Class].
+  ///
+  /// {@template class_get_original}
+  /// Unlike [getType], this method exposes the type as **intended and tracked
+  /// by JetLeaf’s reflection system**, even when Dart’s runtime has erased or
+  /// altered generic information.
+  ///
+  /// This distinction exists because JetLeaf employs its own strategy for
+  /// modeling generic types and mitigating Dart’s type-erasure behavior.
+  ///
+  /// ### Returns
+  /// - The underlying Dart [Type] corresponding to the original generic
+  ///   declaration.
+  /// - May differ from [getType] when generic parameters are erased or
+  ///   normalized by the runtime.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final runtimeType = clazz.getType();     // e.g. List<dynamic>
+  /// final originalType = clazz.getOriginal(); // e.g. List<String>
+  /// ```
+  ///
+  /// ### Design Notes
+  /// - Use [getOriginal] when exact generic intent matters (e.g. dependency
+  ///   resolution, serialization, or code generation).
+  /// - Use [getType] when interacting with Dart runtime APIs or type checks.
+  ///
+  /// {@endtemplate}
   Type getOriginal();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Type Design ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Checks if this class represents a record type.
+  /// Checks whether this class represents a **record type**.
   ///
   /// {@template class_is_record}
   /// Returns:
-  /// - `true` for record types (e.g., `(int, String)`)
-  /// - `false` for other types
+  /// - `true` if this class represents a Dart **record type**
+  ///   (e.g. `(int, String)` or `({int id, String name})`).
+  /// - `false` for all non-record types such as classes, enums, functions,
+  ///   mixins, or primitives.
   ///
-  /// Note:
-  /// Available in Dart 3.0+ for positional and named records.
+  /// Record types are a Dart 3.0+ language feature that allow lightweight,
+  /// immutable aggregates with positional and/or named fields.
+  ///
+  /// ### Usage
+  /// ```dart
+  /// if (clazz.isRecord()) {
+  ///   // Treat as a record type and inspect its fields
+  /// }
+  /// ```
+  ///
+  /// ### Design Notes
+  /// - This method is intended for reflective and type-introspection logic
+  ///   that needs to distinguish record types from traditional classes.
+  /// - A `true` result indicates the underlying reflective model represents
+  ///   a record, not merely a class containing record-typed fields.
+  ///
+  /// ### Compatibility
+  /// - Available for Dart 3.0+ where records are supported by the language.
+  /// - Framework support for records may be partial depending on the
+  ///   JetLeaf version.
+  ///
   /// {@endtemplate}
   bool isRecord();
 
-  /// Checks if this class represents a type variable.
+  /// Checks whether this class represents a **function type**.
   ///
-  /// {@template class_is_type_variable}
+  /// {@template class_is_function}
   /// Returns:
-  /// - `true` for generic type parameters (e.g., `T` in `List<T>`)
-  /// - `false` for concrete types
+  /// - `true` if this class represents a function or callable type
+  ///   (i.e. `Function`, a function signature, or a framework-recognized
+  ///   function class).
+  /// - `false` for all non-function types such as classes, enums, records,
+  ///   mixins, or primitives.
+  ///
+  /// A function type may represent:
+  /// - The Dart core `Function` type
+  /// - A concrete function signature (e.g. `int Function(String)`)
+  /// - A framework-specific `FunctionClass` abstraction used to model
+  ///   executable types reflectively
+  ///
+  /// ### Usage
+  /// ```dart
+  /// if (clazz.isFunction()) {
+  ///   // Treat as an invokable function type
+  /// }
+  /// ```
+  ///
+  /// ### Design Notes
+  /// - This method is used by reflection, invocation, and executable-selection
+  ///   logic to determine whether a type should be treated as callable.
+  /// - Implementations typically check whether the underlying reflective model
+  ///   resolves to a `FunctionClass`.
+  /// - A `true` result does **not** guarantee invokability without parameters;
+  ///   callers must still inspect parameter metadata.
+  ///
+  /// ### Compatibility
+  /// - Supported across all Dart versions where function types are available.
+  /// - Independent of record-type support.
+  ///
   /// {@endtemplate}
-  bool isTypeVariable();
+  bool isFunction();
 
   /// Checks if this class represents a standard class type.
   ///
@@ -209,6 +376,13 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// Class<User>().isClass(); // true
   /// ```
   /// {@endtemplate}
+  /// 
+  /// **Note**: This method will always return true since version 1.0.9.
+  /// Make use of other methods to distinguish which [Class] API you are accessing.
+  /// 
+  /// See: [isMixin], [isEnum]
+  /// 
+  /// Deprecated
   bool isClass();
 
   /// Checks if this class is a mixin declaration.
@@ -226,21 +400,6 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// {@endtemplate}
   bool isMixin();
 
-  /// Checks if this class represents a typedef.
-  ///
-  /// {@template class_is_typedef}
-  /// Returns:
-  /// - `true` for type aliases created with `typedef`
-  /// - `false` for regular classes
-  ///
-  /// Example:
-  /// ```dart
-  /// typedef IntList = List<int>;
-  /// Class<IntList>().isTypedef(); // true
-  /// ```
-  /// {@endtemplate}
-  bool isTypedef();
-
   /// Checks if this class is an enum declaration.
   ///
   /// {@template class_is_enum}
@@ -255,21 +414,6 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// ```
   /// {@endtemplate}
   bool isEnum();
-
-  /// Checks if this class represents an extension.
-  ///
-  /// {@template class_is_extension}
-  /// Returns:
-  /// - `true` for extension declarations
-  /// - `false` for other types
-  ///
-  /// Example:
-  /// ```dart
-  /// extension StringExtension on String {}
-  /// Class<StringExtension>().isExtension(); // true
-  /// ```
-  /// {@endtemplate}
-  bool isExtension();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Access Comparators ===
@@ -401,6 +545,68 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// ```
   /// {@endtemplate}
   bool isInvokable();
+
+    /// Checks whether this class represents the `void` type.
+  ///
+  /// {@template class_is_void}
+  /// Returns:
+  /// - `true` if the class corresponds to Dart's `void` type
+  /// - `false` for all other types
+  ///
+  /// ## Notes
+  /// - Useful in reflection or code-generation contexts to differentiate
+  ///   between methods that return `void` versus any other type.
+  /// - Aligns with `Type`-level checks but operates on the JetLeaf `Class` abstraction.
+  /// {@endtemplate}
+  bool isVoid();
+
+  /// Checks whether this class represents the `dynamic` type.
+  ///
+  /// {@template class_is_dynamic}
+  /// Returns:
+  /// - `true` if the class corresponds to Dart's `dynamic` type
+  /// - `false` for all other types
+  ///
+  /// ## Notes
+  /// - Essential for reflection, type resolution, and argument normalization.
+  /// - Differentiates between fully typed generics and untyped or dynamic values.
+  /// {@endtemplate}
+  bool isDynamic();
+
+  /// Indicates whether this class is **synthetic** (framework-generated)
+  /// rather than directly declared in user source code.
+  ///
+  /// {@template class_is_synthetic}
+  /// A *synthetic class* is a logical or derived representation created
+  /// by JetLeaf to model language constructs that do not have a concrete,
+  /// user-declared class definition.
+  ///
+  /// Synthetic classes commonly arise from:
+  /// - Function signatures (e.g. [FunctionClass])
+  /// - Record types (future support)
+  /// - Parameter or method-derived types
+  /// - Internal framework adapters or proxies
+  ///
+  /// ### Behavior
+  /// - `true` if the class is generated or inferred by the framework
+  /// - `false` if the class corresponds to a real, user-declared type
+  ///
+  /// ### Example
+  /// ```dart
+  /// final param = method.getParameter('callback');
+  /// final cls = param.getClass();
+  ///
+  /// cls.isSynthetic(); // → true for FunctionClass
+  /// ```
+  ///
+  /// ### Notes
+  /// - Synthetic classes typically cannot be instantiated directly.
+  /// - They may not have a source file, package URI, or constructors.
+  /// - This flag is essential for distinguishing *structural types*
+  ///   from *runtime types* during reflection and dependency resolution.
+  ///
+  /// {@endtemplate}
+  bool isSynthetic();
 
   /// {@template method_isAsync}
   /// Determines whether this method is asynchronous.
@@ -698,6 +904,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   // ---------------------------------------------------------------------------------------------------------
 
   /// Gets all interfaces directly implemented by this class.
+  /// 
+  /// **Note**: For a mixin, this method returns the constraints applied to the mixin.
   ///
   /// {@template class_get_all_interfaces}
   /// Returns:
@@ -710,6 +918,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class> getAllInterfaces();
 
   /// Gets implemented interfaces of specific type.
+  /// 
+  /// **Note**: For a mixin, this method returns the constraints applied to the mixin.
   ///
   /// {@template class_get_interfaces}
   /// Type Parameters:
@@ -722,6 +932,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class<I>> getInterfaces<I>();
 
   /// Gets a specific implemented interface.
+  /// 
+  /// **Note**: For a mixin, this method returns a specific constraint applied to the mixin.
   ///
   /// {@template class_get_interface}
   /// Type Parameters:
@@ -734,6 +946,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   Class<I>? getInterface<I>();
 
   /// Gets generic arguments from a specific implemented interface.
+  /// 
+  /// **Note**: For a mixin, this method returns a specific constraint arguments applied to the mixin.
   ///
   /// {@template class_get_interface_arguments}
   /// Type Parameters:
@@ -746,6 +960,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class> getInterfaceArguments<I>();
 
   /// Gets generic arguments from all implemented interfaces.
+  /// 
+  /// **Note**: For a mixin, this method returns all constraint arguments applied to the mixin.
   ///
   /// {@template class_get_all_interface_arguments}
   /// Returns:
@@ -755,6 +971,12 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class> getAllInterfaceArguments();
 
   /// Gets all directly declared interfaces (non-transitive).
+  /// 
+  /// **Note**: For a mixin, this method returns all directly declared constraints applied to the mixin.
+  /// 
+  /// ------------------------------------------------------------------------------
+  /// 
+  /// ### Interface Design
   ///
   /// {@template class_get_all_declared_interfaces}
   /// Returns:
@@ -762,7 +984,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Empty list if no interfaces declared
   /// - Does NOT include inherited interfaces from superclasses
   ///
-  /// ## Declared vs All Interfaces
+  /// #### Declared vs All Interfaces
   /// - **getDeclaredInterfaces()**: Only direct `implements` declarations
   /// - **getAllInterfaces()**: Includes inherited interfaces from hierarchy
   ///
@@ -778,9 +1000,38 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// final all = fileClass.getAllInterfaces();               // [Writable, Readable]
   /// ```
   /// {@endtemplate}
+  /// 
+  /// ------------------------------------------------------------------------------
+  /// 
+  /// ### Mixin Design
+  /// 
+  /// {@template class_get_all_declared_constraints}
+  /// Returns:
+  /// - List of constraints explicitly declared on this class
+  /// - Empty list if no constraints declared
+  /// - Does NOT include inherited constraints from superclasses
+  ///
+  /// #### Declared vs All constraints
+  /// - **getDeclaredInterfaces()**: Only direct `implements` declarations
+  /// - **getAllInterfaces()**: Includes inherited constraints from hierarchy
+  ///
+  /// Example:
+  /// ```dart
+  /// mixin class Readable {}
+  /// mixin class Writable {}
+  /// mixin BaseStream on Readable {}
+  /// mixin FileStream on BaseStream, Writable {}
+  ///
+  /// final fileClass = Class.forType<FileStream>();
+  /// final declared = fileClass.getAllDeclaredInterfaces();  // [Writable]
+  /// final all = fileClass.getAllInterfaces();               // [Writable, Readable]
+  /// ```
+  /// {@endtemplate}
   List<Class> getAllDeclaredInterfaces();
 
   /// Gets declared interfaces of specific type (non-transitive).
+  /// 
+  /// **Note**: For a mixin, this method returns the declared constraints of a specific type applied to the mixin.
   ///
   /// {@template class_get_declared_interfaces}
   /// Type Parameters:
@@ -794,6 +1045,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class<I>> getDeclaredInterfaces<I>();
 
   /// Gets a specific declared interface (non-transitive).
+  /// 
+  /// **Note**: For a mixin, this method returns specific declared constraint applied to the mixin.
   ///
   /// {@template class_get_declared_interface}
   /// Type Parameters:
@@ -806,6 +1059,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   Class<I>? getDeclaredInterface<I>();
 
   /// Gets generic arguments from a specific declared interface.
+  /// 
+  /// **Note**: For a mixin, this method returns the generic arguments from a specific constraint applied to the mixin.
   ///
   /// {@template class_get_declared_interface_arguments}
   /// Type Parameters:
@@ -818,6 +1073,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   List<Class> getDeclaredInterfaceArguments<I>();
 
   /// Gets generic arguments from all declared interfaces.
+  /// 
+  /// **Note**: For a mixin, this method returns the generic arguments from all declared constraints applied to the mixin.
   ///
   /// {@template class_get_all_declared_interface_arguments}
   /// Returns:
@@ -1264,7 +1521,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Getters/setters
   /// 
   /// Excludes:
-  /// - Inherited methods (use [getAllMethods] for hierarchy traversal)
+  /// - Inherited methods (use [getMethods] for hierarchy traversal)
   /// {@endtemplate}
   List<Method> getMethods();
 
@@ -1288,7 +1545,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Getters/setters
   /// 
   /// Excludes:
-  /// - Inherited methods (use [getAllMethods] for hierarchy traversal)
+  /// - Inherited methods (use [getMethods] for hierarchy traversal)
   /// {@endtemplate}
   List<Method> getAllMethodsInHierarchy();
 
@@ -1330,97 +1587,21 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// {@endtemplate}
   List<Method> getMethodsByName(String name);
 
-  // ---------------------------------------------------------------------------------------------------------
-  // === Field Information ===
-  // ---------------------------------------------------------------------------------------------------------
-
-  /// Gets all positional fields in declaration order.
+  /// Gets all enum values as [Field] if this is an enum class.
   ///
-  /// {@template record_get_positional_fields}
+  /// {@template class_get_enum_values}
   /// Returns:
-  /// - An ordered list of [Field] objects
-  /// - Empty list if no positional fields exist
+  /// - List of enum fields with metadata
+  /// - Empty list for non-enum types
   ///
-  /// Order matches the declaration order in source.
+  /// Example:
+  /// ```dart
+  /// enum Status { active, inactive }
+  /// final values = Class.forType<Status>().getEnumValuesAsFields();
+  /// print(values.map((e) => e.name)); // ['active', 'inactive']
+  /// ```
   /// {@endtemplate}
-  List<Field> getPositionalFields();
-  
-  /// Gets all named fields as a name-to-field map.
-  ///
-  /// {@template record_get_named_fields}
-  /// Returns:
-  /// - A map of field names to [Field] objects
-  /// - Empty map if no named fields exist
-  /// {@endtemplate}
-  Map<String, Field> getNamedFields();
-  
-  /// Gets a positional field by index.
-  ///
-  /// {@template record_get_positional_field}
-  /// Parameters:
-  /// - [index]: Zero-based field position
-  ///
-  /// Returns:
-  /// - The [Field] at the given position
-  /// - `null` if index is out of bounds
-  /// {@endtemplate}
-  Field? getPositionalField(int index);
-  
-  /// Gets a named field by name.
-  ///
-  /// {@template record_get_named_field}
-  /// Parameters:
-  /// - [name]: The field name to look up
-  ///
-  /// Returns:
-  /// - The [Field] with matching name
-  /// - `null` if no matching field exists
-  /// {@endtemplate}
-  Field? getNamedField(String name);
-  
-  /// Gets the total number of fields.
-  ///
-  /// {@template record_field_count}
-  /// Returns:
-  /// - The sum of positional and named fields
-  /// {@endtemplate}
-  int getFieldCount();
-  
-  /// Gets the count of positional fields.
-  ///
-  /// {@template record_positional_field_count}
-  /// Returns:
-  /// - The number of positional fields
-  /// - 0 if no positional fields exist
-  /// {@endtemplate}
-  int getPositionalFieldCount();
-  
-  /// Gets the count of named fields.
-  ///
-  /// {@template record_named_field_count}
-  /// Returns:
-  /// - The number of named fields
-  /// - 0 if no named fields exist
-  /// {@endtemplate}
-  int getNamedFieldCount();
-  
-  /// Checks if this record has any positional fields.
-  ///
-  /// {@template record_has_positional_fields}
-  /// Returns:
-  /// - `true` if at least one positional field exists
-  /// - `false` otherwise
-  /// {@endtemplate}
-  bool hasPositionalFields();
-  
-  /// Checks if this record has any named fields.
-  ///
-  /// {@template record_has_named_fields}
-  /// Returns:
-  /// - `true` if at least one named field exists
-  /// - `false` otherwise
-  /// {@endtemplate}
-  bool hasNamedFields();
+  List<Field> getEnumValuesAsFields();
 
   /// Gets all enum values if this is an enum class.
   ///
@@ -1432,11 +1613,11 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// Example:
   /// ```dart
   /// enum Status { active, inactive }
-  /// final values = Class.forType<Status>().getEnumValues();
+  /// final values = Class.forType<Status>().getEnumValuesAsFields();
   /// print(values.map((e) => e.name)); // ['active', 'inactive']
   /// ```
   /// {@endtemplate}
-  List<Field> getEnumValues();
+  List<EnumValue> getEnumValues();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Member Information ===
@@ -1462,7 +1643,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Fields appear before methods
   /// - Declaration order is not guaranteed
   /// {@endtemplate}
-  List<Object> getDeclaredMembers();
+  List<Member> getDeclaredMembers();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Instance Creation ===
@@ -1479,8 +1660,11 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - A new instance of type T
   ///
   /// Throws:
-  /// - [NoSuchMethodException] if no default constructor exists
+  /// - [ConstructorNotFoundException] if no default constructor exists
+  /// - [UnresolvedTypeInstantiationException] if the type is unresolved. Normally represented with `_ClassMirror`.
+  /// - [PrivateConstructorInvocationException] if the constructor being invoked is a private constructor
   /// - [InvalidArgumentException] for invalid arguments
+  /// - [GenericResolutionException] if the type cannot be resolved by Jetleaf
   ///
   /// Example:
   /// ```dart
@@ -1512,33 +1696,6 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - A [Class] instance for the type
   /// {@endtemplate}
   static Class<F> of<F>([ProtectionDomain? domain, String? package, LinkDeclaration? link]) => Class<F>(domain, package, link);
-
-  /// Creates a Class instance for an object's runtime type.
-  ///
-  /// {@template class_for_object}
-  /// Parameters:
-  /// - [obj]: The object to reflect
-  /// - [domain]: Optional protection domain
-  /// - [package]: Optional package name to search with
-  ///
-  /// Returns:
-  /// - A [Class] instance for the object's type
-  /// {@endtemplate}
-  static Class<Object> forObject(Object obj, [ProtectionDomain? domain, String? package, LinkDeclaration? link]) {
-    try {
-      if(obj.runtimeType.toString().notEqualsIgnoreCase("type") || obj.runtimeType.toString().notEqualsIgnoreCase("dynamic")) {
-        return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(obj.runtimeType), domain ?? ProtectionDomain.system(), link);
-      }
-
-      return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(obj), domain ?? ProtectionDomain.system(), link);
-    } on ClassNotFoundException catch (_) {
-      if(obj.runtimeType.toString().notEqualsIgnoreCase("type")) {
-        return _Class<Object>(obj.runtimeType.toString(), domain ?? ProtectionDomain.current(), package, link);
-      }
-
-      return _Class<Object>(obj.toString(), domain ?? ProtectionDomain.current(), package, link);
-    }
-  }
 
   /// Creates a Class instance for a runtime type.
   ///
@@ -1592,7 +1749,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// Used internally by the reflection system.
   /// {@endtemplate}
-  static Class<C> declared<C>(TypeDeclaration declaration, ProtectionDomain domain) {
+  static Class<C> declared<C>(ClassDeclaration declaration, ProtectionDomain domain) {
     return _Class<C>.declared(declaration, domain);
   }
 
@@ -1611,6 +1768,21 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// {@endtemplate}
   static Class<C> fromQualifiedName<C>(String qualifiedName, [ProtectionDomain? domain, LinkDeclaration? link]) {
     return _Class<C>.fromQualifiedName(qualifiedName, domain ?? ProtectionDomain.current(), link);
+  }
+
+  /// Creates a Class instance for an object's runtime type.
+  ///
+  /// {@template class_for_object}
+  /// Parameters:
+  /// - [obj]: The object to reflect
+  /// - [domain]: Optional protection domain
+  /// - [package]: Optional package name to search with
+  ///
+  /// Returns:
+  /// - A [Class] instance for the object's type
+  /// {@endtemplate}
+  static Class<Object> forObject(Object obj, [ProtectionDomain? domain, String? package, LinkDeclaration? link]) {
+    return LangUtils.obtainClass(obj, package: package, pd: domain, link: link);
   }
 }
 
@@ -1637,7 +1809,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
 /// print('Object type: ${classInfo.getName()}');
 ///
 /// // Shortcut syntax
-/// final constructors = myObject.clazz.getConstructors();
+/// final constructors = myObject.getClass().getConstructors();
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
@@ -1656,49 +1828,5 @@ extension ClassExtension on Object {
   /// ```dart
   /// Class.forType<Object>(runtimeType, ProtectionDomain.current())
   /// ```
-  Class getClass([ProtectionDomain? domain, String? package]) {
-    final Object self = this;
-
-    if (self is Iterable<Object?>) {
-      Class<Object?> Function<E>() f = switch (self) {
-        List<Object?>() => <E>() => Class<List<E>>(null, null),
-        Set<Object?>() => <E>() => Class<Set<E>>(null, null),
-        _ => <E>() => Class<Iterable<E>>(null, null),
-      };
-      return extractIterableTypeArgument(self, f) as Class<Object?>;
-    }
-
-    if (self is Iterable) {
-      Class Function<E>() f = switch (self) {
-        List() => <E>() => Class<List<E>>(null, null),
-        Set() => <E>() => Class<Set<E>>(null, null),
-        _ => <E>() => Class<Iterable<E>>(null, null),
-      };
-      return extractIterableTypeArgument(self, f) as Class<Object?>;
-    }
-
-    if (self is Map<Object?, Object?>) {
-      Class<Object?> Function<E, F>() f = switch (self) {
-        Map<Object?, Object?>() => <E, F>() => Class<Map<E, F>>(null, null),
-      };
-      return extractMapTypeArguments(self, f) as Class<Object?>;
-    }
-
-    if (self is Map) {
-      Class Function<E, F>() f = switch (self) {
-        Map() => <E, F>() => Class<Map<E, F>>(null, null),
-      };
-      return extractMapTypeArguments(self, f) as Class<Object?>;
-    }
-
-    try {
-      if(self.runtimeType.toString().notEqualsIgnoreCase("type") || self.runtimeType.toString().notEqualsIgnoreCase("dynamic")) {
-        return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(self.runtimeType), domain ?? ProtectionDomain.system());
-      }
-
-      return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(self), domain ?? ProtectionDomain.system());
-    } on ClassNotFoundException catch (_) {
-      return Class.forObject(self, domain ?? ProtectionDomain.system(), package);
-    }
-  }
+  Class getClass([ProtectionDomain? domain, String? package]) => LangUtils.obtainClass(this, pd: domain, package: package);
 }

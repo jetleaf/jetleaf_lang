@@ -1,3 +1,5 @@
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import '../extensions/primitives/string.dart';
 import '../exceptions.dart';
 
@@ -48,6 +50,7 @@ import '../exceptions.dart';
 /// - [Map] — base interface implemented
 /// - [HashMap] — standard Dart hash-based map
 /// {@endtemplate}
+@Generic(CaseInsensitiveMap)
 class CaseInsensitiveMap<V> implements Map<String, V> {
   /// Internal map storing the key-value pairs with original key casing.
   final Map<String, V> _map = {};

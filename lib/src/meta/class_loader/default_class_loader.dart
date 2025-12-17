@@ -20,6 +20,7 @@ import 'package:jetleaf_build/jetleaf_build.dart';
 import '../../commons/string_builder.dart';
 import '../../extensions/primitives/iterable.dart';
 import '../../exceptions.dart';
+import '../function/function_class.dart';
 import '../protection_domain/protection_domain.dart';
 import '../class/class.dart';
 import 'class_loader.dart';
@@ -162,10 +163,10 @@ class DefaultClassLoader extends ClassLoader {
     
     try {
       // Try qualified name lookup first
-      var declaration = TypeDiscovery.findByQualifiedName(className);
+      var declaration = TypeDiscovery.findClassByQualifiedName(className);
       
       // Fallback to simple name lookup
-      declaration ??= TypeDiscovery.findBySimpleName(className);
+      declaration ??= TypeDiscovery.findClassBySimpleName(className);
       
       if (declaration == null) {
         return null;
@@ -181,7 +182,7 @@ class DefaultClassLoader extends ClassLoader {
     StringBuilder builder = StringBuilder();
     builder.append("${c.getQualifiedName()}:${c.getName()}:${c.getType()}:${c.hashCode}:$c");
 
-    final args = c.getTypeDeclaration().getTypeArguments();
+    final args = c.getClassDeclaration().getTypeArguments();
     args.map((a) => builder.append(":${a.getType()}-${a.getName()}-${a.getPointerQualifiedName()}-$a"));
 
     builder.append(c.getPackageUri());
@@ -334,7 +335,7 @@ class DefaultClassLoader extends ClassLoader {
     _missCount++;
     
     // Compute classes
-    final args = parentClass.getTypeDeclaration().getTypeArguments();
+    final args = parentClass.getClassDeclaration().getTypeArguments();
     final classes = args.map((tp) => getFromLink(tp, parentClass.getProtectionDomain(), useType: true)).toList();
     
     // Cache result
@@ -344,89 +345,149 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   @override
-  Class getFromLink(LinkDeclaration link, ProtectionDomain pd, {bool useType = false, bool usePointer = false}) {
+  Class getFromLink<K>(LinkDeclaration link, ProtectionDomain pd, {bool useType = false, bool usePointer = false}) {
     try {
       if (useType) {
-        return _handleTypeLogic(link, pd);
+        return _handleTypeLogic<K>(link, pd);
       } else if (usePointer) {
-        return _handlePointerLogic(link, pd);
+        return _handlePointerLogic<K>(link, pd);
       }
-      return _handleDefaultLogic(link, pd);
+      return _handleDefaultLogic<K>(link, pd);
     } catch (_) {
       if (useType) {
-        return _handleTypeFallback(link, pd);
+        return _handleTypeFallback<K>(link, pd);
       } else if (usePointer) {
-        return _handlePointerFallback(link, pd);
+        return _handlePointerFallback<K>(link, pd);
       }
-      return _handleDefaultFallback(link, pd);
+      return _handleDefaultFallback<K>(link, pd);
     }
   }
 
-  Class _handleTypeLogic(LinkDeclaration link, ProtectionDomain pd) {
+  bool _isDynamicType<K>([Type? type]) {
+    if (type case final type?) {
+      return type.toString() == "dynamic" || type.runtimeType.toString() == "dynamic";
+    }
+
+    return K.toString() == "dynamic" || K.runtimeType.toString() == "dynamic";
+  }
+
+  Class _handleTypeLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
     if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName(), pd);
     }
-    return Class.forType(link.getType(), pd);
+    
+    if (_isDynamicType<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
   }
 
-  Class _handlePointerLogic(LinkDeclaration link, ProtectionDomain pd) {
+  Class _handlePointerLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
     if (link.getType() == link.getPointerType()) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName());
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName());
     }
     if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName(), pd);
     }
-    return Class.forType(link.getPointerType(), pd);
-  }
 
-  Class _handleDefaultLogic(LinkDeclaration link, ProtectionDomain pd) {
-    if (link.getType() == link.getPointerType()) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName());
-    }
-    
-    if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
-    }
-    
-    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
-    }
-    
-    return Class.forType(link.getType(), pd);
-  }
-
-  Class _handleTypeFallback(LinkDeclaration link, ProtectionDomain pd) {
-    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+    if (_isDynamicType<K>()) {
       return Class.forType(link.getPointerType(), pd);
     }
-    return Class.forType(link.getType(), pd);
+
+    return Class.forType<K>(link.getPointerType() as K, pd);
   }
 
-  Class _handlePointerFallback(LinkDeclaration link, ProtectionDomain pd) {
+  Class _handleDefaultLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
     if (link.getType() == link.getPointerType()) {
-      return Class.forType(link.getType(), pd);
-    }
-    return Class.forType(link.getPointerType(), pd);
-  }
-
-  Class _handleDefaultFallback(LinkDeclaration link, ProtectionDomain pd) {
-    if (link.getType() == link.getPointerType()) {
-      return Class.forType(link.getType(), pd);
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName());
     }
     
     if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
-      return Class.forType(link.getType(), pd);
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName(), pd);
     }
     
     if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      return Class.fromQualifiedName<K>(link.getPointerQualifiedName(), pd);
+    }
+    
+    if (_isDynamicType<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
+  }
+
+  Class _handleTypeFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
+    }
+
+    if (_isDynamicType<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
+  }
+
+  Class _handlePointerFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (_isDynamicType<K>()) {
       return Class.forType(link.getPointerType(), pd);
+    }
+
+    return Class.forType<K>(link.getPointerType() as K, pd);
+  }
+
+  Class _handleDefaultFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
     }
     
     if (link.getType() != link.getPointerType()) {
-      return Class.forType(link.getPointerType(), pd);
+      if (_isDynamicType<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
     }
     
-    return Class.forType(link.getType(), pd);
+    if (_isDynamicType<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
   }
 
   @override
@@ -455,12 +516,12 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeAllInterfaceArguments(Class parentClass, bool declared) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .flatMap((i) => i.getTypeArguments())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .flatMap((i) => i.getTypeParameters())
         .toList();
@@ -493,12 +554,12 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeAllMixinArguments(Class parentClass, bool declared) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .flatMap((i) => i.getTypeArguments())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .flatMap((i) => i.getTypeParameters())
         .toList();
@@ -530,14 +591,14 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   List<Class> _computeAllConstraintArguments(Class parentClass, bool declared) {
-    if(parentClass.getTypeDeclaration() is MixinDeclaration) {
+    if(parentClass.getClassDeclaration() is MixinDeclaration) {
       if(declared) {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .flatMap((i) => i.getTypeArguments())
           .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
           .toList();
       } else {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
           .flatMap((i) => i.getTypeParameters())
           .toList();
@@ -574,13 +635,13 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeInterfaceArguments(Class parentClass, bool declared, Class clazz) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
         .flatMap((i) => i.getTypeArguments())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .flatMap((i) => i.getTypeParameters())
@@ -613,16 +674,18 @@ class DefaultClassLoader extends ClassLoader {
     return List.from(classes.toSet().toList());
   }
 
-  List<Class> _computeInterfaces(Class parentClass, bool declared, Class clazz) {
+  List<Class<I>> _computeInterfaces<I>(Class parentClass, bool declared, Class<I> clazz) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-        .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
+        .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain(), useType: true))
+        .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-        .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
+        .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain()))
+        .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
         .toList();
     }
   }
@@ -654,13 +717,13 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeMixinArguments(Class parentClass, bool declared, Class clazz) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
         .flatMap((i) => i.getTypeArguments())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .flatMap((i) => i.getTypeParameters())
@@ -685,7 +748,7 @@ class DefaultClassLoader extends ClassLoader {
     _missCount++;
     
     // Compute classes
-    final classes = _computeMixins(parentClass, declared, clazz);
+    final classes = _computeMixins<I>(parentClass, declared, clazz);
     
     // Cache result
     _mixinCache[cacheKey] = classes;
@@ -693,16 +756,18 @@ class DefaultClassLoader extends ClassLoader {
     return List.from(classes.toSet().toList());
   }
 
-  List<Class> _computeMixins(Class parentClass, bool declared, Class clazz) {
+  List<Class<I>> _computeMixins<I>(Class parentClass, bool declared, Class clazz) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-        .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
+        .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain(), useType: true))
+        .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-        .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
+        .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain()))
+        .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
         .toList();
     }
   }
@@ -733,15 +798,15 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   List<Class> _computeConstraintArguments(Class parentClass, bool declared, Class clazz) {
-    if(parentClass.getTypeDeclaration() is MixinDeclaration) {
+    if(parentClass.getClassDeclaration() is MixinDeclaration) {
       if(declared) {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
           .flatMap((i) => i.getTypeArguments())
           .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
           .toList();
       } else {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
           .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
           .flatMap((i) => i.getTypeParameters())
@@ -769,7 +834,7 @@ class DefaultClassLoader extends ClassLoader {
     _missCount++;
     
     // Compute classes
-    final classes = _computeConstraints(parentClass, declared, clazz);
+    final classes = _computeConstraints<I>(parentClass, declared, clazz);
     
     // Cache result
     _constraintCache[cacheKey] = classes;
@@ -777,17 +842,19 @@ class DefaultClassLoader extends ClassLoader {
     return List.from(classes.toSet().toList());
   }
 
-  List<Class> _computeConstraints(Class parentClass, bool declared, Class clazz) {
-    if(parentClass.getTypeDeclaration() is MixinDeclaration) {
+  List<Class<I>> _computeConstraints<I>(Class parentClass, bool declared, Class clazz) {
+    if(parentClass.getClassDeclaration() is MixinDeclaration) {
       if(declared) {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-          .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
+          .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain(), useType: true))
+          .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
           .toList();
       } else {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .where((i) => i.getPointerQualifiedName() == clazz.getQualifiedName())
-          .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
+          .map((i) => getFromLink<I>(i, parentClass.getProtectionDomain()))
+          .map((cls) => Class.fromQualifiedName<I>(cls.getQualifiedName()))
           .toList();
       }
     }
@@ -811,7 +878,7 @@ class DefaultClassLoader extends ClassLoader {
     _missCount++;
     
     // Compute classes
-    final link = parentClass.getTypeDeclaration().asClass()?.getSuperClass();
+    final link = parentClass.getClassDeclaration().getSuperClass();
     if (link == null) return null;
 
     final result = getFromLink(link, parentClass.getProtectionDomain(), useType: declared);
@@ -839,10 +906,10 @@ class DefaultClassLoader extends ClassLoader {
     _missCount++;
     
     // Compute classes
-    final link = parentClass.getTypeDeclaration().asClass()?.getSuperClass();
+    final link = parentClass.getClassDeclaration().getSuperClass();
     if (link == null) return null;
 
-    final result = getFromLink(link, parentClass.getProtectionDomain(), useType: declared);
+    final result = getFromLink<S>(link, parentClass.getProtectionDomain(), useType: declared);
     
     // Cache result
     _superClassCache[cacheKey] = result;
@@ -865,7 +932,7 @@ class DefaultClassLoader extends ClassLoader {
     
     _missCount++;
 
-    final superType = parentClass.getTypeDeclaration().asClass()?.getSuperClass();
+    final superType = parentClass.getClassDeclaration().getSuperClass();
     if(superType == null) return [];
 
     final result = superType.getTypeArguments().map((t) => getFromLink(t, parentClass.getProtectionDomain(), useType: declared)).toList();
@@ -891,7 +958,7 @@ class DefaultClassLoader extends ClassLoader {
     
     _missCount++;
 
-    component ??= extractComponentType(parentClass);
+    component ??= extractComponentType<C>(parentClass);
 
     Class<C>? result;
     if (component == null) {
@@ -911,13 +978,20 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   @override
-  Type? extractComponentType(Class parentClass) {
+  Type? extractComponentType<K>(Class parentClass) {
     // Handle generic classes with type arguments
-    final typeArgs = parentClass.getTypeDeclaration().getTypeArguments();
+    List<LinkDeclaration> typeArgs = [];
+    
+    if (parentClass is FunctionClass) {
+      typeArgs = parentClass.getFunctionDeclaration().getTypeArguments();
+    } else {
+      typeArgs = parentClass.getClassDeclaration().getTypeArguments();
+    }
+    
     if (typeArgs.isNotEmpty && typeArgs.length == 1) {
-      return getFromLink(typeArgs.first, parentClass.getProtectionDomain()).getType();
+      return getFromLink<K>(typeArgs.first, parentClass.getProtectionDomain(), usePointer: true).getOriginal();
     } else if (typeArgs.length >= 2) {
-      return getFromLink(typeArgs[1], parentClass.getProtectionDomain()).getType();
+      return getFromLink<K>(typeArgs[1], parentClass.getProtectionDomain(), usePointer: true).getOriginal();
     }
     
     return null;
@@ -973,11 +1047,18 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   @override
-  Type? extractKeyType(Class parentClass) {
+  Type? extractKeyType<K>(Class parentClass) {
     // Handle generic classes with type arguments (Map<K,V> pattern)
-    final typeArgs = parentClass.getTypeDeclaration().getTypeArguments();
+    List<LinkDeclaration> typeArgs = [];
+    
+    if (parentClass is FunctionClass) {
+      typeArgs = parentClass.getFunctionDeclaration().getTypeArguments();
+    } else {
+      typeArgs = parentClass.getClassDeclaration().getTypeArguments();
+    }
+    
     if (typeArgs.length >= 2) {
-      return getFromLink(typeArgs[0], parentClass.getProtectionDomain()).getType();
+      return getFromLink<K>(typeArgs[0], parentClass.getProtectionDomain(), usePointer: true).getOriginal();
     }
     
     return null;
@@ -1021,11 +1102,11 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeAllInterfaces(Class parentClass, bool declared) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getInterfaces()
+      return parentClass.getClassDeclaration().getInterfaces()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .toList();
     }
@@ -1057,11 +1138,11 @@ class DefaultClassLoader extends ClassLoader {
 
   List<Class> _computeAllMixins(Class parentClass, bool declared) {
     if(declared) {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
         .toList();
     } else {
-      return parentClass.getTypeDeclaration().getMixins()
+      return parentClass.getClassDeclaration().getMixins()
         .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
         .toList();
     }
@@ -1092,13 +1173,13 @@ class DefaultClassLoader extends ClassLoader {
   }
 
   List<Class> _computeAllConstraints(Class parentClass, bool declared) {
-    if(parentClass.getTypeDeclaration() is MixinDeclaration) {
+    if(parentClass.getClassDeclaration() is MixinDeclaration) {
       if(declared) {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .map((i) => getFromLink(i, parentClass.getProtectionDomain(), useType: true))
           .toList();
       } else {
-        return (parentClass.getTypeDeclaration() as MixinDeclaration).getConstraints()
+        return (parentClass.getClassDeclaration() as MixinDeclaration).getConstraints()
           .map((i) => getFromLink(i, parentClass.getProtectionDomain()))
           .toList();
       }

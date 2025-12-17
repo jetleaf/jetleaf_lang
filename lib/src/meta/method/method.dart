@@ -1,8 +1,13 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/version.dart';
 import '../../exceptions.dart';
+import '../../utils/lang_utils.dart';
+import '../../utils/method_utils.dart';
+import '../class/class_type.dart';
 import '../class_loader/default_class_loader.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
@@ -58,6 +63,9 @@ part '_method.dart';
 /// {@endtemplate}
 /// {@endtemplate}
 abstract class Method extends Executable implements Member, GenericSource {
+  @override
+  MethodDeclaration getDeclaration();
+
   /// Checks if this method is static.
   ///
   /// {@template method_is_static}
@@ -189,6 +197,41 @@ abstract class Method extends Executable implements Member, GenericSource {
   /// {@endtemplate}
   bool isFutureVoid();
 
+  /// {@template method_isFutureDynamic}
+  /// Determines whether this method declares a `Future<dynamic>` return type.
+  ///
+  /// This method inspects the declared return type of the method and returns
+  /// `true` if it represents an asynchronous computation that completes with
+  /// no value (i.e., a `Future<dynamic>`).  
+  ///
+  /// It is particularly useful in reflection, proxy generation, or method
+  /// interceptors where you need to distinguish between:
+  /// - **Asynchronous dynamic methods** (`Future<dynamic>`) that perform side effects,
+  /// - **Asynchronous value-returning methods** (`Future<T>`), and
+  /// - **Synchronous dynamic methods** (`dynamic`).
+  ///
+  /// ## Example
+  /// ```dart
+  /// class Example {
+  ///   Future<dynamic> save() async {}
+  ///   Future<int> compute() async => 42;
+  ///   dynamic reset() {}
+  /// }
+  ///
+  /// final saveMethod = Class(Example).getMethod('save');
+  /// final computeMethod = Class(Example).getMethod('compute');
+  /// final resetMethod = Class(Example).getMethod('reset');
+  ///
+  /// print(saveMethod.isFutureDynamic());   // true
+  /// print(computeMethod.isFutureDynamic()); // false
+  /// print(resetMethod.isFutureDynamic());   // false
+  /// ```
+  ///
+  /// @return `true` if the method’s return type is `Future<dynamic>`,
+  ///         `false` otherwise.
+  /// {@endtemplate}
+  bool isFutureDynamic();
+
   /// {@template method_isAsync}
   /// Determines whether this method is **asynchronous** — i.e., declared using
   /// the `async` keyword or returning a [Future]-like type.
@@ -224,6 +267,146 @@ abstract class Method extends Executable implements Member, GenericSource {
   /// is marked with `async`), otherwise `false`.
   /// {@endtemplate}
   bool isAsync();
+
+  /// Determines whether this method is a **top-level function** rather than a
+  /// class, mixin, or extension member.
+  ///
+  /// Top-level methods are functions declared directly within a library scope,
+  /// such as:
+  /// ```dart
+  /// void main() {}
+  /// int add(int a, int b) => a + b;
+  /// ```
+  ///
+  /// Returns:
+  /// - `true` if the method originates from a library’s top-level scope  
+  /// - `false` if it belongs to a class, mixin, or extension
+  bool getIsTopLevel();
+
+  /// Determines whether this method represents a Dart **entrypoint**, typically
+  /// used as the starting execution method for an application.
+  ///
+  /// A method is considered an entrypoint if:
+  /// - Its name is `main`
+  /// - It is a top-level function
+  /// - It matches one of Dart’s supported entrypoint signatures:
+  ///   - `void main()`
+  ///   - `void main(List<String> args)`
+  ///   - `Future<void> main()`
+  ///   - `Future<void> main(List<String> args)`
+  ///
+  /// Returns:
+  /// - `true` if the method is recognized as an application entrypoint  
+  /// - `false` otherwise
+  bool getIsEntryPoint();
+
+  /// Checks whether this method is declared using the `external` keyword.
+  ///
+  /// External methods are **implemented outside Dart**, commonly in:
+  /// - Native extensions  
+  /// - FFI bindings  
+  /// - Platform-provided method bodies  
+  ///
+  /// Because external methods lack a Dart body, reflection and invocation
+  /// semantics may differ depending on the runtime.
+  ///
+  /// **Experimental** — API surface or behavior may change.
+  ///
+  /// Returns:
+  /// - `true` if the method is marked `external`
+  /// - `false` otherwise
+  bool isExternal();
+
+  /// Indicates whether the method’s return type is nullable.
+  ///
+  /// This examines the declared return type and determines whether it is
+  /// explicitly nullable under Dart’s null-safety type system.
+  ///
+  /// Examples:
+  /// ```dart
+  /// int? maybeValue() => null;   // nullable → true
+  /// int value() => 1;            // non-nullable → false
+  /// ```
+  ///
+  /// **Experimental** — Nullability inference is reflection-backend–specific.
+  ///
+  /// Returns:
+  /// - `true` if the return type is nullable  
+  /// - `false` otherwise
+  bool hasNullableReturn();
+
+  /// Determines whether the method declares a return type of `dynamic`.
+  ///
+  /// This includes both:
+  /// - Explicit `dynamic` return types  
+  /// - Implicitly inferred dynamic types (depending on reflection backend)  
+  ///
+  /// Example:
+  /// ```dart
+  /// dynamic foo() => 42;         // true
+  /// bar() => 'implicit dynamic'; // may be true depending on backend
+  /// int baz() => 5;              // false
+  /// ```
+  ///
+  /// Returns:
+  /// - `true` if the method’s return type is `dynamic`
+  /// - `false` otherwise
+  bool isDynamic();
+
+  /// Checks whether the method's type is a function type.
+  ///
+  /// {@template parameter_is_function}
+  /// Returns:
+  /// - `true` if the method's declared type is a function type, such as:
+  ///   - `void Function(int)`
+  ///   - `T Function(T)`
+  ///   - `Future<void> Function()`
+  /// - `false` if the method is not a function type.
+  ///
+  /// ## Notes
+  /// - This does **not** check whether the method *evaluates to* a function,
+  ///   only whether its *static type* is a function type.
+  /// - Useful when generating invocation wrappers, proxies, or stubs.
+  ///
+  /// ## Example
+  /// ```dart
+  /// void example(void Function() callback) {}
+  ///
+  /// final param = method.getParameters().first;
+  /// print(param.isFunction()); // true
+  /// ```
+  /// {@endtemplate}
+  bool isFunction();
+
+  /// Gets the underlying link-time declaration for this method.
+  ///
+  /// {@template parameter_get_link_declaration}
+  /// Returns:
+  /// - A [LinkDeclaration] representing the method's static declaration
+  ///   in the compile-time model.
+  ///
+  /// ## What This Represents
+  /// - The original source-level declaration from build-time metadata.
+  /// - Type, name, and annotation information *before* any runtime resolution.
+  ///
+  /// ## Why This Matters
+  /// - Enables tooling that must operate on compile-time structure:
+  ///   - Code generation
+  ///   - Static analysis
+  ///   - AOP weaving
+  ///   - Symbolic evaluation
+  ///
+  /// ## Example
+  /// ```dart
+  /// final link = param.getLinkDeclaration();
+  /// print(link.name);     // Parameter name
+  /// print(link.typeName); // Source-level type
+  /// ```
+  ///
+  /// ## Notes
+  /// - This does not consider runtime modifications from mirrors or proxies.
+  /// {@endtemplate}
+  LinkDeclaration getLinkDeclaration();
   
   /// Gets the method that this method overrides.
   ///
@@ -250,7 +433,9 @@ abstract class Method extends Executable implements Member, GenericSource {
   ///
   /// Throws:
   /// - [InvalidArgumentException] if arguments don't match parameters
-  /// - [NoSuchMethodException] for invalid invocations
+  /// - [MethodNotFoundException] for invalid invocations
+  /// - [PrivateMethodInvocationException] if the method is a private method
+  /// - [GenericResolutionException] if the method's type cannot be resolved
   ///
   /// Example:
   /// ```dart

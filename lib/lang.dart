@@ -12,6 +12,8 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+// ignore_for_file: deprecated_member_use
+
 /// 🍃 **JetLeaf Standard Library**
 ///
 /// This library exposes the core foundational utilities of the JetLeaf
@@ -267,6 +269,8 @@ export 'src/commons/string_builder.dart';
 export 'src/commons/commons.dart' hide TryWithAction;
 export 'src/commons/regex_utils.dart';
 export 'src/commons/typedefs.dart';
+export 'src/commons/version.dart';
+export 'src/commons/version_range.dart';
 
 export 'src/locale/locale.dart';
 export 'src/locale/language_range.dart';
@@ -275,21 +279,25 @@ export 'src/currency/currency.dart';
 export 'src/uuid/uuid.dart';
 
 export 'src/meta/class/class.dart';
+export 'src/meta/class/delegating_class.dart';
 export 'src/meta/class/class_gettable.dart';
 export 'src/meta/class/class_type.dart';
 export 'src/meta/field/field.dart';
 export 'src/meta/constructor/constructor.dart';
 export 'src/meta/method/method.dart';
 export 'src/meta/parameter/parameter.dart';
+export 'src/meta/enum/enum_value.dart';
 export 'src/meta/annotation/annotation.dart';
 export 'src/meta/protection_domain/protection_domain.dart';
-export 'src/meta/resolvable_type.dart';
 export 'src/meta/qualified_name/qualified_name.dart';
 export 'src/meta/package_identifier.dart';
 export 'src/meta/core.dart';
+export 'src/meta/hint/materialized_runtime_hint.dart';
+export 'src/meta/function/function_class.dart';
+export 'src/meta/record/record_class.dart';
+export 'src/meta/record/record_field.dart';
 
 export 'src/meta/executable/executable_argument_resolver.dart';
-export 'src/meta/executable/executable_argument.dart';
 export 'src/meta/executable/executable_selector.dart';
 export 'src/meta/executable/executable_instantiator.dart';
 
@@ -311,4 +319,47 @@ export 'src/obs/obs_types.dart';
 export 'src/exceptions.dart';
 export 'src/nested_runtime_exception.dart';
 
-export 'package:jetleaf_build/jetleaf_build.dart';
+export 'package:jetleaf_build/jetleaf_build.dart' show
+  Constant,
+  runScan,
+  runTestScan,
+  Asset,
+  AssetExtension,
+  Package,
+  Hint,
+  RuntimeHint,
+  Runtime,
+  ExecutableArgument,
+  EqualsAndHashCode,
+  Generic,
+  RuntimeHintDescriptor,
+  RuntimeHintProvider,
+  GenerativeAsset,
+  GenerativePackage,
+  BuildException,
+  RuntimeException,
+  FieldAccessException,
+  FieldMutationException,
+  MethodNotFoundException,
+  RuntimeResolverException,
+  GenericResolutionException,
+  ArgumentResolutionException,
+  PrivateFieldAccessException,
+  ConstructorNotFoundException,
+  PrivateMethodInvocationException,
+  UnresolvedTypeInstantiationException,
+  UnsupportedRuntimeOperationException,
+  PrivateConstructorInvocationException,
+  UnexpectedArgumentException,
+  TooFewPositionalArgumentException,
+  TooManyPositionalArgumentException,
+  MissingRequiredNamedParameterException,
+  MissingRequiredPositionalParameterException,
+  Throwable,
+  PackageNames,
+  GLOBAL_RUNTIME_PROVIDER,
+  ReflectableAnnotation,
+  Author,
+  ToString,
+  ToStringOptions
+;

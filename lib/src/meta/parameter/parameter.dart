@@ -1,6 +1,7 @@
 import 'package:jetleaf_build/jetleaf_build.dart';
 
-import '../../exceptions.dart';
+import '../../commons/version.dart';
+import '../../utils/lang_utils.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
 import '../constructor/constructor.dart';
@@ -54,6 +55,9 @@ part '_parameter.dart';
 /// {@endtemplate}
 /// {@endtemplate}
 abstract interface class Parameter extends Source {
+  @override
+  ParameterDeclaration getDeclaration();
+
   /// Gets the type of the parameter with proper generics.
   ///
   /// {@template parameter_get_type}
@@ -62,10 +66,24 @@ abstract interface class Parameter extends Source {
   ///
   /// Example:
   /// ```dart
-  /// final type = param.getClass<String>(); // Class<String>
+  /// final type = param.getReturnClass(); // Class<String>
   /// ```
   /// {@endtemplate}
-  Class<Object> getClass();
+  @Deprecated("`getClass` is now deprecated and will be removed in the next version of jetleaf since it collides with `getClass` method extension. Use `getReturnClass` instead.")
+  Class<Object> getClass() => getReturnClass();
+
+  /// Gets the type of the parameter with proper generics.
+  ///
+  /// {@template parameter_get_type}
+  /// Returns:
+  /// - A [Class] instance representing the parameter type
+  ///
+  /// Example:
+  /// ```dart
+  /// final type = param.getReturnClass(); // Class<String>
+  /// ```
+  /// {@endtemplate}
+  Class<Object> getReturnClass();
 
   /// Gets the type of the parameter.
   ///
@@ -101,7 +119,84 @@ abstract interface class Parameter extends Source {
   ///   - Named parameter in curly braces `{param}`
   /// - `false` for required parameters
   /// {@endtemplate}
+  bool isOptional();
+  
+  /// Checks whether the parameter type is nullable.
+  ///
+  /// {@template parameter_is_nullable}
+  /// Returns:
+  /// - `true` if the parameter's static type is nullable  
+  ///   (e.g., `int?`, `String?`, or a generic type with a nullable bound)
+  /// - `false` if the type is strictly non-nullable  
+  ///
+  /// ## Notes
+  /// - This reflects the Dart null-safety type system.
+  /// - A parameter can be *required* but still *nullable*, and vice-versa.
+  ///
+  /// ## Example
+  /// ```dart
+  /// void example(int? value) {}
+  ///
+  /// final param = method.getParameters().first;
+  /// print(param.isNullable()); // true
+  /// ```
+  /// {@endtemplate}
   bool isNullable();
+
+  /// Checks whether the parameter's type is a function type.
+  ///
+  /// {@template parameter_is_function}
+  /// Returns:
+  /// - `true` if the parameter's declared type is a function type, such as:
+  ///   - `void Function(int)`
+  ///   - `T Function(T)`
+  ///   - `Future<void> Function()`
+  /// - `false` if the parameter is not a function type.
+  ///
+  /// ## Notes
+  /// - This does **not** check whether the parameter *evaluates to* a function,
+  ///   only whether its *static type* is a function type.
+  /// - Useful when generating invocation wrappers, proxies, or stubs.
+  ///
+  /// ## Example
+  /// ```dart
+  /// void example(void Function() callback) {}
+  ///
+  /// final param = method.getParameters().first;
+  /// print(param.isFunction()); // true
+  /// ```
+  /// {@endtemplate}
+  bool isFunction();
+
+  /// Gets the underlying link-time declaration for this parameter.
+  ///
+  /// {@template parameter_get_link_declaration}
+  /// Returns:
+  /// - A [LinkDeclaration] representing the parameter's static declaration
+  ///   in the compile-time model.
+  ///
+  /// ## What This Represents
+  /// - The original source-level declaration from build-time metadata.
+  /// - Type, name, and annotation information *before* any runtime resolution.
+  ///
+  /// ## Why This Matters
+  /// - Enables tooling that must operate on compile-time structure:
+  ///   - Code generation
+  ///   - Static analysis
+  ///   - AOP weaving
+  ///   - Symbolic evaluation
+  ///
+  /// ## Example
+  /// ```dart
+  /// final link = param.getLinkDeclaration();
+  /// print(link.name);     // Parameter name
+  /// print(link.typeName); // Source-level type
+  /// ```
+  ///
+  /// ## Notes
+  /// - This does not consider runtime modifications from mirrors or proxies.
+  /// {@endtemplate}
+  LinkDeclaration getLinkDeclaration();
   
   /// Checks if this is a named parameter.
   ///
@@ -144,6 +239,47 @@ abstract interface class Parameter extends Source {
   /// - [getDefaultValue] to retrieve the value
   /// {@endtemplate}
   bool hasDefaultValue();
+
+  /// Indicates whether this parameter **must be explicitly resolved** at call time.
+  ///
+  /// This property is used by the invocation engine to determine whether a
+  /// parameter *must* receive a value during reflection-based method or
+  /// constructor calls, even if its signature might otherwise suggest that
+  /// providing a value is optional.
+  ///
+  /// ### When a parameter "must be resolved"
+  /// A parameter is considered *must-resolve* when:
+  /// - The parameter is marked `required` but the reflective call path may not
+  ///   enforce that automatically.
+  /// - The parameter has no default value and cannot be null.
+  /// - The underlying platform reflection metadata is incomplete or ambiguous
+  ///   (e.g., due to external/native declarations).
+  /// - Skipping this parameter would cause the invocation to throw at runtime
+  ///   (common in code generation, proxying, and AOP scenarios).
+  ///
+  /// ### Typical Use Cases
+  /// - **Runtime invocation frameworks**: to ensure required arguments are
+  ///   provided before evaluating a reflected call.
+  /// - **Code generation**: to emit correct invocation stubs for constructors
+  ///   and methods.
+  /// - **Cross-isolate or proxy method calls**: where incomplete metadata can
+  ///   cause invocation failures.
+  ///
+  /// ### Example
+  /// ```dart
+  /// void example({required int count}) {}
+  ///
+  /// final param = Class(Example).getMethod('example').getParameters().first;
+  ///
+  /// if (param.mustBeResolved()) {
+  ///   // Ensure a value for `count` is supplied
+  /// }
+  /// ```
+  ///
+  /// ### Returns
+  /// `true` if the parameter must be supplied with an explicit value during
+  /// invocation; otherwise `false`.
+  bool mustBeResolved();
   
   /// Gets the default value of the parameter.
   ///
@@ -193,7 +329,7 @@ abstract interface class Parameter extends Source {
   /// }
   /// ```
   /// {@endtemplate}
-  static Parameter declared(ParameterDeclaration declaration, ProtectionDomain domain) {
-    return _Parameter(declaration, domain);
+  static Parameter declared(ParameterDeclaration declaration, Member member, ProtectionDomain domain) {
+    return _Parameter(declaration, member, domain);
   }
 }

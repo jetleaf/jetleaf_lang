@@ -45,17 +45,15 @@ part of 'class_path_resource.dart';
 ///
 /// {@endtemplate}
 final class DefaultClassPathResource extends ClassPathResource {
-  List<TypeDeclaration> _declarations = [];
+  List<ClassDeclaration> _declarations = [];
   List<MethodDeclaration> _methodDeclarations = [];
   LibraryDeclaration? _library;
   Stream<List<int>> _stream = Stream<List<int>>.empty();
 
   DefaultClassPathResource(super.packageUri) {
-    _declarations.addAll(Runtime.getAllClasses().where((c) => _matches(c.getPackageUri())));
     _declarations.addAll(Runtime.getAllEnums().where((c) => _matches(c.getPackageUri())));
     _declarations.addAll(Runtime.getAllMixins().where((c) => _matches(c.getPackageUri())));
-    _declarations.addAll(Runtime.getAllRecords().where((c) => _matches(c.getPackageUri())));
-    _declarations.addAll(Runtime.getAllTypedefs().where((c) => _matches(c.getPackageUri())));
+    _declarations.addAll(Runtime.getAllClasses().where((c) => _matches(c.getPackageUri())));
 
     final lib = Runtime.getAllLibraries().find((l) => l.getSourceLocation() != null && _matches(l.getSourceLocation()!.toString()));
     if(lib == null) {
@@ -72,53 +70,26 @@ final class DefaultClassPathResource extends ClassPathResource {
 
   Exception _throwIfNotFound([String? name]) => IllegalStateException("${name ?? 'Class'} for $packageUri not found");
 
-  TypeDeclaration? _findFromLibrary([String? name]) {
+  ClassDeclaration? _findFromLibrary([String? name]) {
     // Check for ClassDeclaration type
-    TypeDeclaration? declaration = _library?.getDeclarations().whereType<ClassDeclaration>().find((d) => d.getSimpleName() == name);
-    if(declaration != null) {
-      return declaration;
-    }
+    ClassDeclaration? declaration;
     
     // Check for EnumDeclaration type
     declaration = _library?.getDeclarations().whereType<EnumDeclaration>().find((d) => d.getSimpleName() == name);
-    if(declaration != null) {
-      return declaration;
-    }
-    
-    // Check for MixinDeclaration type
-    declaration = _library?.getDeclarations().whereType<MixinDeclaration>().find((d) => d.getSimpleName() == name);
-    if(declaration != null) {
-      return declaration;
-    }
-    
-    // Check for RecordDeclaration type
-    declaration = _library?.getDeclarations().whereType<RecordDeclaration>().find((d) => d.getSimpleName() == name);
-    if(declaration != null) {
-      return declaration;
-    }
-    
-    // Check for TypedefDeclaration type
-    declaration = _library?.getDeclarations().whereType<TypedefDeclaration>().find((d) => d.getSimpleName() == name);
-    if(declaration != null) {
-      return declaration;
-    }
-    
-    return null;
+    declaration ??= _library?.getDeclarations().whereType<MixinDeclaration>().find((d) => d.getSimpleName() == name);
+    return declaration ??= _library?.getDeclarations().whereType<ClassDeclaration>().find((d) => d.getSimpleName() == name);
   }
 
-  List<TypeDeclaration> _findFromLibraryAll() {
-    List<TypeDeclaration> declarations = [];
+  List<ClassDeclaration> _findFromLibraryAll() {
+    List<ClassDeclaration> declarations = [];
 
-    // Check for ClassDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<ClassDeclaration>().toList() ?? []);
     // Check for EnumDeclaration type
     declarations.addAll(_library?.getDeclarations().whereType<EnumDeclaration>().toList() ?? []);
     // Check for MixinDeclaration type
     declarations.addAll(_library?.getDeclarations().whereType<MixinDeclaration>().toList() ?? []);
-    // Check for RecordDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<RecordDeclaration>().toList() ?? []);
-    // Check for TypedefDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<TypedefDeclaration>().toList() ?? []);
+    // Check for ClassDeclaration type
+    declarations.addAll(_library?.getDeclarations().whereType<ClassDeclaration>().toList() ?? []);
+    
     return declarations;
   }
 

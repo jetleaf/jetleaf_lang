@@ -146,7 +146,6 @@ class MultiBoundedContainer<T extends BaseInterface> implements Comparable<T> {
   }
 }
 
-@Resolved()
 @Generic(TestClass, "")
 class TestClass<T extends Major> extends BaseInterface 
     with TestMixin, AnotherMixin 

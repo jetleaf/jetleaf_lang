@@ -21,6 +21,12 @@ class _Annotation extends Annotation {
   _Annotation(this._declaration, this._pd);
 
   // ============================================== COMMON METHODS ========================================
+
+  @override
+  AnnotationDeclaration getDeclaration() {
+    checkAccess('getType', DomainPermission.READ_ANNOTATIONS);
+    return _declaration;
+  }
   
   @override
   Type getType() {
@@ -31,11 +37,11 @@ class _Annotation extends Annotation {
   @override
   bool matches<A>([Class<A>? type]) {
     try {
-      if (getClass().getType() == A) {
+      if (getDeclaringClass().getType() == A) {
         return true;
       }
 
-      if (getClass().getType() is A) {
+      if (getDeclaringClass().getType() is A) {
         return true;
       }
 
@@ -47,12 +53,12 @@ class _Annotation extends Annotation {
         return true;
       }
 
-      if (getClass().isInstance(A)) {
+      if (getDeclaringClass().isInstance(A)) {
         return true;
       }
 
       final cls = type ?? Class<A>();
-      if (getClass().isInstance(cls)) {
+      if (getDeclaringClass().isInstance(cls)) {
         return true;
       }
     } catch (_) { }
@@ -61,16 +67,17 @@ class _Annotation extends Annotation {
   }
   
   @override
-  Class getClass() {
+  Class getDeclaringClass() {
     checkAccess('getType', DomainPermission.READ_ANNOTATIONS);
+    final link = _declaration.getLinkDeclaration();
     
     try {
-      return Class.fromQualifiedName(_declaration.getLinkDeclaration().getPointerQualifiedName(), _pd);
+      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
     } catch (_) {
       try {
-        return Class.forType(_declaration.getLinkDeclaration().getPointerType(), _pd);
+        return Class.forType(link.getPointerType(), _pd, null, link);
       } catch (_) {
-        return Class.forType(_declaration.getLinkDeclaration().getType(), _pd);
+        return Class.forType(link.getType(), _pd, null, link);
       }
     }
   }
@@ -81,7 +88,7 @@ class _Annotation extends Annotation {
   @override
   List<String> getFieldNames() {
     checkAccess('getFieldNames', DomainPermission.READ_ANNOTATIONS);
-    return _declaration.getFieldNames();
+    return UnmodifiableListView(_declaration.getFieldNames());
   }
 
   // ========================================= VALUE PROVIDERS ============================================
@@ -117,7 +124,7 @@ class _Annotation extends Annotation {
   @override
   Map<String, dynamic> getUserProvidedValues() {
     checkAccess('getUserProvidedValues', DomainPermission.READ_ANNOTATIONS);
-    return _declaration.getUserProvidedValues();
+    return UnmodifiableMapView(_declaration.getUserProvidedValues());
   }
   
   @override
@@ -132,7 +139,7 @@ class _Annotation extends Annotation {
       }
     }
     
-    return values;
+    return UnmodifiableMapView(values);
   }
 
   // ======================================== HELPER METHODS ==============================================
@@ -160,7 +167,7 @@ class _Annotation extends Annotation {
   @override
   List<Field> getFields() {
     checkAccess('getFields', DomainPermission.READ_ANNOTATIONS);
-    return _declaration.getFields().map((f) => Field.declared(f, _declaration, _pd)).toList();
+    return UnmodifiableListView(_declaration.getFields().map((f) => Field.declared(f, _declaration, _pd)));
   }
 
   @override
@@ -178,7 +185,7 @@ class _Annotation extends Annotation {
   @override
   String getSignature() {
     checkAccess('getSignature', DomainPermission.READ_ANNOTATIONS);
-    final typeName = getClass().getName();
+    final typeName = getDeclaringClass().getName();
     final userValues = getAllFieldValues();
     
     if (userValues.isEmpty) {
@@ -199,5 +206,22 @@ class _Annotation extends Annotation {
   }
   
   @override
-  String toString() => 'Annotation(${getClass().getName()})';
+  String toString() => 'Annotation(${getDeclaringClass().getName()})';
+  
+  @override
+  Author? getAuthor() {
+    checkAccess("getAuthor", DomainPermission.READ_TYPE_INFO);
+    return getDeclaringClass().getAuthor();
+  }
+
+  @override
+  Version? getVersion() {
+    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
+
+    if (getDeclaringClass().getPackage() case final package?) {
+      return Version.parse(package.getVersion());
+    }
+
+    return null;
+  }
 }

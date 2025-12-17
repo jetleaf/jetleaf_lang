@@ -15,56 +15,55 @@
 part of 'class.dart';
 
 @Generic(_Class)
-class _Class<T> with EqualsAndHashCode implements Class<T> {
+class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   String _name;
   final String? _package;
   final ProtectionDomain _pd;
   final LinkDeclaration? _link;
 
-  late final TypeDeclaration _declaration;
+  late final ClassDeclaration _declaration;
   
   _Class(this._name, this._pd, this._package, this._link) {
     final checker = _name != T.toString() ? _name : T;
 
-    final result = _name != T.toString() 
-      ? TypeDiscovery.findByName(_name, _package) ?? TypeDiscovery.findByType(T, _package)
-      : TypeDiscovery.findByType(T, _package) ?? TypeDiscovery.findByName(_name, _package);
-    
-    if(result == null) {
-      throw ClassNotFoundException(checker.toString());
-    }
-
-    _confirmResult(result);
+    ClassDeclaration? result = _name != T.toString() 
+      ? TypeDiscovery.findClassByName(_name, _package) ?? TypeDiscovery.findClassByType(T, _package)
+      : TypeDiscovery.findClassByType(T, _package) ?? TypeDiscovery.findClassByName(_name, _package);
+    result ??= _predict(checker.toString());
 
     _declaration = result;
   }
 
   _Class.fromQualifiedName(this._name, this._pd, this._link) : _package = null {
-    TypeDeclaration? result = TypeDiscovery.findByQualifiedName(_name);
+    ClassDeclaration? result = TypeDiscovery.findClassByQualifiedName(_name);
 
     if (result == null && _name == "dart:mirrors.void") {
-      result = TypeDiscovery.findByName("void", _package);
+      result = TypeDiscovery.findClassByName("void", _package) ?? TypeDiscovery.findClassByQualifiedName(Void.getQualifiedName());
     }
 
-    if(result == null) {
-      throw ClassNotFoundException(_name);
+    if (_name == "dart:mirrors.dynamic" || _name == "dynamic") {
+      result = TypeDiscovery.findClassByName("dynamic", _package) ?? TypeDiscovery.findClassByQualifiedName(Dynamic.getQualifiedName());
     }
 
-    _confirmResult(result);
+    result ??= _predict(_name);
 
     _declaration = result;
     _name = result.getName();
   }
 
-  _Class.declared(this._declaration, this._pd) : _link = null, _name = _declaration.getName(), _package = null {
-    _confirmResult(_declaration);
-  }
-
-  void _confirmResult(TypeDeclaration result) {
-    if(result is! ClassDeclaration && result is! EnumDeclaration && result is! RecordDeclaration && result is! MixinDeclaration && result is! TypedefDeclaration) {
-      throw UnsupportedOperationException("Class of $T must either be a class, enum, record, mixin or typedef");
+  ClassDeclaration _predict(String name) {
+    if (name == "dynamic") {
+      return DYNAMIC_CLASS.getClassDeclaration();
     }
-  }
+
+    if (name == "void") {
+      return VOID_CLASS.getClassDeclaration();
+    }
+
+    throw ClassNotFoundException(name);
+  } 
+
+  _Class.declared(this._declaration, this._pd) : _link = null, _name = _declaration.getName(), _package = null;
 
   @override
   Declaration getDeclaration() {
@@ -73,51 +72,14 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   }
   
   @override
-  TypeDeclaration getTypeDeclaration() {
+  ClassDeclaration getClassDeclaration() {
     checkAccess('getDeclaration', DomainPermission.READ_TYPE_INFO);
     return _declaration;
   }
 
-  List<LinkDeclaration> _getTypeArgs() => _link?.getTypeArguments() ?? _declaration.getTypeArguments();
-
   @override
   String getSignature() {
     checkAccess('getSignature', DomainPermission.READ_TYPE_INFO);
-
-    // Handle records
-    if (_declaration is RecordDeclaration) {
-      final positional = getPositionalFields().map((f) => f.getClass().getName()).join(', ');
-      final named = getNamedFields().entries.map((e) => '${e.value.getClass().getName()} ${e.key}').join(', ');
-
-      if (named.isEmpty) {
-        return '($positional)';
-      } else if (positional.isEmpty) {
-        return '({$named})';
-      } else {
-        return '($positional, {$named})';
-      }
-    }
-
-    // Handle classes
-    if (_declaration is ClassDeclaration) {
-      final typeParams = _getTypeArgs().isNotEmpty
-          ? '<${_getTypeArgs().join(', ')}>'
-          : '';
-
-      final superType = _declaration.getSuperClass() != null
-          ? ' extends ${_declaration.getSuperClass()!.getName()}'
-          : '';
-
-      final interfaces = _declaration.getInterfaces().isNotEmpty
-          ? ' implements ${_declaration.getInterfaces().map((i) => i.getName()).join(', ')}'
-          : '';
-
-      final mixins = _declaration.getMixins().isNotEmpty
-          ? ' with ${_declaration.getMixins().map((m) => m.getName()).join(', ')}'
-          : '';
-
-      return 'class ${_declaration.getName()}$typeParams$superType$mixins$interfaces';
-    }
 
     // Handle enums
     if (_declaration is EnumDeclaration) {
@@ -127,8 +89,8 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
     // Handle mixins
     if (_declaration is MixinDeclaration) {
-      final typeParams = _getTypeArgs().isNotEmpty
-          ? '<${_getTypeArgs().join(', ')}>'
+      final typeParams = getTypeArgumentLinks().isNotEmpty
+          ? '<${getTypeArgumentLinks().join(', ')}>'
           : '';
 
       final onClause = _declaration.getConstraints().isNotEmpty
@@ -142,61 +104,46 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       return 'mixin ${_declaration.getName()}$typeParams$onClause$interfaces';
     }
 
-    // Handle typedefs
-    if (_declaration is TypedefDeclaration) {
-      final typeParams = _getTypeArgs().isNotEmpty
-          ? '<${_getTypeArgs().join(', ')}>'
-          : '';
-      return 'typedef ${_declaration.getName()}$typeParams = ${_declaration.getAliasedType()}';
+    final typeParams = getTypeArgumentLinks().isNotEmpty
+        ? '<${getTypeArgumentLinks().join(', ')}>'
+        : '';
+
+    final superType = _declaration.getSuperClass() != null
+        ? ' extends ${_declaration.getSuperClass()!.getName()}'
+        : '';
+
+    final interfaces = _declaration.getInterfaces().isNotEmpty
+        ? ' implements ${_declaration.getInterfaces().map((i) => i.getName()).join(', ')}'
+        : '';
+
+    final mixins = _declaration.getMixins().isNotEmpty
+        ? ' with ${_declaration.getMixins().map((m) => m.getName()).join(', ')}'
+        : '';
+
+    return 'class ${_declaration.getName()}$typeParams$superType$mixins$interfaces';
+  }
+
+  @override
+  Author? getAuthor() => super.getAuthor() ?? getAnnotation<Author>();
+
+  @override
+  List<LinkDeclaration> getTypeArgumentLinks() {
+    checkAccess("getTypeArgumentLinks", DomainPermission.READ_TYPE_INFO);
+    return UnmodifiableListView(_link?.getTypeArguments() ?? _declaration.getTypeArguments());
+  }
+
+  @override
+  List<Class<Object>> getTypeArguments() {
+    checkAccess("getTypeArguments", DomainPermission.READ_TYPE_INFO);
+
+    final args = <Class<Object>>[];
+
+    for (final link in getTypeArgumentLinks()) {
+      final keyDeclaration = MetaClassLoader.getFromLink(link, _pd);
+      args.add(Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link));
     }
 
-    // Fallback
-    return toString();
-  }
-
-  // ======================================= META OVERRIDDEN METHODS =========================================
-
-  @override
-  void checkAccess(String operation, DomainPermission permission) {
-    getProtectionDomain().checkAccess(operation, permission);
-  }
-
-  @override
-  A? getDirectAnnotation<A>() {
-    checkAccess('getAnnotation', DomainPermission.READ_ANNOTATIONS);
-
-    final annotations = getAllDirectAnnotations();
-    for (final annotation in annotations) {
-      if (annotation.matches<A>()) {
-        try {
-          return annotation.getInstance<A>();
-        } catch (_) {
-          return null;
-        }
-      }
-    }
-    return null;
-  }
-
-  @override
-  List<A> getDirectAnnotations<A>() {
-    checkAccess('getAnnotations', DomainPermission.READ_ANNOTATIONS);
-    final annotations = getAllDirectAnnotations();
-    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
-  }
-
-  @override
-  bool hasDirectAnnotation<A>() {
-    checkAccess('hasAnnotation', DomainPermission.READ_ANNOTATIONS);
-    return getDirectAnnotation<A>() != null;
-  }
-
-  @override
-  List<Annotation> getAllDirectAnnotations() {
-    checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
-
-    final annotations = _declaration.getDeclaration()?.getAnnotations();
-    return annotations?.map((a) => Annotation.declared(a, getProtectionDomain())).toList() ?? [];
+    return UnmodifiableListView(args);
   }
 
   // ---------------------------------------------------------------------------------------------------------
@@ -245,9 +192,27 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
   @override
   bool isInstance(Object? obj) {
+    if (obj is FunctionClass || obj is RecordClass) return false;
+
     if (obj == null) return false;
 
+    if (getQualifiedName() == Dynamic.getQualifiedName()) {
+      return true;
+    }
+
+    if (getQualifiedName() == Void.getQualifiedName()) {
+      return true;
+    }
+
     if(obj is Class) {
+      if (obj.getQualifiedName() == Dynamic.getQualifiedName() || obj == DYNAMIC_CLASS) {
+        return true;
+      }
+
+      if (obj.getQualifiedName() == Void.getQualifiedName() || obj == VOID_CLASS) {
+        return true;
+      }
+
       if(obj.getQualifiedName() == getQualifiedName()) {
         if (obj.hasGenerics()) {
           final comp = obj.componentType();
@@ -303,7 +268,9 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   
   @override
   bool isAssignableFrom(Class other) {
-    if(_declaration.isAssignableFrom(other.getDeclaration() as TypeDeclaration)) {
+    if (other is FunctionClass || other is RecordClass) return false;
+
+    if(_declaration.isAssignableFrom(other.getClassDeclaration())) {
       return true;
     }
 
@@ -312,7 +279,9 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
   @override
   bool isAssignableTo(Class other) {
-    if(_declaration.isAssignableTo(other.getDeclaration() as TypeDeclaration)) {
+    if (other is FunctionClass || other is RecordClass) return false;
+
+    if(_declaration.isAssignableTo(other.getClassDeclaration())) {
       return true;
     }
 
@@ -333,6 +302,8 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   
   @override
   bool isSubclassOf(Class other) {
+    if (other is FunctionClass || other is RecordClass) return false;
+
     if(this == other) {
       return true;
     }
@@ -387,25 +358,34 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   // =========================================== HELPER METHODS ===============================================
 
   @override
-  List<String> getModifiers() => [
-    if (isPublic()) 'PUBLIC',
-    if (!isPublic()) 'PRIVATE',
-    if (isBase()) 'BASE',
-    if (isAbstract()) 'ABSTRACT',
-    if (isEnum()) 'ENUM',
-    if (isFinal()) 'FINAL',
-    if (isInterface()) 'INTERFACE',
-    if (isMixin()) 'MIXIN',
-    if (isRecord()) 'RECORD',
-    if (isSealed()) 'SEALED',
-    if (isTypeVariable()) 'TYPE_VARIABLE',
-    if (isTypedef()) 'TYPEDEF',
-    if (isClass()) 'CLASS',
-    if (isExtension()) 'EXTENSION',
-  ];
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_TYPE_INFO);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isBase()) 'BASE',
+      if (isAbstract()) 'ABSTRACT',
+      if (isEnum()) 'ENUM',
+      if (isFinal()) 'FINAL',
+      if (isInterface()) 'INTERFACE',
+      if (isMixin()) 'MIXIN',
+      if (isRecord()) 'RECORD',
+      if (isSealed()) 'SEALED',
+      if (isClass()) 'CLASS',
+    ];
+  }
 
   @override
   bool isAsync() {
+    checkAccess('isAsync', DomainPermission.READ_TYPE_INFO);
+
+    if (_declaration.getDartType() case final dartType?) {
+      if (dartType.isDartAsyncFuture || dartType.isDartAsyncFutureOr) {
+        return true;
+      }
+    }
+
     if (Class<Future>(null, "dart").isAssignableFrom(this) || Class<FutureOr>(null, "dart").isAssignableFrom(this)) {
       return true;
     }
@@ -416,7 +396,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   bool isAbstract() {
     checkAccess('isAbstract', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsAbstract() ?? false;
+    return _declaration.getIsAbstract();
   }
 
   @override
@@ -428,7 +408,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   bool isBase() {
     checkAccess('isBase', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsBase() ?? false;
+    return _declaration.getIsBase();
   }
   
   @override
@@ -440,65 +420,74 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   bool isFinal() {
     checkAccess('isFinal', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsFinal() ?? false;
+    return _declaration.getIsFinal();
+  }
+
+  @override
+  bool isFunction() {
+    checkAccess('isFunction', DomainPermission.READ_TYPE_INFO);
+    return false;
   }
   
   @override
   bool isInterface() {
     checkAccess('isInterface', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsInterface() ?? false;
+    return _declaration.getIsInterface();
   }
   
   @override
   bool isMixin() {
     checkAccess('isMixin', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsMixin() ?? _declaration.asMixin() != null;
+    return _declaration is MixinDeclaration;
   }
   
   @override
   bool isRecord() {
     checkAccess('isRecord', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsRecord() ?? _declaration.asRecord() != null;
+    return false;
+  }
+
+  @override
+  bool isVoid() {
+    checkAccess('isVoid', DomainPermission.READ_TYPE_INFO);
+    return this == VOID_CLASS || getQualifiedName() == Void.getQualifiedName();
+  }
+
+  @override
+  bool isDynamic() {
+    checkAccess('isDynamic', DomainPermission.READ_TYPE_INFO);
+    return this == DYNAMIC_CLASS || getQualifiedName() == Dynamic.getQualifiedName();
   }
   
   @override
   bool isSealed() {
     checkAccess('isSealed', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass()?.getIsSealed() ?? false;
-  }
-  
-  @override
-  bool isTypeVariable() {
-    checkAccess('isTypeVariable', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asTypeVariable() != null; // Typevariable is not yet fully used.
-  }
-  
-  @override
-  bool isTypedef() {
-    checkAccess('isTypedef', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asTypedef() != null;
+    return _declaration.getIsSealed();
   }
 
   @override
   bool isClass() {
     checkAccess('isClass', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asClass() != null;
-  }
-  
-  @override
-  bool isExtension() {
-    checkAccess('isExtension', DomainPermission.READ_TYPE_INFO);
-    return false; // Extension support is not yet added
+    return true;
   }
 
   @override
-  bool hasGenerics() => GenericTypeParser.isGeneric(T.toString()) || GenericTypeParser.isGeneric(_name);
+  bool isSynthetic() {
+    checkAccess('isSynthetic', DomainPermission.READ_TYPE_INFO);
+    return _declaration.getIsSynthetic();
+  }
+
+  @override
+  bool hasGenerics() {
+    checkAccess('hasGenerics', DomainPermission.READ_TYPE_INFO);
+    return GenericTypeParser.isGeneric(T.toString()) || GenericTypeParser.isGeneric(_name);
+  }
 
   @override
   bool isArray() {
     checkAccess('isArray', DomainPermission.READ_TYPE_INFO);
     return _declaration.getKind() == TypeKind.listType 
-      || (_getTypeArgs().isNotEmpty && _getTypeArgs().length == 1)
+      || (getTypeArgumentLinks().isNotEmpty && getTypeArgumentLinks().length == 1)
       || T.toString().startsWith("List<") || T.toString().startsWith("Iterable")
       || T is List || T is Iterable || T == List || T == Set || T == Iterable 
       || isAssignableTo(Class.of<List>())
@@ -509,7 +498,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   bool isKeyValuePaired() {
     checkAccess('isKeyValuePaired', DomainPermission.READ_TYPE_INFO);
-    return (_getTypeArgs().isNotEmpty && _getTypeArgs().length >= 2) 
+    return (getTypeArgumentLinks().isNotEmpty && getTypeArgumentLinks().length >= 2) 
       || _declaration.getKind() == TypeKind.mapType
       || T == Map 
       || isAssignableTo(Class.of<Map>()) 
@@ -541,10 +530,16 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   }
 
   @override
-  Type getType() => _declaration.getType();
+  Type getType() {
+    checkAccess('getType', DomainPermission.READ_TYPE_INFO);
+    return _declaration.getType();
+  }
 
   @override
-  Type getOriginal() => T;
+  Type getOriginal() {
+    checkAccess('getOriginal', DomainPermission.READ_TYPE_INFO);
+    return T;
+  }
 
   @override
   Package? getPackage() {
@@ -553,15 +548,20 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   }
 
   @override
-  List<Class> getTypeParameters() {
-    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
+  Version? getVersion() {
+    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
 
-    final args = _link?.getTypeArguments();
-    if (args != null && args.isNotEmpty) {
-      return args.map((dec) => Class.fromQualifiedName(dec.getPointerQualifiedName(), _pd, dec)).toList();
+    if (getPackage() case final package?) {
+      return Version.parse(package.getVersion());
     }
 
-    return MetaClassLoader.findTypeParameters(this);
+    return null;
+  }
+
+  @override
+  List<Class> getTypeParameters() {
+    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
+    return UnmodifiableListView(MetaClassLoader.findTypeParameters(this));
   }
 
   @override
@@ -582,8 +582,16 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       return Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
     }
     
-    final keyDeclaration = MetaClassLoader.extractKeyType(this);
-    return MetaClassLoader.findKeyType<K>(this, keyDeclaration);
+    final type = MetaClassLoader.extractKeyType(this);
+    if (MetaClassLoader.findKeyType<K>(this, type) case final key?) {
+      return key;
+    }
+
+    if (isKeyValuePaired() && (K.toString() == "dynamic" || K.toString() == "Object")) {
+      return Class<Object>() as Class<K>;
+    }
+
+    return null;
   }
   
   @override
@@ -597,8 +605,16 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       return Class.fromQualifiedName(component.getQualifiedName(), _pd, link);
     }
 
-    final componentDeclaration = MetaClassLoader.extractComponentType(this);
-    return MetaClassLoader.findComponentType<C>(this, componentDeclaration);
+    final type = MetaClassLoader.extractComponentType(this);
+    if (MetaClassLoader.findComponentType<C>(this, type) case final component?) {
+      return component;
+    }
+
+    if (isArray() && (C.toString() == "dynamic" || C.toString() == "Object")) {
+      return Class<Object>() as Class<C>;
+    }
+
+    return null;
   }
 
   // =========================================== SUPER CLASS METHODS ============================================
@@ -618,7 +634,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   List<Class> getSuperClassArguments() {
     checkAccess('getSuperClassArguments', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findSuperClassArguments(this);
+    return UnmodifiableListView(MetaClassLoader.findSuperClassArguments(this));
   }
 
   // =========================================== SUB CLASS METHODS ===========================================
@@ -626,7 +642,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   List<Class> getSubClasses() {
     checkAccess('getSubClasses', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findSubclasses(this);
+    return UnmodifiableListView(MetaClassLoader.findSubclasses(this));
   }
 
   @override
@@ -647,10 +663,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getInterfaces', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findAllConstraints(this, false);
+      return UnmodifiableListView(MetaClassLoader.findAllConstraints(this, false));
     }
 
-    return MetaClassLoader.findAllInterfaces(this, false);
+    return UnmodifiableListView(MetaClassLoader.findAllInterfaces(this, false));
   }
 
   @override
@@ -658,10 +674,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getAllDeclaredInterfaces', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findAllConstraints(this);
+      return UnmodifiableListView(MetaClassLoader.findAllConstraints(this));
     }
 
-    return MetaClassLoader.findAllInterfaces(this);
+    return UnmodifiableListView(MetaClassLoader.findAllInterfaces(this));
   }
 
   @override
@@ -669,10 +685,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getInterfaces', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findConstraints<I>(this, false);
+      return UnmodifiableListView(MetaClassLoader.findConstraints<I>(this, false));
     }
 
-    return MetaClassLoader.findInterfaces<I>(this, false);
+    return UnmodifiableListView(MetaClassLoader.findInterfaces<I>(this, false));
   }
 
   @override
@@ -680,10 +696,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getDeclaredInterfaces', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findConstraints<I>(this);
+      return UnmodifiableListView(MetaClassLoader.findConstraints<I>(this));
     }
 
-    return MetaClassLoader.findInterfaces<I>(this);
+    return UnmodifiableListView(MetaClassLoader.findInterfaces<I>(this));
   }
 
   @override
@@ -694,6 +710,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     if (list.isEmpty) {
       return null;
     }
+
     return list.first;
   }
 
@@ -705,6 +722,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     if (list.isEmpty) {
       return null;
     }
+
     return list.first;
   }
   
@@ -713,10 +731,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getInterfaceArguments', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findConstraintArguments<I>(this, false);
+      return UnmodifiableListView(MetaClassLoader.findConstraintArguments<I>(this, false));
     }
 
-    return MetaClassLoader.findInterfaceArguments<I>(this, false);
+    return UnmodifiableListView(MetaClassLoader.findInterfaceArguments<I>(this, false));
   }
 
   @override
@@ -724,10 +742,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getDeclaredInterfaceArguments', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findConstraintArguments<I>(this);
+      return UnmodifiableListView(MetaClassLoader.findConstraintArguments<I>(this));
     }
 
-    return MetaClassLoader.findInterfaceArguments<I>(this);
+    return UnmodifiableListView(MetaClassLoader.findInterfaceArguments<I>(this));
   }
 
   @override
@@ -735,10 +753,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getAllInterfaceArguments', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findAllConstraintArguments(this, false);
+      return UnmodifiableListView(MetaClassLoader.findAllConstraintArguments(this, false));
     }
 
-    return MetaClassLoader.findAllInterfaceArguments(this, false);
+    return UnmodifiableListView(MetaClassLoader.findAllInterfaceArguments(this, false));
   }
 
   @override
@@ -746,10 +764,10 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     checkAccess('getAllDeclaredInterfaceArguments', DomainPermission.READ_TYPE_INFO);
     
     if(_declaration.asMixin() != null) {
-      return MetaClassLoader.findAllConstraintArguments(this);
+      return UnmodifiableListView(MetaClassLoader.findAllConstraintArguments(this));
     }
 
-    return MetaClassLoader.findAllInterfaceArguments(this);
+    return UnmodifiableListView(MetaClassLoader.findAllInterfaceArguments(this));
   }
 
   // =========================================== MIXIN ACCESS METHODS ==========================================
@@ -757,49 +775,49 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   List<Class> getAllMixins() {
     checkAccess('getAllMixins', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findAllMixins(this, false);
+    return UnmodifiableListView(MetaClassLoader.findAllMixins(this, false));
   }
 
   @override
   List<Class> getAllDeclaredMixins() {
     checkAccess('getAllMixins', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findAllMixins(this);
+    return UnmodifiableListView(MetaClassLoader.findAllMixins(this));
   }
   
   @override
   List<Class> getMixinsArguments<M>() {
     checkAccess('getMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findMixinArguments<M>(this, false);
+    return UnmodifiableListView(MetaClassLoader.findMixinArguments<M>(this, false));
   }
 
   @override
   List<Class> getDeclaredMixinsArguments<M>() {
     checkAccess('getDeclaredMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findMixinArguments<M>(this);
+    return UnmodifiableListView(MetaClassLoader.findMixinArguments<M>(this));
   }
   
   @override
   List<Class> getAllMixinsArguments() {
     checkAccess('getAllMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findAllMixinArguments(this, false);
+    return UnmodifiableListView(MetaClassLoader.findAllMixinArguments(this, false));
   }
 
   @override
   List<Class> getAllDeclaredMixinsArguments() {
     checkAccess('getAllDeclaredMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findAllMixinArguments(this);
+    return UnmodifiableListView(MetaClassLoader.findAllMixinArguments(this));
   }
   
   @override
   List<Class<I>> getMixins<I>() {
     checkAccess('getMixins', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findMixins<I>(this, false);
+    return UnmodifiableListView(MetaClassLoader.findMixins<I>(this, false));
   }
 
   @override
   List<Class<I>> getDeclaredMixins<I>() {
     checkAccess('getDeclaredMixins', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findMixins<I>(this);
+    return UnmodifiableListView(MetaClassLoader.findMixins<I>(this));
   }
 
   @override
@@ -810,6 +828,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     if (list.isEmpty) {
       return null;
     }
+
     return list.first;
   }
 
@@ -821,6 +840,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
     if (list.isEmpty) {
       return null;
     }
+
     return list.first;
   }
 
@@ -829,9 +849,17 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   // ---------------------------------------------------------------------------------------------------------
 
   @override
+  List<Annotation> getAllDirectAnnotations() {
+    checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
+
+    final annotations = _declaration.getAnnotations();
+    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
+  }
+
+  @override
   List<Annotation> getAllAnnotations() {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
-    return _getAllAnnotations();
+    return UnmodifiableListView(_getAllAnnotations());
   }
 
   List<Annotation> _getAllAnnotations([Set<Class>? visited]) {
@@ -869,7 +897,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
     final annotations = getAllAnnotations();
     for (final annotation in annotations) {
-      if (annotation.getClass().getType() == A) {
+      if (annotation.getDeclaringClass().getType() == A) {
         return annotation.getInstance<A>();
       }
     }
@@ -881,7 +909,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   List<A> getAnnotations<A>() {
     checkAccess('getAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllAnnotations();
-    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
+    return UnmodifiableListView(annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()));
   }
 
   @override
@@ -893,15 +921,9 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   // ========================================== DECLARED MEMBERS ========================================
   
   @override
-  List<Object> getDeclaredMembers() {
+  List<Member> getDeclaredMembers() {
     checkAccess('getDeclaredMembers', DomainPermission.READ_TYPE_INFO);
-
-    final members = <Object>[];
-    members.addAll(getConstructors());
-    members.addAll(getMethods());
-    members.addAll(getFields());
-
-    return members;
+    return UnmodifiableListView([...getMethods(), ...getConstructors(), ...getFields()]);
   }
 
   // ============================================ FIELD METHODS ===============================================
@@ -910,63 +932,24 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   Field? getField(String name) {
     checkAccess('getField', DomainPermission.READ_TYPE_INFO);
 
-    final declaration = _declaration.asClass() ?? _declaration.asEnum() ?? _declaration.asRecord();
-    if (declaration == null) {
-      return null;
+    if (_declaration is EnumDeclaration) {
+      final field = getEnumValuesAsFields().firstWhereOrNull((f) => f.getName().equals(name));
+      if (field != null) {
+        return field;
+      }
     }
 
-    if (declaration is ClassDeclaration) {
-      final field = declaration.getFields().firstWhereOrNull((f) => f.getName().equals(name));
-      return field != null ? Field.declared(field, declaration, _pd) : null;
-    }
-
-    if (declaration is EnumDeclaration) {
-      final field = declaration.getValues().firstWhereOrNull((f) => f.getName().equals(name));
-      return field != null ? Field.declared(field, declaration, _pd) : null;
-    }
-
-    if (declaration is EnumDeclaration) {
-      final field = declaration.getMembers().whereType<FieldDeclaration>().firstWhereOrNull((f) => f.getName().equals(name));
-      return field != null ? Field.declared(field, declaration, _pd) : null;
-    }
-
-    if (declaration is RecordDeclaration) {
-      final field = declaration.getPositionalFields().firstWhereOrNull((f) => f.getName().equals(name));
-      return field != null ? Field.declared(field, declaration, _pd) : null;
-    }
-
-    if (declaration is RecordDeclaration) {
-      final field = declaration.getNamedFields().values.firstWhereOrNull((f) => f.getName().equals(name));
-      return field != null ? Field.declared(field, declaration, _pd) : null;
-    }
-
-    return null;
+    return getFields().firstWhereOrNull((f) => f.getName().equals(name));
   }
   
   @override
   List<Field> getFields() {
     checkAccess('getFields', DomainPermission.READ_FIELDS);
 
-    final fields = <Field>[];
+    final fields = <Field>[..._declaration.getFields().map((field) => Field.declared(field, _declaration, _pd))];
     
-    if (_declaration.asClass() != null) {
-      fields.addAll(_declaration.asClass()!.getFields().map((f) => Field.declared(f, _declaration, _pd)));
-    }
-    
-    if (_declaration.asEnum() != null) {
-      fields.addAll(_declaration.asEnum()!.getValues().map((f) => Field.declared(f, _declaration, _pd)));
-    }
-
-    if (_declaration.asEnum() != null) {
-      fields.addAll(_declaration.asEnum()!.getMembers().whereType<FieldDeclaration>().map((f) => Field.declared(f, _declaration, _pd)));
-    }
-    
-    if (_declaration.asRecord() != null) {
-      fields.addAll(_declaration.asRecord()!.getPositionalFields().map((f) => Field.declared(f, _declaration, _pd)));
-    }
-    
-    if (_declaration.asRecord() != null) {
-      fields.addAll(_declaration.asRecord()!.getNamedFields().values.map((f) => Field.declared(f, _declaration, _pd)));
+    if (_declaration case EnumDeclaration declaration) {
+      fields.addAll(declaration.getValues().map((f) => Field.declared(f, _declaration, _pd)));
     }
 
     final supertype = getSuperClass();
@@ -979,105 +962,55 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       fields.addAll(interface.getFields());
     }
     
-    return fields;
+    return UnmodifiableListView(fields);
   }
 
   @override
-  List<Field> getEnumValues() {
+  List<Field> getEnumValuesAsFields() {
     checkAccess('getEnumValues', DomainPermission.READ_TYPE_INFO);
 
     if (!isEnum()) {
-      throw InvalidArgumentException('Not an enum type');
+      throw InvalidArgumentException('Not an enum type. Always check `isEnum` before accessing this method');
     }
 
     final fields = <Field>[];
     
-    final enumType = _declaration.asEnum();
-    if (enumType != null) {
-      fields.addAll(enumType.getValues().map((f) => Field.declared(f, enumType, _pd)).toList());
+    if (_declaration case EnumDeclaration declaration) {
+      fields.addAll(declaration.getValues().map((f) => Field.declared(f, declaration, _pd)).toList());
     }
 
     final supertype = getSuperClass();
     if (supertype != null && supertype is _Class && supertype.isEnum()) {
-      final en = supertype._declaration.asEnum();
-      if (en != null) {
-        fields.addAll(en.getValues().map((f) => Field.declared(f, en, _pd)).toList());
-      }
+      try {
+        fields.addAll(supertype.getEnumValuesAsFields());
+      } on InvalidArgumentException catch (_) {}
     }
     
-    return fields;
+    return UnmodifiableListView(fields);
   }
 
   @override
-  List<Field> getPositionalFields() {
-    checkAccess('getPositionalFields', DomainPermission.READ_FIELDS);
+  List<EnumValue> getEnumValues() {
+    checkAccess('getEnumValues', DomainPermission.READ_TYPE_INFO);
+
+    if (!isEnum()) {
+      throw InvalidArgumentException('Not an enum type. Always check `isEnum` before accessing this method');
+    }
+
+    final fields = <EnumValue>[];
     
-    final fields = <Field>[];
-    
-    if (_declaration.asRecord() != null) {
-      fields.addAll(_declaration.asRecord()!.getPositionalFields().map((f) => Field.declared(f, _declaration, _pd)));
+    if (_declaration case EnumDeclaration declaration) {
+      fields.addAll(declaration.getValues().map((f) => EnumValue.declared(declaration, f, _pd)).toList());
+    }
+
+    final supertype = getSuperClass();
+    if (supertype != null && supertype is _Class && supertype.isEnum()) {
+      try {
+        fields.addAll(supertype.getEnumValues());
+      } on InvalidArgumentException catch (_) {}
     }
     
-    return fields;
-  }
-  
-  @override
-  Map<String, Field> getNamedFields() {
-    checkAccess('getNamedFields', DomainPermission.READ_FIELDS);
-    final namedFields = <String, Field>{};
-    final declaration = _declaration.asRecord();
-    
-    if (declaration != null) {
-      for (final entry in declaration.getNamedFields().entries) {
-        namedFields[entry.key] = Field.declared(entry.value, _declaration, _pd);
-      }
-    }
-    
-    return namedFields;
-  }
-  
-  @override
-  Field? getPositionalField(int index) {
-    checkAccess('getPositionalField', DomainPermission.READ_FIELDS);
-    final field = _declaration.asRecord()?.getPositionalField(index);
-    return field != null ? Field.declared(field, _declaration, _pd) : null;
-  }
-  
-  @override
-  Field? getNamedField(String name) {
-    checkAccess('getNamedField', DomainPermission.READ_FIELDS);
-    final field = _declaration.asRecord()?.getField(name);
-    return field != null ? Field.declared(field, _declaration, _pd) : null;
-  }
-  
-  @override
-  int getFieldCount() {
-    checkAccess('getFieldCount', DomainPermission.READ_FIELDS);
-    return getPositionalFieldCount() + getNamedFieldCount();
-  }
-  
-  @override
-  int getPositionalFieldCount() {
-    checkAccess('getPositionalFieldCount', DomainPermission.READ_FIELDS);
-    return _declaration.asRecord()?.getPositionalFields().length ?? 0;
-  }
-  
-  @override
-  int getNamedFieldCount() {
-    checkAccess('getNamedFieldCount', DomainPermission.READ_FIELDS);
-    return _declaration.asRecord()?.getNamedFields().length ?? 0;
-  }
-  
-  @override
-  bool hasPositionalFields() {
-    checkAccess('hasPositionalFields', DomainPermission.READ_FIELDS);
-    return getPositionalFieldCount() > 0;
-  }
-  
-  @override
-  bool hasNamedFields() {
-    checkAccess('hasNamedFields', DomainPermission.READ_FIELDS);
-    return getNamedFieldCount() > 0;
+    return UnmodifiableListView(fields);
   }
 
   // ============================================= METHOD METHODS ==========================================
@@ -1085,62 +1018,34 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   Method? getMethod(String name) {
     checkAccess('getMethod', DomainPermission.READ_METHODS);
-
-    final declaration = _declaration.asClass() ?? _declaration.asEnum() ?? _declaration.asMixin();
-
-    if (declaration == null) return null;
-    Method? result;
-    
-    if (declaration is ClassDeclaration) {
-      final method = declaration.getMethods().firstWhereOrNull((m) => m.getName().equals(name));
-      result = method != null ? Method.declared(method, _pd) : null;
-    } else if (declaration is EnumDeclaration) {
-      final method = declaration.getMembers().whereType<MethodDeclaration>().firstWhereOrNull((m) => m.getName().equals(name));
-      result = method != null ? Method.declared(method, _pd) : null;
-    } else if (declaration is MixinDeclaration) {
-      final method = declaration.getMethods().firstWhereOrNull((m) => m.getName().equals(name));
-      result = method != null ? Method.declared(method, _pd) : null;
-    }
-
-    final supertype = getSuperClass();
-    if (supertype != null) {
-      result ??= supertype.getMethod(name);
-    }
-
-    final interfaces = getInterfaces();
-    for (final interface in interfaces) {
-      final method = interface.getMethod(name);
-      if (method != null) {
-        result ??= method;
-        break;
-      }
-    }
-    
-    return result;
+    return getMethods().firstWhereOrNull((m) => m.getName().equals(name));
   }
   
   @override
   Method? getMethodBySignature(String name, List<Class> parameterTypes) {
     checkAccess('getMethodBySignature', DomainPermission.READ_METHODS);
 
-    final methods = _declaration.asClass()?.getMethods() 
-      ?? _declaration.asEnum()?.getMembers().whereType<MethodDeclaration>().toList() 
-      ?? _declaration.asMixin()?.getMethods()
-      ?? [];
+    final methods = getMethods();
     
     for (final method in methods) {
       if (method.getName() == name) {
         final params = method.getParameters();
+
         if (params.length == parameterTypes.length) {
           bool matches = true;
+
           for (int i = 0; i < params.length; i++) {
-            if (params[i].getType() != parameterTypes[i].getType()) {
+            final param = params[i];
+            final parameterType = parameterTypes[i];
+
+            if (!param.getReturnClass().isInstance(parameterType) || param.getReturnClass() != parameterType || param.getReturnClass().getType() != parameterType.getType()) {
               matches = false;
               break;
             }
           }
+
           if (matches) {
-            return Method.declared(method, _pd);
+            return method;
           }
         }
       }
@@ -1155,11 +1060,15 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
 
     final methods = <Method>[];
     
-    final result = _declaration.asClass()?.getMethods() 
-      ?? _declaration.asEnum()?.getMembers().whereType<MethodDeclaration>().toList() 
-      ?? _declaration.asMixin()?.getMethods()
-      ?? [];
-    methods.addAll(result.map((m) => Method.declared(m, _pd)).toList());
+    methods.addAll(_declaration.getMethods().map((m) => Method.declared(m, _pd)).toList());
+
+    if (_declaration case MixinDeclaration mixin) {
+      methods.addAll(
+        mixin.getConstraints()
+          .map((link) => _Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getMethods())
+          .flatMap((m) => m.toList()).toList()
+      );
+    }
 
     final supertype = getSuperClass();
     if (supertype != null) {
@@ -1171,36 +1080,27 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       methods.addAll(interface.getMethods());
     }
 
-    return methods;
+    return UnmodifiableListView(methods);
   }
 
   @override
   List<Method> getAllMethodsInHierarchy() {
     checkAccess('getAllMethodsInHierarchy', DomainPermission.READ_METHODS);
     
-    final methods = _declaration.asClass()?.getAllMethodsInHierarchy() 
-      ?? _declaration.asEnum()?.getMembers().whereType<MethodDeclaration>().toList() 
-      ?? _declaration.asMixin()?.getMethods()
-      ?? [];
-    return methods.map((m) => Method.declared(m, _pd)).toList();
+    final methods = _declaration.getAllMethodsInHierarchy();
+    return UnmodifiableListView(methods.map((m) => Method.declared(m, _pd)));
   }
   
   @override
   List<Method> getOverriddenMethods() {
     checkAccess('getOverriddenMethods', DomainPermission.READ_METHODS);
-    
     return getMethods().where((m) => m.isOverride()).toList();
   }
   
   @override
   List<Method> getMethodsByName(String name) {
     checkAccess('getMethodsByName', DomainPermission.READ_METHODS);
-    
-    final methods = _declaration.asClass()?.getMethods() 
-      ?? _declaration.asEnum()?.getMembers().whereType<MethodDeclaration>().toList() 
-      ?? _declaration.asMixin()?.getMethods()
-      ?? [];
-    return methods.where((m) => m.getName() == name).map((m) => Method.declared(m, _pd)).toList();
+    return getMethods().where((m) => m.getName() == name).toList();
   }
 
   // =========================================== CONSTRUCTOR METHODS ===========================================
@@ -1208,29 +1108,34 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   Constructor? getConstructor(String name) {
     checkAccess('getConstructor', DomainPermission.READ_CONSTRUCTORS);
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
-    ConstructorDeclaration? constructor = constructors.firstWhereOrNull((c) => c.getName().equals(name));
-    return constructor != null ? Constructor.declared(constructor, _pd) : null;
+    final constructors = getConstructors();
+    return constructors.firstWhereOrNull((c) => c.getName().equals(name));
   }
 
   @override
   Constructor? getConstructorBySignature(List<Class> parameterTypes) {
     checkAccess('getConstructorBySignature', DomainPermission.READ_CONSTRUCTORS);
 
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
+    final constructors = getConstructors();
     
     for (final constructor in constructors) {
       final params = constructor.getParameters();
+
       if (params.length == parameterTypes.length) {
         bool matches = true;
+
         for (int i = 0; i < params.length; i++) {
-          if (params[i].getType() != parameterTypes[i].getType()) {
+          final param = params[i];
+          final parameterType = parameterTypes[i];
+
+          if (!param.getReturnClass().isInstance(parameterType) || param.getReturnClass() != parameterType || param.getReturnClass().getType() != parameterType.getType()) {
             matches = false;
             break;
           }
         }
+
         if (matches) {
-          return Constructor.declared(constructor, _pd);
+          return constructor;
         }
       }
     }
@@ -1242,38 +1147,14 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   Constructor? getBestConstructor(List<Class> parameterTypes) {
     checkAccess('getBestConstructor', DomainPermission.READ_CONSTRUCTORS);
 
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
+    final constructors = getConstructors();
     Constructor? best;
     int bestScore = -1;
 
-    for (final rawCtor in constructors) {
-      final ctor = Constructor.declared(rawCtor, _pd);
-      final params = rawCtor.getParameters(); // ParameterDeclaration list
-      // Separate positional (including optional positional) and named params
-      final positionalParams = <Parameter>[];
-      final namedParams = <String, Parameter>{};
-
-      for (final pd in params) {
-        final p = Parameter.declared(pd, _pd);
-        if (p.isNamed()) {
-          namedParams[p.getName()] = p;
-        } else {
-          positionalParams.add(p);
-        }
-      }
-
-      // Quick reject: provided positional types must not be less than required positional count
-      final requiredPositionalCount = positionalParams.where((p) => p.isPositional() && p.isRequired()).length;
-      if (parameterTypes.length < requiredPositionalCount) {
-        continue;
-      }
-
-      // If constructor has required named params, we cannot satisfy them from positional types alone
-      final requiredNamed = namedParams.values.where((p) => p.isRequired()).length;
-      if (requiredNamed > 0) {
-        // We can't match required named params by type-only call; skip this ctor
-        continue;
-      }
+    for (final constructor in constructors) {
+      final params = constructor.getParameters();
+      final positionalParams = constructor.getPositionalParameters();
+      final namedParams = constructor.getNamedParameters();
 
       // Now try to match provided positional types to positionalParams in-order
       bool fits = true;
@@ -1290,7 +1171,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
         // Accept if providedType is assignable to param type (or exact)
         // Prefer exact matches with higher score
         try {
-          final paramClass = param.getClass();
+          final paramClass = param.getReturnClass();
           if (paramClass == providedType) {
             score += 3; // exact
           } else if (paramClass.isAssignableFrom(providedType)) {
@@ -1320,7 +1201,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       for (int j = parameterTypes.length; j < positionalParams.length; j++) {
         final param = positionalParams[j];
         // if leftover param is required -> cannot accept
-        if (param.isRequired() && !param.hasDefaultValue()) {
+        if (param.mustBeResolved() && !param.hasDefaultValue()) {
           fits = false;
           break;
         }
@@ -1331,8 +1212,8 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       if (!fits) continue;
 
       // Named params: if they are all optional/have defaults or nullable then acceptable
-      for (final p in namedParams.values) {
-        if (p.isRequired() && !p.hasDefaultValue()) {
+      for (final p in namedParams) {
+        if (p.mustBeResolved() && !p.hasDefaultValue()) {
           fits = false;
           break;
         }
@@ -1343,7 +1224,7 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
       // Prefer constructor with higher score, tie-break with fewer required missing params and fewer params overall
       if (score > bestScore || (score == bestScore && (best == null || params.length < best.getParameters().length))) {
         bestScore = score;
-        best = ctor;
+        best = constructor;
       }
     }
 
@@ -1353,31 +1234,30 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   List<Constructor> getConstructors() {
     checkAccess('getConstructors', DomainPermission.READ_CONSTRUCTORS);
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
-    return constructors.map((c) => Constructor.declared(c, _pd)).toList();
+    final constructors = _declaration.getConstructors();
+    return UnmodifiableListView(constructors.map((c) => Constructor.declared(c, _pd)));
   }
 
   @override
   Constructor? getDefaultConstructor() {
     checkAccess('getDefaultConstructor', DomainPermission.READ_CONSTRUCTORS);
 
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
-    ConstructorDeclaration? dc = constructors.firstWhereOrNull((c) => c.getName().isEmpty);
-    return dc != null ? Constructor.declared(dc, _pd) : null;
+    final constructors = getConstructors();
+    return constructors.firstWhereOrNull((c) => c.getName().isEmpty);
   }
 
   @override
   Constructor? getNoArgConstructor([bool acceptWhenAllParametersAreOptional = false]) {
     checkAccess('getNoArgConstructor', DomainPermission.READ_CONSTRUCTORS);
 
-    final constructors = _declaration.asClass()?.getConstructors() ?? [];
-    ConstructorDeclaration? dc = constructors.firstWhereOrNull((c) => c.getParameters().isEmpty);
+    final constructors = getConstructors();
+    Constructor? constructor = constructors.firstWhereOrNull((c) => c.getParameters().isEmpty);
 
-    if(acceptWhenAllParametersAreOptional && dc == null) {
-      dc = constructors.find((c) => c.getParameters().all((p) => p.getIsNullable()));
+    if(acceptWhenAllParametersAreOptional && constructor == null) {
+      constructor = constructors.find((c) => c.getParameters().all((p) => p.isNullable()));
     }
 
-    return dc != null ? Constructor.declared(dc, _pd) : null;
+    return constructor;
   }
 
   // ============================================ INSTANCE METHODS ===========================================
@@ -1385,35 +1265,30 @@ class _Class<T> with EqualsAndHashCode implements Class<T> {
   @override
   T newInstance([Map<String, dynamic>? arguments, String? constructorName]) {
     checkAccess('newInstance', DomainPermission.CREATE_INSTANCES);
-    if (_declaration.asClass() == null) {
-      throw IllegalStateException('Cannot create instance of ${getType()} - no constructor data available');
-    }
 
     // Try with constructor name, if provided
     if(constructorName != null) {
       final constructor = getConstructor(constructorName);
       if (constructor == null) {
-        throw IllegalStateException('Constructor $constructorName not found in ${getType()}');
+        throw ConstructorNotFoundException(getName(), constructorName);
       }
       
       return constructor.newInstance<T>(arguments ?? {});
     }
 
     // If arguments is not null, try to determine constructor to use.
-    if(arguments != null) {
+    if(arguments case final arguments?) {
       final constructors = getConstructors();
       final constructor = constructors.firstWhereOrNull((c) => c.canAcceptArguments(arguments));
-      if (constructor == null) {
-        throw IllegalStateException('Constructor not found in ${getType()}');
+      if (constructor case final constructor?) {
+        return constructor.newInstance<T>(arguments);
       }
-      
-      return constructor.newInstance<T>(arguments);
     }
 
     // Resort to last option of default constructor.
     final constructor = getDefaultConstructor();
     if (constructor == null) {
-      throw IllegalStateException('Constructor not found in ${getType()}');
+      throw ConstructorNotFoundException(getName(), "");
     }
     
     return constructor.newInstance<T>(arguments ?? {});
@@ -1440,11 +1315,21 @@ extension ClassHierarchyExtensions on ClassDeclaration {
     
     // Add methods from current class
     allMethods.addAll(clazz.getMethods());
+
+    if (clazz case MixinDeclaration mixin) {
+      // Add methods from constraints
+      for (final constraint in mixin.getConstraints()) {
+        final interfaceClass = Class.fromQualifiedName(constraint.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
+        if (interfaceClass != null) {
+          _collectMethodsFromHierarchy(interfaceClass, allMethods, visited);
+        }
+      }
+    }
     
     // Add methods from superclass
     final supertype = clazz.getSuperClass();
     if (supertype != null) {
-      final superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), ProtectionDomain.system()).getTypeDeclaration().asClass();
+      final superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
       if (superclass != null) {
         _collectMethodsFromHierarchy(superclass, allMethods, visited);
       }
@@ -1452,7 +1337,7 @@ extension ClassHierarchyExtensions on ClassDeclaration {
     
     // Add methods from interfaces
     for (final interfaceType in clazz.getInterfaces()) {
-      final interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), ProtectionDomain.system()).getTypeDeclaration().asClass();
+      final interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
       if (interfaceClass != null) {
         _collectMethodsFromHierarchy(interfaceClass, allMethods, visited);
       }
@@ -1460,7 +1345,7 @@ extension ClassHierarchyExtensions on ClassDeclaration {
     
     // Add methods from mixins
     for (final mixinType in clazz.getMixins()) {
-      final mixinDeclaration = Class.fromQualifiedName(mixinType.getPointerQualifiedName(), ProtectionDomain.system()).getTypeDeclaration().asMixin();
+      final mixinDeclaration = Class.fromQualifiedName(mixinType.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asMixin();
       if (mixinDeclaration != null) {
         allMethods.addAll(mixinDeclaration.getMethods());
       }

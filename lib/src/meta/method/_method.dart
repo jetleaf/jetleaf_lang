@@ -27,7 +27,7 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
-  Declaration getDeclaration() {
+  MethodDeclaration getDeclaration() {
     checkAccess('getDeclaration', DomainPermission.READ_METHODS);
     return _declaration;
   }
@@ -52,31 +52,40 @@ class _Method extends Method with EqualsAndHashCode {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
     final annotations = _declaration.getAnnotations();
-    return annotations.map((a) => Annotation.declared(a, getProtectionDomain())).toList();
+    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
   }
 
   @override
   Class<Object> getReturnClass() {
     checkAccess('getReturnType', DomainPermission.READ_METHODS);
-    try {
-      final link = _declaration.getReturnType();
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-    } on ClassNotFoundException catch (e) {
-      if (e.className == "dart:core.Object") {
-        return Void.getClass();
-      }
+    return LangUtils.obtainClassFromLink(_declaration.getReturnType());
+  }
 
-      rethrow;
+  @override
+  Version? getVersion() {
+    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
+
+    if (getDeclaringClass().getPackage() case final package?) {
+      return Version.parse(package.getVersion());
     }
+
+    return null;
   }
 
   @override
   List<Class> getTypeParameters() {
     checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
 
-    return _declaration.getReturnType().getTypeArguments()
+    return UnmodifiableListView(
+      _declaration.getReturnType().getTypeArguments()
       .map((dec) => Class.fromQualifiedName(dec.getPointerQualifiedName(), _pd, dec))
-      .toList();
+    );
+  }
+
+  @override
+  LinkDeclaration getLinkDeclaration() {
+    checkAccess('getLinkDeclaration', DomainPermission.READ_METHODS);
+    return _declaration.getReturnType();
   }
   
   @override
@@ -92,6 +101,12 @@ class _Method extends Method with EqualsAndHashCode {
 
   @override
   bool hasGenerics() => _declaration.getReturnType().getTypeArguments().isNotEmpty;
+
+  @override
+  bool isFunction() {
+    checkAccess('isFunction', DomainPermission.READ_METHODS);
+    return getLinkDeclaration() is FunctionLinkDeclaration;
+  }
 
   @override
   Class<K>? keyType<K>() {
@@ -125,57 +140,62 @@ class _Method extends Method with EqualsAndHashCode {
   @override
   Type getReturnType() {
     checkAccess('getReturnType', DomainPermission.READ_METHODS);
-    return _declaration.getReturnType().getType();
+    return getReturnClass().getType();
   }
 
   @override
   List<Parameter> getParameters() {
     checkAccess('getParameters', DomainPermission.READ_METHODS);
-    return _declaration.getParameters().map((p) => Parameter.declared(p, _pd)).toList();
+    return UnmodifiableListView(_declaration.getParameters().map((p) => Parameter.declared(p, this, _pd)));
   }
 
   @override
   int getParameterCount() {
     checkAccess('getParameterCount', DomainPermission.READ_METHODS);
-    return _declaration.getParameters().length;
+    return getParameters().length;
   }
 
   @override
   Parameter? getParameter(String name) {
     checkAccess('getParameter', DomainPermission.READ_METHODS);
-    final parameters = _declaration.getParameters();
-    final parameter = parameters.where((p) => p.getName() == name).firstOrNull;
-    return parameter != null ? Parameter.declared(parameter, _pd) : null;
+    final parameters = getParameters();
+    return parameters.where((p) => p.getName() == name).firstOrNull;
   }
 
   @override
   Parameter? getParameterAt(int index) {
     checkAccess('getParameterAt', DomainPermission.READ_METHODS);
-    final parameters = _declaration.getParameters();
+    final parameters = getParameters();
     if (index < 0 || index >= parameters.length) return null;
-    return Parameter.declared(parameters[index], _pd);
+    return parameters[index];
   }
 
   @override
   List<Class> getParameterTypes() {
     checkAccess('getParameterTypes', DomainPermission.READ_METHODS);
-    return _declaration.getParameters().map((p) {
-      final link = p.getLinkDeclaration();
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-    }).toList();
+    return UnmodifiableListView(
+      _declaration.getParameters().map((p) {
+        final link = p.getLinkDeclaration();
+        return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
+      })
+    );
   }
 
   @override
-  List<String> getModifiers() => [
-    if (isPublic()) 'PUBLIC',
-    if (!isPublic()) 'PRIVATE',
-    if (isStatic()) 'STATIC',
-    if (isAbstract()) 'ABSTRACT',
-    if (isConst()) 'CONST',
-    if (isFactory()) 'FACTORY',
-    if (isGetter()) 'GETTER',
-    if (isSetter()) 'SETTER',
-  ];
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_METHODS);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isStatic()) 'STATIC',
+      if (isAbstract()) 'ABSTRACT',
+      if (isConst()) 'CONST',
+      if (isFactory()) 'FACTORY',
+      if (isGetter()) 'GETTER',
+      if (isSetter()) 'SETTER',
+    ];
+  }
 
   @override
   bool isStatic() {
@@ -191,27 +211,60 @@ class _Method extends Method with EqualsAndHashCode {
 
   @override
   bool isVoid() {
+    checkAccess('isVoid', DomainPermission.READ_METHODS);
+
     final type = getReturnClass();
-    return type == Void.getClass() || type.getType() == Void;
+    return type == VOID_CLASS || type.getType() == Void;
+  }
+
+  @override
+  bool isDynamic() {
+    checkAccess('isDynamic', DomainPermission.READ_METHODS);
+
+    final type = getReturnClass();
+    return type == DYNAMIC_CLASS || type.getType() == Dynamic;
   }
 
   @override
   bool isAsync() {
-    final type = getReturnClass();
+    checkAccess('isAsync', DomainPermission.READ_METHODS);
 
+    // if (_declaration.getDartType() case final dartType?) {
+    //   if (dartType.isDartAsyncFuture || dartType.isDartAsyncFutureOr) {
+    //     return true;
+    //   }
+    // }
+
+    final type = getReturnClass();
     return type == Class<Future>(null, PackageNames.DART) || type == Class<FutureOr>(null, PackageNames.DART);
   }
 
   @override
   bool isFutureVoid() {
+    checkAccess('isFutureVoid', DomainPermission.READ_METHODS);
+
     final type = getReturnClass();
 
     if (type == Class<Future>(null, PackageNames.DART) || type == Class<FutureOr>(null, PackageNames.DART)) {
       final generic = type.componentType();
-      return generic != null && (generic == Void.getClass() || generic.getType() == Void);
+      return generic != null && (generic == VOID_CLASS || generic.getType() == Void);
     }
     
-    return isVoid();
+    return false;
+  }
+
+  @override
+  bool isFutureDynamic() {
+    checkAccess('isFutureDynamic', DomainPermission.READ_METHODS);
+
+    final type = getReturnClass();
+
+    if (type == Class<Future>(null, PackageNames.DART) || type == Class<FutureOr>(null, PackageNames.DART)) {
+      final generic = type.componentType();
+      return generic != null && (generic == DYNAMIC_CLASS || generic.getType() == Dynamic);
+    }
+    
+    return false;
   }
 
   @override
@@ -239,6 +292,30 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
+  bool isExternal() {
+    checkAccess('isExternal', DomainPermission.READ_METHODS);
+    return _declaration.isExternal();
+  }
+
+  @override
+  bool getIsEntryPoint() {
+    checkAccess('getIsEntryPoint', DomainPermission.READ_METHODS);
+    return _declaration.getIsEntryPoint();
+  }
+
+  @override
+  bool getIsTopLevel() {
+    checkAccess('getIsTopLevel', DomainPermission.READ_METHODS);
+    return _declaration.getIsTopLevel();
+  }
+
+  @override
+  bool hasNullableReturn() {
+    checkAccess('hasNullableReturn', DomainPermission.READ_METHODS);
+    return _declaration.hasNullableReturn();
+  }
+
+  @override
   bool isFactory() {
     checkAccess('isFactory', DomainPermission.READ_METHODS);
     return _declaration.getIsFactory();
@@ -260,6 +337,7 @@ class _Method extends Method with EqualsAndHashCode {
           result[param.getName()] = args[i];
         }
       }
+
       return _declaration.invoke(instance, result);
     }
 
@@ -295,53 +373,19 @@ class _Method extends Method with EqualsAndHashCode {
   @override
   bool canAcceptArguments(Map<String, dynamic> arguments) {
     checkAccess('canAcceptArguments', DomainPermission.READ_METHODS);
-    final parameters = _declaration.getParameters();
-
-    // Check if all required parameters are provided
-    for (final param in parameters) {
-      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
-        return false;
-      }
-    }
-
-    // Check if all provided arguments have corresponding parameters
-    for (final argName in arguments.keys) {
-      if (!parameters.any((p) => p.getName() == argName)) {
-        return false;
-      }
-    }
-    return true;
+    return MethodUtils.canAcceptArguments(arguments, getParameters());
   }
 
   @override
   bool canAcceptPositionalArguments(List<dynamic> args) {
     checkAccess('canAcceptPositionalArguments', DomainPermission.READ_METHODS);
-    final parameters = _declaration.getParameters();
-    final positionalParams = parameters.where((p) => !p.getIsNamed()).toList();
-    final requiredPositionalCount = positionalParams.where((p) => !p.getIsNullable()).length;
-    return args.length >= requiredPositionalCount && args.length <= positionalParams.length;
+    return MethodUtils.canAcceptPositionalArguments(args, getParameters());
   }
 
   @override
   bool canAcceptNamedArguments(Map<String, dynamic> arguments) {
     checkAccess('canAcceptNamedArguments', DomainPermission.READ_METHODS);
-    final parameters = _declaration.getParameters();
-    
-    // Check if all required parameters are provided
-    for (final param in parameters) {
-      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
-        return false;
-      }
-    }
-    
-    // Check if all provided arguments have corresponding parameters
-    for (final argName in arguments.keys) {
-      if (!parameters.any((p) => p.getName() == argName)) {
-        return false;
-      }
-    }
-    
-    return true;
+    return MethodUtils.canAcceptNamedArguments(arguments, getParameters());
   }
 
   @override
@@ -390,17 +434,10 @@ class _Method extends Method with EqualsAndHashCode {
     if (link == null) return null;
 
     // This method declaration might be coming from [ClassDeclaration]
-    TypeDeclaration? parent;
+    ClassDeclaration? parent;
     try {
-      parent = Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getDeclaration() as ClassDeclaration;
-    } catch (_) {
-      // This method declarationmight be a [MixinDeclaration]
-      try {
-        parent = Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getDeclaration() as MixinDeclaration;
-      } catch (_) {
-        // suppress error
-      }
-    }
+      parent = Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getClassDeclaration();
+    } on ClassNotFoundException catch (_) { }
 
     try {
       if(parent == null) {
@@ -410,30 +447,21 @@ class _Method extends Method with EqualsAndHashCode {
       final methodName = _declaration.getName();
       final methodSignature = _createMethodSignature(_declaration);
       
-      if(parent is ClassDeclaration) {
-        // Search in superclass hierarchy
-        final superclassMethod = _searchInSuperclassHierarchy(parent, methodName, methodSignature);
-        if (superclassMethod != null) {
-          return superclassMethod;
-        }
-        
-        // Search in implemented interfaces
-        final interfaceMethod = _searchInInterfaces(parent, methodName, methodSignature);
-        if (interfaceMethod != null) {
-          return interfaceMethod;
-        }
-
-        // Search in mixed-in types
-        final mixinMethod = _searchInMixins(parent, methodName, methodSignature);
-        if (mixinMethod != null) {
-          return mixinMethod;
-        }
+      // Search in superclass hierarchy
+      final superclassMethod = _searchInSuperclassHierarchy(parent, methodName, methodSignature);
+      if (superclassMethod != null) {
+        return superclassMethod;
       }
       
-      if(parent is MixinDeclaration) {
-        // Search in mixed-in types
-        final mixinMethod = _findMatchingMethodInMixin(parent, methodName, methodSignature);
-        
+      // Search in implemented interfaces
+      final interfaceMethod = _searchInInterfaces(parent, methodName, methodSignature);
+      if (interfaceMethod != null) {
+        return interfaceMethod;
+      }
+
+      // Search in mixed-in types
+      final mixinMethod = _searchInMixins(parent, methodName, methodSignature);
+      if (mixinMethod != null) {
         return mixinMethod;
       }
     } catch (_) {
@@ -451,7 +479,7 @@ class _Method extends Method with EqualsAndHashCode {
     ClassDeclaration? superclass;
 
     try {
-      superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), _pd, supertype).getDeclaration() as ClassDeclaration;
+      superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), _pd, supertype).getClassDeclaration();
     } catch (_) {
       // suppress error
     }
@@ -476,7 +504,7 @@ class _Method extends Method with EqualsAndHashCode {
       ClassDeclaration? interfaceClass;
 
       try {
-        interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), _pd, interfaceType).getDeclaration() as ClassDeclaration;
+        interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), _pd, interfaceType).getClassDeclaration();
       } catch (_) {
         // suppress error
       }

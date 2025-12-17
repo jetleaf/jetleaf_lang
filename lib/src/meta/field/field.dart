@@ -12,9 +12,13 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'dart:collection';
+
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/version.dart';
 import '../../exceptions.dart';
+import '../../utils/lang_utils.dart';
 import '../core.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
@@ -141,6 +145,15 @@ abstract class Field extends Source implements Member {
   /// Static fields can be accessed with a null instance.
   /// {@endtemplate}
   bool isStatic();
+
+  /// Checks if this field is a top-level field.
+  ///
+  /// {@template field_is_topLevel}
+  /// Returns:
+  /// - `true` if declared at the top level
+  /// - `false` for fields declared in a class
+  /// {@endtemplate}
+  bool isTopLevel();
   
   /// Checks if this field is final.
   ///
@@ -206,6 +219,8 @@ abstract class Field extends Source implements Member {
   /// - `true` if declared with `record` modifier
   /// - `false` otherwise
   /// {@endtemplate}
+  /// 
+  /// **Note**: This method will always return false since v1.0.9
   bool isRecordField();
 
   /// Checks if this field is an annotation field.
@@ -245,8 +260,9 @@ abstract class Field extends Source implements Member {
   /// - The current field value
   ///
   /// Throws:
-  /// - [AccessError] if field is not readable
-  /// - [NullReferenceError] for null instance on instance fields
+  /// - [FieldAccessException] if field is not readable
+  /// - [PrivateFieldAccessException] if the field is a private field
+  /// - [GenericResolutionException] if the field's type cannot be resolved
   ///
   /// Example:
   /// ```dart
@@ -263,9 +279,9 @@ abstract class Field extends Source implements Member {
   /// - [value]: The new value to set
   ///
   /// Throws:
-  /// - [AccessError] if field is not writable
-  /// - [TypeError] for invalid value types
-  /// - [FinalFieldError] when modifying final fields
+  /// - [FieldMutationException] if field is not writable
+  /// - [PrivateFieldAccessException] if the field is a private field
+  /// - [GenericResolutionException] if the field's type cannot be resolved
   ///
   /// Example:
   /// ```dart

@@ -28,3 +28,4 @@
 library;
 
 export 'lang.dart';
+export 'package:jetleaf_build/jetleaf_build.dart';
