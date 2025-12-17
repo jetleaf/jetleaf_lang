@@ -186,8 +186,7 @@ final class _TypeSelectBinding {
   /// Uses the assignability rule defined by [isAssignableFrom] to evaluate
   /// compatibility.
   bool matches(Parameter param) {
-    final pType = param.getClass();
-
+    final pType = param.getReturnClass();
     return isAssignableFrom ? type.isAssignableFrom(pType) : type.isAssignableTo(pType);
   }
 }

@@ -1,6 +1,10 @@
+import 'dart:collection';
+
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/version.dart';
 import '../../exceptions.dart';
+import '../../utils/method_utils.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
 import '../core.dart';
@@ -60,6 +64,9 @@ abstract class Constructor extends Executable implements Member {
   /// Factory constructors may return instances of subtypes.
   /// {@endtemplate}
   bool isFactory();
+
+  @override
+  ConstructorDeclaration getDeclaration();
   
   /// Creates a new instance using named arguments.
   ///

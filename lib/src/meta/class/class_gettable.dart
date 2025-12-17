@@ -1,3 +1,5 @@
+import 'package:jetleaf_build/jetleaf_build.dart';
+
 import 'class.dart';
 
 /// {@template class_gettable}
@@ -57,6 +59,7 @@ import 'class.dart';
 /// - Implementations are typically registered automatically by JetLeaf’s
 ///   class scanner during bootstrap.
 /// {@endtemplate}
+@Generic(ClassGettable)
 abstract interface class ClassGettable<T> {
   /// {@macro class_gettable}
   ///

@@ -12,51 +12,15 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
+import 'dart:collection';
+
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../commons/version.dart';
 import 'annotation/annotation.dart';
 import 'class/class.dart';
 import 'parameter/parameter.dart';
 import 'protection_domain/protection_domain.dart';
-
-/// {@template jetleaf_void_base}
-/// Abstract base class representing a **marker or placeholder type** in the
-/// JetLeaf type system.
-///
-/// The [Void] base class is intended to serve as a generic type parameter
-/// or sentinel type where no actual value is expected or needed. It is often
-/// used in APIs or frameworks that require a `Class<T>` reference but do
-/// not need to store a concrete instance.
-///
-/// ### Purpose
-/// - Provide a first-class type representation for "no-value" or placeholder scenarios.
-/// - Enable generic programming patterns where a type parameter is required but no data exists.
-/// - Serve as a foundation for JetLeaf internal type-system constructs.
-///
-/// ### Features
-/// - **Abstract base:** Cannot be instantiated directly.
-/// - **Type reflection:** Provides [getClass] to retrieve a `Class<Void>` reference.
-///
-/// ### Example Usage
-/// ```dart
-/// final voidClass = Void.getClass();
-/// // voidClass can now be used as a type reference in generic APIs
-/// ```
-///
-/// This allows APIs expecting a type to accept [Void] as a valid type argument
-/// without requiring a concrete instance.
-/// {@endtemplate}
-abstract base class Void {
-  /// Returns the [Class] instance corresponding to this [Void] type.
-  ///
-  /// Example:
-  /// ```dart
-  /// final clazz = Void.getClass(); // Class<Void>
-  /// ```
-  /// 
-  /// {@macro jetleaf_void_base}
-  static Class<Void> getClass() => Class<Void>();
-}
 
 /// {@template member}
 /// Abstract base class representing a member of a class that extends [Executable].
@@ -191,10 +155,10 @@ abstract interface class Member {
 ///
 /// ## Implementations
 /// Typically implemented by:
-/// - [ClassMetadata] for class-level annotations
-/// - [MethodMetadata] for method annotations
-/// - [FieldMetadata] for field annotations
-/// - [ParameterMetadata] for parameter annotations
+/// - [Class] for class-level annotations
+/// - [Method] for method annotations
+/// - [Field] for field annotations
+/// - [Parameter] for parameter annotations
 /// {@endtemplate}
 /// {@endtemplate}
 abstract class PermissionManager {
@@ -224,9 +188,6 @@ abstract class PermissionManager {
   /// - [operation]: Description of the operation being performed
   /// - [permission]: Required permission level
   ///
-  /// Throws:
-  /// - [AccessDeniedError] if permissions are insufficient
-  ///
   /// Example:
   /// ```dart
   /// try {
@@ -240,6 +201,65 @@ abstract class PermissionManager {
   void checkAccess(String operation, DomainPermission permission) {
     getProtectionDomain().checkAccess(operation, permission);
   }
+
+  /// Retrieves the [Author] annotation applied to this element, if present.
+  ///
+  /// This method inspects the element’s **direct annotations** and returns
+  /// the first instance of [Author] found. It does **not** search inherited
+  /// annotations from superclasses or interfaces.
+  ///
+  /// ### Returns
+  /// - An [Author] object if the annotation is present directly on this element.
+  /// - `null` if no [Author] annotation is applied.
+  ///
+  /// ### Example
+  /// ```dart
+  /// @Author(name: "Alice", email: "alice@example.com")
+  /// class MyClass {}
+  ///
+  /// final clazz = Class.forName<MyClass>("MyClass");
+  /// final author = clazz.getAuthor();
+  /// print(author?.name); // → "Alice"
+  /// ```
+  ///
+  /// ### Notes
+  /// - This is a **direct annotation lookup**. Use `getAnnotation<T>()` if
+  ///   you want to include inherited annotations.
+  Author? getAuthor();
+
+  /// Retrieves the version metadata associated with this declaration, if any.
+  ///
+  /// {@template declaration_get_version}
+  /// This method returns the [Version] annotation directly attached to the
+  /// underlying declaration (class, method, field, parameter, etc.).
+  ///
+  /// Version metadata is commonly used to:
+  /// - Track API evolution and semantic versioning
+  /// - Signal feature maturity or stability
+  /// - Drive compatibility checks and documentation generation
+  ///
+  /// ### Behavior
+  /// - Returns the **direct** [Version] annotation only  
+  /// - Does **not** search inherited, overridden, or enclosing declarations  
+  /// - Returns `null` if no version metadata is present
+  ///
+  /// ### Typical Usage
+  /// ```dart
+  /// final version = declaration.getVersion();
+  ///
+  /// if (version != null) {
+  ///   print('Introduced in version ${version.value}');
+  /// }
+  /// ```
+  ///
+  /// ### Notes
+  /// - This method is commonly paired with [getAuthor] and other
+  ///   metadata-accessor methods.
+  /// - Tooling such as documentation generators, API diff tools,
+  ///   and compatibility analyzers rely on this method for accurate
+  ///   version introspection.
+  /// {@endtemplate}
+  Version? getVersion();
 }
 
 /// {@template source_metadata}
@@ -257,10 +277,10 @@ abstract class PermissionManager {
 ///
 /// ## Implementations
 /// Typically implemented by:
-/// - [ClassMetadata] for class-level annotations
-/// - [MethodMetadata] for method annotations
-/// - [FieldMetadata] for field annotations
-/// - [ParameterMetadata] for parameter annotations
+/// - [Class] for class-level annotations
+/// - [Method] for method annotations
+/// - [Field] for field annotations
+/// - [Parameter] for parameter annotations
 /// {@endtemplate}
 ///
 /// {@template source_metadata_example}
@@ -441,7 +461,7 @@ abstract class Source extends PermissionManager {
   List<A> getDirectAnnotations<A>() {
     checkAccess('getDirectAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllDirectAnnotations();
-    return annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()).toList();
+    return UnmodifiableListView(annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()));
   }
   
   /// Checks if this element has a specific annotation.
@@ -542,6 +562,12 @@ abstract class Source extends PermissionManager {
   ///
   /// {@endtemplate}
   List<String> getModifiers();
+
+  @override
+  Author? getAuthor() {
+    checkAccess("getAuthor", DomainPermission.READ_TYPE_INFO);
+    return getDirectAnnotation<Author>();
+  }
 }
 
 /// {@template executable_element}
@@ -559,9 +585,9 @@ abstract class Source extends PermissionManager {
 ///
 /// ## Implementations
 /// Typically implemented by:
-/// - [MethodElement] for class methods
-/// - [ConstructorElement] for constructors
-/// - [FunctionElement] for standalone functions
+/// - [Method] for class methods
+/// - [Constructor] for constructors
+/// - [ExecutableFunction] for standalone functions
 /// {@endtemplate}
 ///
 /// {@template executable_element_example}
@@ -600,6 +626,56 @@ abstract class Executable extends Source {
   /// ```
   /// {@endtemplate}
   List<Parameter> getParameters();
+
+  /// Gets all **positional parameters** declared by this executable.
+  ///
+  /// {@template executable_get_positional_parameters}
+  /// Returns:
+  /// - A list of positional [Parameter] objects in **declaration order**
+  /// - Includes both:
+  ///   - Required positional parameters (`void f(int a, String b)`)
+  ///   - Optional positional parameters (`void f([int a])`)
+  ///
+  /// Excludes:
+  /// - Named parameters (`void f({int x})`)
+  ///
+  /// Example:
+  /// ```dart
+  /// void method(int a, [String? b], {bool flag = false});
+  ///
+  /// // getPositionalParameters() → [a, b]
+  /// ```
+  ///
+  /// Notes:
+  /// - Order always mirrors the source declaration.
+  /// - Optional positional parameters appear after required positional ones.
+  /// {@endtemplate}
+  List<Parameter> getPositionalParameters() => getParameters().where((p) => p.isPositional()).toList();
+
+  /// Gets all **named parameters** declared by this executable.
+  ///
+  /// {@template executable_get_named_parameters}
+  /// Returns:
+  /// - A list of named [Parameter] objects
+  /// - Empty list if the executable declares no named parameters
+  ///
+  /// Includes:
+  /// - Required named parameters (`void f({required int id})`)
+  /// - Optional named parameters (`void f({String? name})`)
+  ///
+  /// Example:
+  /// ```dart
+  /// void method(int a, {String? label, bool flag = false});
+  ///
+  /// // getNamedParameters() → [label, flag]
+  /// ```
+  ///
+  /// Notes:
+  /// - Named parameters do **not** have a stable order requirement in Dart,
+  ///   but implementations typically return them in source order.
+  /// - For lookup by name, see [getParameter].
+  /// {@endtemplate}
+  List<Parameter> getNamedParameters() => getParameters().where((p) => p.isNamed()).toList();
 
   /// Gets the total number of parameters.
   ///

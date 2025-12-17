@@ -109,5 +109,12 @@ void main() {
       expect(reversed, equals([5, 4, 3, 2, 1]));
       expect(list, equals([1, 2, 3, 4, 5]));
     });
+
+    test('should match two lists with identical values', () {
+      final list = [1, 2, 3, 4, 5];
+      final reversed = list.reverse();
+      expect(reversed.matches(list), isTrue);
+      expect(list.matches([8, 9]), isFalse);
+    });
   });
 }

@@ -16,9 +16,10 @@ part of 'parameter.dart';
 
 class _Parameter extends Parameter with EqualsAndHashCode {
   final ParameterDeclaration _declaration;
+  final Member _member;
   final ProtectionDomain _pd;
   
-  _Parameter(this._declaration, this._pd);
+  _Parameter(this._declaration, this._member, this._pd);
   
   @override
   String getName() {
@@ -27,50 +28,44 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   }
 
   @override
-  Declaration getDeclaration() {
+  ParameterDeclaration getDeclaration() {
     checkAccess('getDeclaration', DomainPermission.READ_METHODS);
     return _declaration;
   }
   
   @override
-  Class<Object> getClass() {
+  Class<Object> getReturnClass() {
     checkAccess('getType', DomainPermission.READ_METHODS);
-    try {
-      final link = _declaration.getLinkDeclaration();
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-    } catch (e) {
-      return Class.forType(_declaration.getType());
-    }
+    return LangUtils.obtainClassFromLink(_declaration.getLinkDeclaration());
   }
 
   @override
   Member getMember() {
     checkAccess('getMember', DomainPermission.READ_METHODS);
-    
-    if(_declaration.getMemberDeclaration() is ConstructorDeclaration) {
-      return Constructor.declared(_declaration.getMemberDeclaration() as ConstructorDeclaration, _pd);
+    return _member;
+  }
+
+  @override
+  Version? getVersion() {
+    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
+
+    if (_member.getDeclaringClass().getPackage() case final package?) {
+      return Version.parse(package.getVersion());
     }
-    
-    if(_declaration.getMemberDeclaration() is MethodDeclaration) {
-      return Method.declared(_declaration.getMemberDeclaration() as MethodDeclaration, _pd);
-    }
-    
-    if(_declaration.getMemberDeclaration() is FieldDeclaration) {
-      final field = _declaration.getMemberDeclaration() as FieldDeclaration;
-      final parent = field.getParentClass();
-      
-      if(parent != null) {
-        return Field.declared(field, parent, _pd);
-      }
-    }
-    
-    throw IllegalArgumentException('Member not found');
+
+    return null;
+  }
+
+  @override
+  LinkDeclaration getLinkDeclaration() {
+    checkAccess('getLinkDeclaration', DomainPermission.READ_METHODS);
+    return _declaration.getLinkDeclaration();
   }
 
   @override
   Type getType() {
     checkAccess('getType', DomainPermission.READ_METHODS);
-    return _declaration.getType();
+    return getReturnClass().getType();
   }
   
   @override
@@ -91,19 +86,41 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   }
 
   @override
-  List<String> getModifiers() => [
-    if (isPublic()) 'PUBLIC',
-    if (!isPublic()) 'PRIVATE',
-    if (isNullable()) 'OPTIONAL',
-    if (isNamed()) 'NAMED',
-    if (isPositional()) 'POSITIONAL',
-    if (isRequired()) 'REQUIRED',
-  ];
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_METHODS);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isOptional()) 'OPTIONAL',
+      if (isNamed()) 'NAMED',
+      if (isPositional()) 'POSITIONAL',
+      if (isRequired()) 'REQUIRED',
+    ];
+  }
   
   @override
   bool isNullable() {
-    checkAccess('isOptional', DomainPermission.READ_METHODS);
+    checkAccess('isNullable', DomainPermission.READ_METHODS);
     return _declaration.getIsNullable();
+  }
+
+  @override
+  bool isOptional() {
+    checkAccess('isOptional', DomainPermission.READ_METHODS);
+    return _declaration.getIsOptional();
+  }
+
+  @override
+  bool isFunction() {
+    checkAccess('isFunction', DomainPermission.READ_METHODS);
+    return getLinkDeclaration() is FunctionLinkDeclaration;
+  }
+
+  @override
+  bool mustBeResolved() {
+    checkAccess('mustBeResolved', DomainPermission.READ_METHODS);
+    return !_declaration.getIsNullable() && !_declaration.getIsOptional();
   }
   
   @override
@@ -121,7 +138,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   @override
   bool isRequired() {
     checkAccess('isRequired', DomainPermission.READ_METHODS);
-    return !_declaration.getIsNullable();
+    return _declaration.getIsRequired();
   }
 
   @override
@@ -145,7 +162,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   @override
   String getSignature() {
     checkAccess('getSignature', DomainPermission.READ_METHODS);
-    final typeStr = getClass().getName();
+    final typeStr = getReturnClass().getName();
     final nameStr = getName();
     
     if (isNamed()) {
@@ -172,5 +189,5 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   }
   
   @override
-  String toString() => 'Parameter(${getName()}: ${getClass().getName()})';
+  String toString() => 'Parameter(${getName()}: ${getReturnClass().getName()})';
 }

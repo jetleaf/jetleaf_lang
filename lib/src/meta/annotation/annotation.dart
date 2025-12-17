@@ -1,5 +1,8 @@
+import 'dart:collection';
+
 import 'package:jetleaf_build/jetleaf_build.dart';
 
+import '../../commons/version.dart';
 import '../../exceptions.dart';
 import '../class/class.dart';
 import '../field/field.dart';
@@ -63,7 +66,55 @@ abstract class Annotation extends PermissionManager implements FieldAccess {
   /// print('Annotation type: ${clazz.name}');
   /// ```
   /// {@endtemplate}
-  Class getClass();
+  Class getDeclaringClass();
+
+  /// Gets the declaration metadata associated with this annotation.
+  ///
+  /// {@template annotation_get_declaration}
+  /// Returns the full [AnnotationDeclaration] that describes how this
+  /// annotation was written in source code, including:
+  ///
+  /// - The annotation’s constructor and arguments
+  /// - Source location (file, line, column)
+  /// - Documentation comments (if any)
+  /// - Modifiers
+  /// - The fully qualified type of the annotation
+  ///
+  /// This declaration corresponds **exactly** to the annotation expression
+  /// appearing in the source. It does **not** evaluate or instantiate the
+  /// annotation; for the runtime instance, use:
+  ///
+  /// ```dart
+  /// final instance = annotation.getInstance();
+  /// ```
+  ///
+  /// ## Example
+  /// ```dart
+  /// @Route(path: "/home")
+  /// class HomeController {}
+  ///
+  /// final clazz = Class.forType<HomeController>();
+  /// final annotation = clazz.getAnnotations().first;
+  ///
+  /// final decl = annotation.getDeclaration();
+  ///
+  /// print(decl.getName());          // "Route"
+  /// print(decl.getArguments());     // {"path": "/home"}
+  /// print(decl.sourceFile);         // e.g., ".../home_controller.dart"
+  /// print(decl.documentation);      // checks docs on the annotation constructor
+  /// ```
+  ///
+  /// ## Notes
+  /// - Always returns a declaration; annotations are guaranteed to originate
+  ///   from a concrete annotation expression.
+  /// - Use this method when you need metadata for tooling, analyzers,
+  ///   documentation generation, or static-structure inspection.
+  /// - To reflect on the annotation’s type itself, use:
+  ///   ```dart
+  ///   final annotationClass = decl.getClass();
+  ///   ```
+  /// {@endtemplate}
+  AnnotationDeclaration getDeclaration();
 
   /// Gets the runtime type of the annotation.
   ///

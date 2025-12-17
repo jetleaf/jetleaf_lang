@@ -1,6 +1,7 @@
 import 'package:jetleaf_build/jetleaf_build.dart';
 
 import '../meta/method/method.dart';
+import '../meta/parameter/parameter.dart';
 import '../meta/protection_domain/protection_domain.dart';
 
 /// A cached list of all method declarations visible to the JetLeaf [Runtime].
@@ -232,4 +233,113 @@ final class MethodUtils {
     "noSuchMethod",
     "runtimeType",
   ];
+
+  /// Checks whether a set of arguments can be applied to a list of parameters.
+  ///
+  /// This method validates that all required parameters—both positional
+  /// and named—are provided in the given [arguments] map. It does not
+  /// perform type checking.
+  ///
+  /// ### Parameters
+  /// - [arguments]: A map of parameter names to their corresponding values.
+  /// - [parameters]: The list of [Parameter] objects representing the target
+  ///   method or constructor signature.
+  ///
+  /// ### Returns
+  /// `true` if all required parameters are present in [arguments]; otherwise `false`.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final parameters = method.getParameters();
+  /// final args = {'name': 'Alice', 'age': 30};
+  ///
+  /// if (MethodUtils.canAcceptArguments(args, parameters)) {
+  ///   method.invoke(instance, args);
+  /// }
+  /// ```
+  static bool canAcceptArguments(Map<String, dynamic> arguments, List<Parameter> parameters) {
+    // Check required positional parameters
+    final positionalParams = parameters.where((p) => !p.isNamed()).toList();
+    for (int i = 0; i < positionalParams.length; i++) {
+      final param = positionalParams[i];
+      if (param.mustBeResolved() && !arguments.containsKey(param.getName())) {
+        return false; // Required positional missing
+      }
+    }
+
+    // Check required named parameters
+    final namedParams = parameters.where((p) => p.isNamed()).toList();
+    for (final param in namedParams) {
+      if (param.mustBeResolved() && !arguments.containsKey(param.getName())) {
+        return false; // Required named missing
+      }
+    }
+
+    return true;
+  }
+
+
+  /// Checks whether a list of positional arguments can be applied to a method's
+  /// positional parameters.
+  ///
+  /// Validates that the number of arguments satisfies the required and optional
+  /// positional parameters.
+  ///
+  /// ### Parameters
+  /// - [args]: List of runtime argument values.
+  /// - [parameters]: List of [Parameter] objects representing the method's parameters.
+  ///
+  /// ### Returns
+  /// `true` if the number of arguments is within the allowed range of required
+  /// and optional positional parameters; otherwise `false`.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final parameters = method.getParameters();
+  /// final args = [1, 'hello'];
+  ///
+  /// if (MethodUtils.canAcceptPositionalArguments(args, parameters)) {
+  ///   method.invokeWithArgs(instance, null, args);
+  /// }
+  /// ```
+  static bool canAcceptPositionalArguments(List<dynamic> args, List<Parameter> parameters) {
+    final positionalParams = parameters.where((p) => !p.isNamed()).toList();
+    final requiredPositionalCount = positionalParams.where((p) => p.mustBeResolved()).length;
+
+    return args.length >= requiredPositionalCount && args.length <= positionalParams.length;
+  }
+
+  /// Checks whether a set of named arguments can be applied to a method's
+  /// named parameters.
+  ///
+  /// Validates that all required named parameters are provided and ignores
+  /// extra arguments.
+  ///
+  /// ### Parameters
+  /// - [arguments]: Map of argument names to values.
+  /// - [parameters]: List of [Parameter] objects representing the method's parameters.
+  ///
+  /// ### Returns
+  /// `true` if all required named parameters are present in [arguments]; otherwise `false`.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final parameters = method.getParameters();
+  /// final args = {'count': 10, 'name': 'Alice'};
+  ///
+  /// if (MethodUtils.canAcceptNamedArguments(args, parameters)) {
+  ///   method.invoke(instance, args);
+  /// }
+  /// ```
+  static bool canAcceptNamedArguments(Map<String, dynamic> arguments, List<Parameter> parameters) {
+    final namedParams = parameters.where((p) => p.isNamed()).toList();
+
+    for (final param in namedParams) {
+      if (param.mustBeResolved() && !arguments.containsKey(param.getName())) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

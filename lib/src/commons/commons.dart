@@ -40,6 +40,7 @@ import '../meta/class/class.dart';
 /// ### See Also
 /// - [SimpleProvider]
 /// {@endtemplate}
+@Generic(Provider)
 abstract interface class Provider<T> with EqualsAndHashCode {
   /// Returns an instance of type [T].
   ///
@@ -67,6 +68,7 @@ abstract interface class Provider<T> with EqualsAndHashCode {
 /// - Immutable: the value cannot be changed after construction.
 /// - Thread-safe by default due to immutability.
 /// {@endtemplate}
+@Generic(SimpleProvider)
 final class SimpleProvider<T> implements Provider<T> {
   /// The value to be supplied by this provider.
   final T _value;

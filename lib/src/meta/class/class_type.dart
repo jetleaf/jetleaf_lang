@@ -5,6 +5,44 @@ import 'class.dart';
 import 'class_gettable.dart';
 import '../protection_domain/protection_domain.dart';
 
+/// Represents the reflective wrapper for Dart's built-in `dynamic` type.
+///
+/// This constant is used internally by the reflection system whenever a
+/// method, parameter, or field explicitly or implicitly declares a `dynamic`
+/// type.  
+///
+/// Since `dynamic` does not correspond to an actual class at runtime,
+/// this instance uses a `null` underlying mirror and is registered under the
+/// build-system package namespace.
+///
+/// Typically used in:
+/// - Method return-type resolution  
+/// - Parameter type analysis  
+/// - Dynamic invocation systems  
+final Class<Dynamic> DYNAMIC_CLASS = Class<Dynamic>(null, PackageNames.BUILD);
+
+/// Represents the reflective wrapper for Dart's `void` return type.
+///
+/// Unlike normal types, `void` is a compile-time type marker and does not
+/// represent a concrete class.  
+///
+/// This placeholder `Class<Void>` instance allows the reflection system to
+/// uniformly represent `void` return types in method metadata, type
+/// resolution, and signature analysis.
+///
+/// It is used whenever a method declares:
+/// ```dart
+/// void foo() {}
+/// ```
+/// or, for asynchronous methods:
+/// ```dart
+/// Future<void> bar() async {}
+/// ```
+///
+/// Like [DYNAMIC_CLASS], the underlying mirror is `null` because `void` is
+/// not an instantiable runtime type.
+final Class<Void> VOID_CLASS = Class<Void>(null, PackageNames.BUILD);
+
 /// {@template class_type}
 /// The `ClassType` class in **Jetleaf** represents a reference to a Dart
 /// class, optionally including metadata such as package, protection domain,
@@ -17,7 +55,7 @@ import '../protection_domain/protection_domain.dart';
 /// type system infrastructure.
 ///
 /// ### Key Features:
-/// - Supports optional class [name], [package], [ProtectionDomain], and [TypeDeclaration].
+/// - Supports optional class [name], [package], [ProtectionDomain], and [ClassDeclaration].
 /// - Can convert itself into a [Class] instance using [toClass].
 /// - Integrates with Jetleaf's type system for dynamic class handling.
 /// - Provides multiple factory constructors for flexible class reference creation.
@@ -33,7 +71,7 @@ import '../protection_domain/protection_domain.dart';
 /// // Convert to a Jetleaf Class instance
 /// final userClass = simpleClass.toClass();
 ///
-/// // Create a ClassType with a TypeDeclaration
+/// // Create a ClassType with a ClassDeclaration
 /// final declaredClass = ClassType(declaration: someTypeDeclaration);
 /// final declaredClassInstance = declaredClass.toClass();
 ///
@@ -48,6 +86,7 @@ import '../protection_domain/protection_domain.dart';
 /// }
 /// ```
 /// {@endtemplate}
+@Generic(ClassType)
 class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   /// {@template class_type_name}
   /// The simple name of the class.
@@ -98,7 +137,7 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   final ProtectionDomain? pd;
 
   /// {@template class_type_declaration}
-  /// Optional [TypeDeclaration] that represents the class declaration.
+  /// Optional [ClassDeclaration] that represents the class declaration.
   ///
   /// If provided, [toClass] will use this declaration to create a [Class]
   /// instance. This is the most precise way to reference a class as it
@@ -106,11 +145,11 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   ///
   /// ## Example
   /// ```dart
-  /// final declaration = TypeDeclaration.from(UserService);
+  /// final declaration = ClassDeclaration.from(UserService);
   /// final classType = ClassType(declaration: declaration);
   /// ```
   /// {@endtemplate}
-  final TypeDeclaration? declaration;
+  final ClassDeclaration? declaration;
 
   /// {@template class_type_qualifiedName}
   /// Contains the full URI of the class with the class name.
@@ -161,7 +200,7 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   const ClassType.qualified(this.qualifiedName, [this.name, this.pd, this.declaration, this.package]);
 
   /// {@template class_type_fromDeclaration}
-  /// Creates a ClassType from a TypeDeclaration.
+  /// Creates a ClassType from a ClassDeclaration.
   ///
   /// This constructor provides the most precise class reference by using
   /// complete declaration metadata. It's ideal for scenarios where exact
@@ -169,7 +208,7 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   ///
   /// ## Example
   /// ```dart
-  /// final declaration = TypeDeclaration.from(UserService);
+  /// final declaration = ClassDeclaration.from(UserService);
   /// final classType = ClassType.declared(declaration);
   /// ```
   ///
@@ -240,15 +279,15 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   @override
   Class<T> toClass() {
     if (declaration != null) {
-      return Class.declared(declaration!, pd ?? ProtectionDomain.current());
+      return Class.declared<T>(declaration!, pd ?? ProtectionDomain.current());
     }
 
     if (name != null) {
-      return Class.forName(name!, pd ?? ProtectionDomain.current(), package);
+      return Class.forName<T>(name!, pd ?? ProtectionDomain.current(), package);
     }
 
     if (qualifiedName != null) {
-      return Class.fromQualifiedName(qualifiedName!);
+      return Class.fromQualifiedName<T>(qualifiedName!);
     }
 
     return Class<T>(pd ?? ProtectionDomain.current(), package);
@@ -293,5 +332,5 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   /// @return List of properties to use for equality and hash code calculations
   /// {@endtemplate}
   @override
-  List<Object?> equalizedProperties() => [name, package, pd, declaration?.getQualifiedName()];
+  List<Object?> equalizedProperties() => toClass().equalizedProperties();
 }

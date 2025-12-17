@@ -27,18 +27,22 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   }
   
   @override
-  Declaration getDeclaration() {
+  ConstructorDeclaration getDeclaration() {
     checkAccess('getDeclaration', DomainPermission.READ_CONSTRUCTORS);
     return _declaration;
   }
 
   @override
-  List<String> getModifiers() => [
-    if (isPublic()) 'PUBLIC',
-    if (!isPublic()) 'PRIVATE',
-    if (isConst()) 'CONST',
-    if (isFactory()) 'FACTORY',
-  ];
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_CONSTRUCTORS);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isConst()) 'CONST',
+      if (isFactory()) 'FACTORY',
+    ];
+  }
 
   @override
   Class<D> getDeclaringClass<D>() {
@@ -49,6 +53,17 @@ class _Constructor extends Constructor with EqualsAndHashCode {
       throw IllegalStateException('Constructor ${getName()} has no declaring class');
     }
     return Class.fromQualifiedName<D>(link.getPointerQualifiedName(), _pd, link);
+  }
+
+  @override
+  Version? getVersion() {
+    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
+
+    if (getDeclaringClass().getPackage() case final package?) {
+      return Version.parse(package.getVersion());
+    }
+
+    return null;
   }
 
   @override
@@ -81,7 +96,7 @@ class _Constructor extends Constructor with EqualsAndHashCode {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
     final annotations = _declaration.getAnnotations();
-    return annotations.map((a) => Annotation.declared(a, getProtectionDomain())).toList();
+    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
   }
 
   // =========================================== PARAMETER METHODS ===========================================
@@ -89,13 +104,13 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   @override
   List<Parameter> getParameters() {
     checkAccess('getParameters', DomainPermission.READ_CONSTRUCTORS);
-    return _declaration.getParameters().map((p) => Parameter.declared(p, _pd)).toList();
+    return UnmodifiableListView(_declaration.getParameters().map((p) => Parameter.declared(p, this, _pd)));
   }
   
   @override
   int getParameterCount() {
     checkAccess('getParameterCount', DomainPermission.READ_CONSTRUCTORS);
-    return _declaration.getParameters().length;
+    return getParameters().length;
   }
   
   @override
@@ -104,7 +119,7 @@ class _Constructor extends Constructor with EqualsAndHashCode {
 
     final parameters = _declaration.getParameters();
     final parameter = parameters.where((p) => p.getName() == name).firstOrNull;
-    return parameter != null ? Parameter.declared(parameter, _pd) : null;
+    return parameter != null ? Parameter.declared(parameter, this, _pd) : null;
   }
   
   @override
@@ -113,16 +128,13 @@ class _Constructor extends Constructor with EqualsAndHashCode {
 
     final parameters = _declaration.getParameters();
     if (index < 0 || index >= parameters.length) return null;
-    return Parameter.declared(parameters[index], _pd);
+    return Parameter.declared(parameters[index], this, _pd);
   }
   
   @override
   List<Class> getParameterTypes() {
     checkAccess('getParameterTypes', DomainPermission.READ_CONSTRUCTORS);
-    return _declaration.getParameters().map((p) {
-      final link = p.getLinkDeclaration();
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-    }).toList();
+    return getParameters().map((p) => p.getReturnClass()).toList();
   }
 
   // =========================================== HELPER METHODS ============================================
@@ -148,58 +160,19 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   @override
   bool canAcceptArguments(Map<String, dynamic> arguments) {
     checkAccess('canAcceptArguments', DomainPermission.READ_CONSTRUCTORS);
-
-    final parameters = _declaration.getParameters();
-    
-    // Check if all required parameters are provided
-    for (final param in parameters) {
-      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
-        return false;
-      }
-    }
-    
-    // Check if all provided arguments have corresponding parameters
-    for (final argName in arguments.keys) {
-      if (!parameters.any((p) => (p.getIsNamed() && p.getName() == argName) || (!p.getIsNamed() && p.getIndex() == int.tryParse(argName)))) {
-        return false;
-      }
-    }
-    
-    return true;
+    return MethodUtils.canAcceptArguments(arguments, getParameters());
   }
-  
+
   @override
   bool canAcceptPositionalArguments(List<dynamic> args) {
     checkAccess('canAcceptPositionalArguments', DomainPermission.READ_CONSTRUCTORS);
-
-    final parameters = _declaration.getParameters();
-    final positionalParams = parameters.where((p) => !p.getIsNamed()).toList();
-    final requiredPositionalCount = positionalParams.where((p) => !p.getIsNullable()).length;
-    
-    return args.length >= requiredPositionalCount && args.length <= positionalParams.length;
+    return MethodUtils.canAcceptPositionalArguments(args, getParameters());
   }
 
   @override
   bool canAcceptNamedArguments(Map<String, dynamic> arguments) {
     checkAccess('canAcceptNamedArguments', DomainPermission.READ_CONSTRUCTORS);
-
-    final parameters = _declaration.getParameters();
-    
-    // Check if all required parameters are provided
-    for (final param in parameters) {
-      if (!param.getIsNullable() && !arguments.containsKey(param.getName())) {
-        return false;
-      }
-    }
-    
-    // Check if all provided arguments have corresponding parameters
-    for (final argName in arguments.keys) {
-      if (!parameters.any((p) => p.getName() == argName)) {
-        return false;
-      }
-    }
-    
-    return true;
+    return MethodUtils.canAcceptNamedArguments(arguments, getParameters());
   }
 
   // ========================================== INSTANCE CREATORS =============================================
@@ -253,8 +226,18 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   @override
   String getSignature() {
     checkAccess('getSignature', DomainPermission.READ_CONSTRUCTORS);
-    final paramTypes = getParameterTypes().map((t) => t.getName()).join(', ');
-    return '${getName()}($paramTypes)';
+    final paramTypes = getParameters().map((t) => "${t.getReturnClass().getName()} ${t.getName()}").join(', ');
+    final name = getName();
+
+    if (name.isEmpty) {
+      return '${getDeclaringClass().getName()}($paramTypes)';
+    }
+
+    if (isPublic()) {
+      return '${getDeclaringClass().getName()} ${getName()}($paramTypes)';
+    }
+
+    return '${getDeclaringClass().getName()}${getName()}($paramTypes)';
   }
 
   @override

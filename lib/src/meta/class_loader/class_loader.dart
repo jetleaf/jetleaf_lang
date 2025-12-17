@@ -12,8 +12,6 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'dart:async';
-
 import 'package:jetleaf_build/jetleaf_build.dart';
 
 import '../../io/base.dart';
@@ -305,7 +303,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// print(componentType?.qualifiedName); // "dart:core/string.dart.String"
   /// ```
   /// {@endtemplate}
-  Type? extractComponentType(Class parentClass);
+  Type? extractComponentType<K>(Class parentClass);
 
   /// {@template class_loader_extract_key_type}
   /// Extract key type for maps
@@ -323,7 +321,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// print(keyType?.qualifiedName); // "dart:core/string.dart.String"
   /// ```
   /// {@endtemplate}
-  Type? extractKeyType(Class parentClass);
+  Type? extractKeyType<K>(Class parentClass);
 
   /// Finds all direct subclasses of the specified class with caching.
   /// 
@@ -640,7 +638,7 @@ abstract class ClassLoader implements Closeable, Flushable {
   List<Class<I>> findConstraints<I>(Class parentClass, [bool declared = true]);
 
   /// Extract a class from a [LinkDeclaration]
-  Class getFromLink(LinkDeclaration link, ProtectionDomain pd, {bool useType = false, bool usePointer = false});
+  Class getFromLink<K>(LinkDeclaration link, ProtectionDomain pd, {bool useType = false, bool usePointer = false});
 
   /// {@template class_loader_find_all_constraints}
   /// Retrieves all constraints applied to a class.
@@ -717,84 +715,6 @@ abstract class ClassLoader implements Closeable, Flushable {
   /// - Capacity planning
   /// {@endtemplate}
   ClassLoaderStats getCacheStats();
-
-  /// Flushes all caches, clearing cached class data while keeping the loader active.
-  /// 
-  /// {@template class_loader_flush}
-  /// This operation:
-  /// - Clears all cached class instances
-  /// - Removes subclass relationship caches
-  /// - Clears interface and mixin caches
-  /// - Resets cache statistics
-  /// - Keeps the loader ready for new operations
-  /// 
-  /// ## When to Flush
-  /// - Memory pressure situations
-  /// - After dynamic class modifications
-  /// - Periodic maintenance in long-running applications
-  /// - Before major application phase transitions
-  /// 
-  /// ## Example
-  /// ```dart
-  /// // Clear caches but keep loader active
-  /// await loader.flush();
-  /// 
-  /// // Loader is still usable after flush
-  /// final newClass = await loader.loadClass<String>('dart:core/string.dart.String');
-  /// ```
-  /// 
-  /// ## Performance Impact
-  /// - Immediate: Frees cached memory
-  /// - Short-term: Increased loading times until cache rebuilds
-  /// - Long-term: Improved memory efficiency
-  /// 
-  /// Throws [IOException] if cache cleanup encounters I/O errors.
-  /// {@endtemplate}
-  @override
-  Future<void> flush();
-
-  /// Closes the class loader and releases all resources.
-  /// 
-  /// {@template class_loader_close}
-  /// This operation:
-  /// - Flushes all caches (calls [flush])
-  /// - Releases system resources
-  /// - Marks the loader as closed
-  /// - Prevents further operations
-  /// 
-  /// ## Post-Close Behavior
-  /// After closing, the loader becomes unusable:
-  /// - [loadClass] throws [IllegalStateException]
-  /// - [findClass] throws [IllegalStateException]
-  /// - Cache operations are no-ops
-  /// - [close] calls are idempotent
-  /// 
-  /// ## Example
-  /// ```dart
-  /// try {
-  ///   // Use the loader
-  ///   final classes = await loader.loadMultipleClasses(classNames);
-  /// } finally {
-  ///   // Always close in finally block
-  ///   await loader.close();
-  /// }
-  /// 
-  /// // Or use with try-with-resources pattern
-  /// await using(SystemClassLoader(), (loader) async {
-  ///   return await loader.loadClass<User>('package:example/test.dart.User');
-  /// });
-  /// ```
-  /// 
-  /// ## Resource Management
-  /// - Releases memory held by caches
-  /// - Closes any open file handles or connections
-  /// - Notifies dependent systems of shutdown
-  /// - Ensures clean application termination
-  /// 
-  /// Throws [IOException] if resource cleanup encounters errors.
-  /// {@endtemplate}
-  @override
-  Future<void> close();
 }
 
 /// {@template class_loader_stats}

@@ -10,7 +10,7 @@ part of 'executable_argument_resolver.dart';
 /// 2. **Type bindings** – fallback, matches parameters based on registered types
 ///    and assignability rules.
 ///
-/// The resolved arguments are returned as an [_SimpleExecutableArgument], which
+/// The resolved arguments are returned as an [ExecutableArgument], which
 /// provides both positional and named arguments ready for invocation.
 ///
 /// ---
@@ -57,7 +57,7 @@ final class _ExecutableArgumentResolver implements ExecutableArgumentResolver {
 
   @override
   ExecutableArgumentResolver and<T>(Class<T> type, T? instance, [bool isAssignableFrom = true]) {
-    if (!type.isInstance(instance)) {
+    if (instance != null && !type.isInstance(instance)) {
       throw IllegalStateException("Instance '${instance.runtimeType}' cannot be assigned to parameter of type '${type.getQualifiedName()}'");
     }
 
@@ -78,7 +78,7 @@ final class _ExecutableArgumentResolver implements ExecutableArgumentResolver {
     final params = executable.getParameters();
 
     for (final param in params) {
-      final paramClass = param.getClass();
+      final paramClass = param.getReturnClass();
       Object? resolved;
 
       // -------------------------------------------------------------
@@ -112,7 +112,7 @@ final class _ExecutableArgumentResolver implements ExecutableArgumentResolver {
       }
     }
 
-    return _SimpleExecutableArgument(named, positional);
+    return ExecutableArgument.unmodified(named, positional);
   }
 }
 
@@ -262,38 +262,4 @@ class _PredicateBinding {
   /// 
   /// {@macro predicate_binding}
   const _PredicateBinding(this.matcher, this.instance);
-}
-
-
-/// {@template simple_executable_argument}
-/// Simple implementation of [ExecutableArgument] used internally by
-/// [_ExecutableArgumentResolver].
-///
-/// Stores resolved **positional** and **named** arguments.
-/// 
-/// {@endtemplate}
-final class _SimpleExecutableArgument with EqualsAndHashCode, ToString implements ExecutableArgument {
-  /// Named arguments resolved for the executable.
-  final Map<String, Object?> _named;
-
-  /// Positional arguments resolved for the executable.
-  final List<Object?> _positional;
-
-  /// Creates a new instance with the provided named and positional arguments.
-  /// 
-  /// {@macro simple_executable_argument}
-  const _SimpleExecutableArgument(this._named, this._positional);
-
-  @override
-  Map<String, Object?> getNamedArguments() => _named;
-
-  @override
-  List<Object?> getPositionalArguments() => _positional;
-
-  @override
-  List<Object?> equalizedProperties() => [_named, _positional];
-
-  @override
-  ToStringOptions toStringOptions() => super.toStringOptions()
-    ..customParameterNames = ["named", "positional"];
 }
