@@ -6,6 +6,13 @@ This project follows a simple, human-readable changelog format inspired by
 
 ---
 
+## [1.1.0]
+
+### Changed
+- Updated dependency: `jetleaf_build`
+
+---
+
 ## [1.0.9]
 
 ### Added

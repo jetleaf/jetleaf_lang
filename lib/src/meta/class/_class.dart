@@ -346,7 +346,6 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     _declaration.getKind(),
     _declaration.getDebugIdentifier(),
     _declaration.getType(),
-    _declaration.getElement(),
     _declaration.getIsNullable(),
     _declaration.getIsPublic(),
     _declaration.isGeneric()
@@ -379,12 +378,6 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   bool isAsync() {
     checkAccess('isAsync', DomainPermission.READ_TYPE_INFO);
-
-    if (_declaration.getDartType() case final dartType?) {
-      if (dartType.isDartAsyncFuture || dartType.isDartAsyncFutureOr) {
-        return true;
-      }
-    }
 
     if (Class<Future>(null, "dart").isAssignableFrom(this) || Class<FutureOr>(null, "dart").isAssignableFrom(this)) {
       return true;
