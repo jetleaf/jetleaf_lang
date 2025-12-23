@@ -80,7 +80,7 @@ void main() {
       final parameters = method!.getParameters();
       expect(parameters.length, 1);
       
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'requiredParam');
       expect(param.getType(), String);
       expect(param.getReturnClass().getSimpleName(), 'String');
@@ -101,7 +101,7 @@ void main() {
       final parameters = method!.getParameters();
       expect(parameters.length, 1);
       
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'optionalParam');
       expect(param.getType(), String);
       expect(param.isRequired(), isFalse);
@@ -120,7 +120,7 @@ void main() {
       final parameters = method!.getParameters();
       expect(parameters.length, 1);
       
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'namedParam');
       expect(param.getType(), String);
       expect(param.isRequired(), isFalse);
@@ -140,7 +140,7 @@ void main() {
       final parameters = method!.getParameters();
       expect(parameters.length, 1);
       
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'requiredNamed');
       expect(param.getType(), String);
       expect(param.isRequired(), isTrue);
@@ -157,7 +157,7 @@ void main() {
       
       expect(method, isNotNull);
       final parameters = method!.getParameters();
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       
       expect(param.getMember(), method);
     });
@@ -168,7 +168,7 @@ void main() {
       
       expect(method, isNotNull);
       final parameters = method!.getParameters();
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       
       final annotations = param.getAllDirectAnnotations();
       expect(annotations.length, greaterThanOrEqualTo(1));
@@ -180,7 +180,7 @@ void main() {
       
       expect(method, isNotNull);
       final parameters = method!.getParameters();
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       
       final signature = param.getSignature();
       expect(signature, contains('param'));
@@ -195,12 +195,12 @@ void main() {
       final parameters = method!.getParameters();
       
       expect(parameters.length, 3);
-      expect(parameters[0].getName(), 'a');
-      expect(parameters[0].getIndex(), 0);
-      expect(parameters[1].getName(), 'b');
-      expect(parameters[1].getIndex(), 1);
-      expect(parameters[2].getName(), 'c');
-      expect(parameters[2].getIndex(), 2);
+      expect(parameters.elementAt(0).getName(), 'a');
+      expect(parameters.elementAt(0).getIndex(), 0);
+      expect(parameters.elementAt(1).getName(), 'b');
+      expect(parameters.elementAt(1).getIndex(), 1);
+      expect(parameters.elementAt(2).getName(), 'c');
+      expect(parameters.elementAt(2).getIndex(), 2);
     });
     
     test('Mixed parameter types', () {      
@@ -212,17 +212,17 @@ void main() {
       
       expect(parameters.length, 3);
       
-      final requiredParam = parameters[0];
+      final requiredParam = parameters.elementAt(0);
       expect(requiredParam.getName(), 'required');
       expect(requiredParam.isPositional(), isTrue);
       expect(requiredParam.isNamed(), isFalse);
       
-      final optionalParam = parameters[1];
+      final optionalParam = parameters.elementAt(1);
       expect(optionalParam.getName(), 'optional');
       expect(optionalParam.isPositional(), isTrue);
       expect(optionalParam.isNamed(), isFalse);
       
-      final namedParam = parameters[2];
+      final namedParam = parameters.elementAt(2);
       expect(namedParam.getName(), 'named');
       expect(namedParam.isPositional(), isFalse);
       expect(namedParam.isNamed(), isTrue);
@@ -236,7 +236,7 @@ void main() {
       final parameters = constructor!.getParameters();
       
       expect(parameters.length, 1);
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'field');
       expect(param.getType(), String);
       expect(param.getMember(), constructor);
@@ -250,7 +250,7 @@ void main() {
       final parameters = method!.getParameters();
       
       expect(parameters.length, 1);
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       expect(param.getName(), 'genericParam');
       // Type should be resolved to String
     });
@@ -260,19 +260,19 @@ void main() {
       
       final method1 = classApi.getMethod('method1');
       expect(method1, isNotNull);
-      final param1 = method1!.getParameters()[0];
+      final param1 = method1!.getParameters().elementAt(0);
       expect(param1.isNullable(), isTrue);
       expect(param1.isOptional(), isFalse);
       
       final method2 = classApi.getMethod('method2');
       expect(method2, isNotNull);
-      final param2 = method2!.getParameters()[0];
+      final param2 = method2!.getParameters().elementAt(0);
       expect(param2.isNullable(), isTrue);
       expect(param2.isOptional(), isTrue);
       
       final method3 = classApi.getMethod('method3');
       expect(method3, isNotNull);
-      final param3 = method3!.getParameters()[0];
+      final param3 = method3!.getParameters().elementAt(0);
       expect(param3.isNullable(), isTrue);
       expect(param3.isOptional(), isTrue);
     });

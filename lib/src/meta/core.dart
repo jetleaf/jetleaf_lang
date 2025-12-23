@@ -259,7 +259,7 @@ abstract class PermissionManager {
   ///   and compatibility analyzers rely on this method for accurate
   ///   version introspection.
   /// {@endtemplate}
-  Version? getVersion();
+  Version getVersion();
 }
 
 /// {@template source_metadata}
@@ -400,7 +400,7 @@ abstract class Source extends PermissionManager {
   /// }
   /// ```
   /// {@endtemplate}
-  List<Annotation> getAllDirectAnnotations();
+  Iterable<Annotation> getAllDirectAnnotations();
   
   /// Gets a single annotation by type, if present.
   ///
@@ -458,7 +458,7 @@ abstract class Source extends PermissionManager {
   /// }
   /// ```
   /// {@endtemplate}
-  List<A> getDirectAnnotations<A>() {
+  Iterable<A> getDirectAnnotations<A>() {
     checkAccess('getDirectAnnotations', DomainPermission.READ_ANNOTATIONS);
     final annotations = getAllDirectAnnotations();
     return UnmodifiableListView(annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()));
@@ -625,7 +625,7 @@ abstract class Executable extends Source {
   /// // Returns [Parameter(a), Parameter(b)]
   /// ```
   /// {@endtemplate}
-  List<Parameter> getParameters();
+  Iterable<Parameter> getParameters();
 
   /// Gets all **positional parameters** declared by this executable.
   ///
@@ -650,7 +650,7 @@ abstract class Executable extends Source {
   /// - Order always mirrors the source declaration.
   /// - Optional positional parameters appear after required positional ones.
   /// {@endtemplate}
-  List<Parameter> getPositionalParameters() => getParameters().where((p) => p.isPositional()).toList();
+  Iterable<Parameter> getPositionalParameters() => getParameters().where((p) => p.isPositional()).toList();
 
   /// Gets all **named parameters** declared by this executable.
   ///
@@ -675,7 +675,7 @@ abstract class Executable extends Source {
   ///   but implementations typically return them in source order.
   /// - For lookup by name, see [getParameter].
   /// {@endtemplate}
-  List<Parameter> getNamedParameters() => getParameters().where((p) => p.isNamed()).toList();
+  Iterable<Parameter> getNamedParameters() => getParameters().where((p) => p.isNamed()).toList();
 
   /// Gets the total number of parameters.
   ///
@@ -733,7 +733,7 @@ abstract class Executable extends Source {
   /// // Returns [Class<int>, Class<String>]
   /// ```
   /// {@endtemplate}
-  List<Class> getParameterTypes();
+  Iterable<Class> getParameterTypes();
 
   /// Checks if named arguments can be accepted.
   ///

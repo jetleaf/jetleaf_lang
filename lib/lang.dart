@@ -149,9 +149,8 @@ library;
 export 'src/meta/resource/asset_loader/_bundler.dart';
 export 'src/meta/resource/asset_loader/bundler.dart';
 export 'src/meta/resource/asset_loader/interface.dart';
-export 'src/meta/resource/asset_path/asset_path_resource.dart';
-export 'src/meta/resource/class_path/class_path_resource.dart';
-export 'src/meta/resource/asset_path/asset_resource.dart';
+export 'src/meta/resource/class_path/class_path_resource.dart' hide DefaultClassPathResource;
+export 'src/meta/resource/asset_path/asset_resource.dart' hide DefaultAssetBuilder, DefaultAssetPathResource, FileAssetPathResource;
 
 export 'src/byte/byte_array.dart';
 export 'src/byte/byte_stream.dart';
@@ -198,6 +197,7 @@ export 'src/io/input_stream/input_stream.dart';
 export 'src/io/input_stream/network_input_stream.dart';
 export 'src/io/input_stream/byte_array_input_stream.dart';
 export 'src/io/input_stream/input_stream_source.dart';
+export 'src/io/input_stream/string_input_stream.dart';
 
 export 'src/io/output_stream/buffered_output_stream.dart';
 export 'src/io/output_stream/byte_array_output_stream.dart';
@@ -230,6 +230,8 @@ export 'src/io/stream_support.dart';
 export 'src/io/stream_builder.dart';
 export 'src/io/base.dart';
 
+export 'src/garbage_collector/garbage_collector.dart';
+
 export 'src/math/big_decimal.dart';
 export 'src/math/big_integer.dart';
 
@@ -244,12 +246,6 @@ export 'src/primitives/double.dart';
 export 'src/primitives/character.dart';
 export 'src/primitives/boolean.dart';
 export 'src/primitives/short.dart';
-
-export 'src/system/system.dart';
-export 'src/system/detector/system_detector.dart';
-export 'src/system/detector/standard_system_detector.dart';
-export 'src/system/properties/properties.dart';
-export 'src/system/properties/system_properties.dart';
 
 export 'src/time/zoned_date_time.dart';
 export 'src/time/local_date_time.dart';
@@ -279,7 +275,6 @@ export 'src/currency/currency.dart';
 export 'src/uuid/uuid.dart';
 
 export 'src/meta/class/class.dart';
-export 'src/meta/class/delegating_class.dart';
 export 'src/meta/class/class_gettable.dart';
 export 'src/meta/class/class_type.dart';
 export 'src/meta/field/field.dart';
@@ -289,12 +284,9 @@ export 'src/meta/parameter/parameter.dart';
 export 'src/meta/enum/enum_value.dart';
 export 'src/meta/annotation/annotation.dart';
 export 'src/meta/protection_domain/protection_domain.dart';
-export 'src/meta/qualified_name/qualified_name.dart';
 export 'src/meta/package_identifier.dart';
 export 'src/meta/core.dart';
 export 'src/meta/hint/materialized_runtime_hint.dart';
-export 'src/meta/function/function_class.dart';
-export 'src/meta/record/record_class.dart';
 export 'src/meta/record/record_field.dart';
 
 export 'src/meta/executable/executable_argument_resolver.dart';
@@ -307,9 +299,6 @@ export 'src/uri/uri_validator.dart';
 
 export 'src/utils/method_utils.dart';
 export 'src/utils/class_utils.dart';
-
-export 'src/meta/class_loader/class_loader.dart';
-export 'src/meta/class_loader/default_class_loader.dart';
 
 export 'src/obs/obs.dart';
 export 'src/obs/obs_enums.dart';
@@ -324,7 +313,6 @@ export 'package:jetleaf_build/jetleaf_build.dart' show
   runScan,
   runTestScan,
   Asset,
-  AssetExtension,
   Package,
   Hint,
   RuntimeHint,
@@ -357,9 +345,14 @@ export 'package:jetleaf_build/jetleaf_build.dart' show
   MissingRequiredPositionalParameterException,
   Throwable,
   PackageNames,
-  GLOBAL_RUNTIME_PROVIDER,
   ReflectableAnnotation,
   Author,
   ToString,
-  ToStringOptions
+  ToStringOptions,
+  QualifiedName,
+  System,
+  SystemDetector,
+  SystemProperties,
+  StdExtension,
+  SystemExtension
 ;

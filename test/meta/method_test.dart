@@ -148,10 +148,10 @@ void main() {
       expect(method, isNotNull);
       final params = method!.getParameters();
       expect(params.length, 2);
-      expect(params[0].getName(), 'param1');
-      expect(params[0].getType(), String);
-      expect(params[1].getName(), 'param2');
-      expect(params[1].getType(), int);
+      expect(params.elementAt(0).getName(), 'param1');
+      expect(params.elementAt(0).getType(), String);
+      expect(params.elementAt(1).getName(), 'param2');
+      expect(params.elementAt(1).getType(), int);
     });
     
     test('getParameterCount() returns correct count', () {

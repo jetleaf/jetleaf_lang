@@ -14,7 +14,7 @@
 
 part of 'parameter.dart';
 
-class _Parameter extends Parameter with EqualsAndHashCode {
+final class _Parameter extends Source with EqualsAndHashCode implements Parameter {
   final ParameterDeclaration _declaration;
   final Member _member;
   final ProtectionDomain _pd;
@@ -46,15 +46,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (_member.getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => _member.getDeclaringClass().getVersion();
 
   @override
   LinkDeclaration getLinkDeclaration() {
@@ -72,11 +64,12 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   ProtectionDomain getProtectionDomain() => _pd;
 
   @override
-  List<Annotation> getAllDirectAnnotations() {
+  Iterable<Annotation> getAllDirectAnnotations() sync* {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
-    
-    final annotations = _declaration.getAnnotations();
-    return annotations.map((a) => Annotation.declared(a, getProtectionDomain())).toList();
+
+    for (final annotation in _declaration.getAnnotations()) {
+      yield Annotation.declared(annotation, getProtectionDomain());
+    }
   }
   
   @override
@@ -114,7 +107,7 @@ class _Parameter extends Parameter with EqualsAndHashCode {
   @override
   bool isFunction() {
     checkAccess('isFunction', DomainPermission.READ_METHODS);
-    return getLinkDeclaration() is FunctionLinkDeclaration;
+    return getLinkDeclaration() is FunctionDeclaration;
   }
 
   @override

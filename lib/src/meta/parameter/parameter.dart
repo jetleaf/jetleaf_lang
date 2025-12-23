@@ -54,23 +54,9 @@ part '_parameter.dart';
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract interface class Parameter extends Source {
+abstract final class Parameter extends Source {
   @override
   ParameterDeclaration getDeclaration();
-
-  /// Gets the type of the parameter with proper generics.
-  ///
-  /// {@template parameter_get_type}
-  /// Returns:
-  /// - A [Class] instance representing the parameter type
-  ///
-  /// Example:
-  /// ```dart
-  /// final type = param.getReturnClass(); // Class<String>
-  /// ```
-  /// {@endtemplate}
-  @Deprecated("`getClass` is now deprecated and will be removed in the next version of jetleaf since it collides with `getClass` method extension. Use `getReturnClass` instead.")
-  Class<Object> getClass() => getReturnClass();
 
   /// Gets the type of the parameter with proper generics.
   ///
@@ -329,7 +315,5 @@ abstract interface class Parameter extends Source {
   /// }
   /// ```
   /// {@endtemplate}
-  static Parameter declared(ParameterDeclaration declaration, Member member, ProtectionDomain domain) {
-    return _Parameter(declaration, member, domain);
-  }
+  factory Parameter.declared(ParameterDeclaration declaration, Member member, ProtectionDomain domain) = _Parameter;
 }

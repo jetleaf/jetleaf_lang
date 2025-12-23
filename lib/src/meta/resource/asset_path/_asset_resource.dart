@@ -1,63 +1,66 @@
 part of 'asset_resource.dart';
 
 /// Private implementation of [AssetResource].
-class _AssetResource implements AssetResource {
-  @override
-  final Object source;
+final class _AssetResource implements AssetResource {
+  final Object _source;
 
-  _AssetResource(this.source);
-
-  _AssetResource.fromAsset(Asset asset) : source = asset;
+  _AssetResource(this._source);
 
   @override
   Map<String, Object> toJson() {
-    if (source is Asset) return (source as Asset).toJson();
-    return { 'source': source };
+    if (_source case Asset source) {
+      return source.toJson();
+    }
+    
+    return { 'source': _source };
   }
+
+  @override
+  Object getSource() => _source;
   
   @override
   Uint8List getContentBytes() {
-    if (source is Asset) {
-      return (source as Asset).getContentBytes();
+    if (_source case Asset source) {
+      return source.getContentBytes();
     }
 
-    if (source is Uint8List) {
-      return source as Uint8List;
+    if (_source case Uint8List source) {
+      return source;
     }
     
-    return Uint8List.fromList(Closeable.DEFAULT_ENCODING.encode(source.toString()));
+    return Uint8List.fromList(Closeable.DEFAULT_ENCODING.encode(_source.toString()));
   }
   
   @override
   String getFileName() {
-    if (source is Asset) {
-      return (source as Asset).getFileName();
-    }
-
-    if (source is String) {
-      return source as String;
+    if (_source case Asset source) {
+      return source.getFileName();
     }
     
-    return source.toString();
+    if (_source case String source) {
+      return source;
+    }
+    
+    return _source.toString();
   }
   
   @override
   String getFilePath() {
-    if (source is Asset) {
-      return (source as Asset).getFilePath();
+    if (_source case Asset source) {
+      return source.getFilePath();
     }
 
-    if (source is String) {
-      return source as String;
+    if (_source case String source) {
+      return source;
     }
     
-    return source.toString();
+    return _source.toString();
   }
   
   @override
   String? getPackageName() {
-    if (source is Asset) {
-      return (source as Asset).getPackageName();
+    if (_source case Asset source) {
+      return source.getPackageName();
     }
     
     return null;
@@ -65,11 +68,11 @@ class _AssetResource implements AssetResource {
   
   @override
   String getUniqueName() {
-    if (source is Asset) {
-      return (source as Asset).getUniqueName();
+    if (_source case Asset source) {
+      return source.getUniqueName();
     }
     
-    return source.toString();
+    return _source.toString();
   }
 
   /// Determines the file extension from either a file path or content analysis
@@ -248,5 +251,67 @@ class _AssetResource implements AssetResource {
 
     if (content.contains('//') || content.contains('/*')) return true;
     return false;
+  }
+
+  // Default strategies are private helpers for initial behavior.
+  static String? _defaultExtensionStrategy(Object source) {
+    if (source is String) {
+      if (getIsContent(source)) {
+        return _AssetResource._determineExtensionFromContent(source);
+      } else {
+        return _AssetResource._determineExtensionFromPath(source);
+      }
+    }
+
+    if (source is Asset) {
+      final pathExt = _AssetResource._determineExtensionFromPath(source.getFilePath()) ??
+          _AssetResource._determineExtensionFromPath(source.getFileName());
+      if (pathExt != null) return pathExt;
+      return _AssetResource._determineExtensionFromContent(source.getContentAsString());
+    }
+
+    return null;
+  }
+
+  static bool _defaultContentDetector(Object source) {
+    // Asset objects are *not* content here.
+    if (source is Asset) return false;
+    if (source is! String) return false;
+
+    final text = source;
+
+    // Quick heuristics: newlines, JSON/XML/YAML openers, or characters
+    // unlikely to appear in filenames.
+    if (text.contains('\n')) return true;
+    final trimmed = text.trimLeft();
+
+    if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.startsWith('<')) {
+      return true;
+    }
+
+    if (text.contains('{') || text.contains('<') || text.contains(': ')) return true;
+
+    // Defer to the richer heuristics in _AssetResource.
+    return _AssetResource._looksLikeYaml(text) ||
+        _AssetResource._looksLikeProperties(text) ||
+        _AssetResource._looksLikeDart(text);
+  }
+  
+  @override
+  List<Object?> equalizedProperties() {
+    if (_source case Asset source) {
+      return source.equalizedProperties();
+    }
+
+    return [_source];
+  }
+  
+  @override
+  String getContentAsString() {
+    if (_source case Asset source) {
+      return source.getContentAsString();
+    }
+
+    return _source.toString();
   }
 }

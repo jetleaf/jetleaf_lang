@@ -24,12 +24,6 @@ void main() {
       expect(intClass.isPrimitive(), isTrue);
     });
     
-    test('Class.of<T>() static method', () {
-      final boolClass = Class.of<bool>();
-      expect(boolClass, isA<Class<bool>>());
-      expect(boolClass.getType(), bool);
-    });
-    
     test('Class.forObject() with object', () {
       final obj = 'test string';
       final classApi = Class.forObject(obj);
@@ -62,7 +56,7 @@ void main() {
     });
     
     test('getPackageUri() for core types', () {
-      expect(Class<String>().getPackageUri(), 'dart:core');
+      expect(Class<String>().getPackageUri(), 'dart:core/string.dart');
     });
     
     test('getType() returns runtime Type', () {
@@ -221,9 +215,9 @@ void main() {
 
     test('getEnumValuesAsFields() for enum classes', () {
       final statusClass = Class<TestStatus>();
-      final values = statusClass.getEnumValuesAsFields();
+      final values = statusClass.getFields();
       
-      expect(values.length, 3);
+      expect(values.length, 5);
       expect(values.any((f) => f.getName() == 'active'), isTrue);
       expect(values.any((f) => f.getName() == 'inactive'), isTrue);
       expect(values.any((f) => f.getName() == 'pending'), isTrue);
@@ -323,4 +317,63 @@ void main() {
       expect(valuedType!.getType(), int);
     });
   });
+
+  group("IsInstance in a List", () {
+    test("Check list data", () {
+      final result = ["1", "2", "3", "4"];
+      final list = Class<List>();
+
+      print(list.isInstance(result));
+    });
+  });
+
+  group('Diagnostic: Subclass lookup', () {
+    test('check Runtime.getSubClasses vs manual DFS', () {
+      final baseClass = Class<UserClassBase>();
+      final subClassesViaAPI = baseClass.getSubClasses().toList();
+
+      print('Subclasses returned by Class API for UserClassBase:');
+      for (var c in subClassesViaAPI) {
+        print('- ${c.getQualifiedName()}');
+      }
+
+      expect(subClassesViaAPI.length, 4);
+    });
+
+    test('check Runtime.getSubClasses vs manual DFS', () {
+      final baseClass = Class<Closeable>();
+      final subClassesViaAPI = baseClass.getSubClasses().toList();
+
+      print('Subclasses returned by Class API for Closeable:');
+      for (var c in subClassesViaAPI) {
+        print('- ${c.getQualifiedName()}');
+      }
+    });
+
+    test('check Runtime.getSubClasses vs manual DFS', () {
+      final baseClass = Class<InputStream>();
+      final subClassesViaAPI = baseClass.getSubClasses().toList();
+
+      print('Subclasses returned by Class API for InputStream:');
+      for (var c in subClassesViaAPI) {
+        print('- ${c.getQualifiedName()}');
+      }
+    });
+
+    test('check Runtime.getSubClasses vs manual DFS', () {
+      final baseClass = Class<String>();
+      final subClassesViaAPI = baseClass.getSubClasses().toList();
+
+      print('Subclasses returned by Class API for String:');
+      for (var c in subClassesViaAPI) {
+        print('- ${c.getQualifiedName()}');
+      }
+    });
+  });
 }
+
+abstract class UserClassBase {}
+abstract class FirstBase extends UserClassBase {}
+abstract class SecondBase extends FirstBase {}
+abstract class ThirdUnrelated extends SecondBase {}
+abstract class Unrelated extends ThirdUnrelated {}

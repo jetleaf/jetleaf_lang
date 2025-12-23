@@ -21,7 +21,7 @@ part of 'executable_instantiator.dart';
 /// ---
 /// ## Example
 /// ```dart
-/// final instantiator = _ExecutableInstantiator(Class.of(MyClass))
+/// final instantiator = _ExecutableInstantiator(Class.forType(MyClass))
 ///   .withSelector(ExecutableSelector().and(Class<ApplicationContext>()))
 ///   .withArgumentResolver(ExecutableArgumentResolver().and(Class<ApplicationContext>(), context));
 ///

@@ -22,10 +22,10 @@ import '../extensions/primitives/string.dart';
 import '../collections/hash_set.dart';
 import '../commons/optional.dart';
 import '../extensions/primitives/map.dart';
+import '../garbage_collector/garbage_collector.dart';
 import '../math/big_integer.dart';
 import '../meta/class/class_gettable.dart';
 import '../meta/class/class_type.dart';
-import '../meta/protection_domain/protection_domain.dart';
 import '../primitives/boolean.dart';
 import '../primitives/character.dart';
 import '../primitives/double.dart';
@@ -33,40 +33,6 @@ import '../primitives/float.dart';
 import '../primitives/integer.dart';
 import '../meta/method/method.dart';
 import '../meta/class/class.dart';
-
-bool _initialized = false;
-
-// ========================================================================
-// Constants and Static Fields
-// ========================================================================
-
-/// Map with primitive wrapper type as key and corresponding primitive
-/// type as value, for example: `Class<Integer>() -> Class<int>()`.
-final Map<Class, Class> _primitiveWrapperTypeMap = {};
-
-/// Map with primitive type as key and corresponding wrapper
-/// type as value, for example: `Class<int>() -> Class<Integer>()`.
-final Map<Class, Class> _primitiveTypeToWrapperMap = {};
-
-/// Map with primitive type name as key and corresponding primitive
-/// type as value, for example: `'int' -> Class<int>()`.
-final Map<String, Class> _primitiveTypeNameMap = {};
-
-/// Map with common Dart language class name as key and corresponding Class as value.
-/// Primarily for efficient deserialization of remote invocations.
-final Map<String, Class> _commonClassCache = {};
-
-/// Cachec for class hierarchies within a class.
-/// 
-/// A `null` value signals that no class hierarchy was found for the key.
-final Map<Class, List<Class>> _classHierarchy = {};
-
-/// Cache for class declarations within the JetLeaf framework.
-/// 
-/// This list is populated with all class declarations discovered during
-/// the initial reflection scan, ensuring efficient access to class metadata
-/// throughout the framework.
-List<ClassDeclaration> _classDeclarations = [];
 
 /// {@template class_utils}
 /// A utility class that provides static methods for working with class hierarchies
@@ -80,7 +46,7 @@ List<ClassDeclaration> _classDeclarations = [];
 /// 
 /// ```dart
 /// // Get the complete class hierarchy for a type
-/// final hierarchy = ClassUtils.getClassHierarchy(Class.of<String>());
+/// final hierarchy = ClassUtils.getClassHierarchy(Class<String>());
 /// 
 /// // The hierarchy will include:
 /// // - The original class (String)
@@ -104,9 +70,46 @@ List<ClassDeclaration> _classDeclarations = [];
 /// - **Ordered results**: Returns hierarchy in a logical traversal order
 /// {@endtemplate}
 final class ClassUtils {
+  /// {@macro class_utils}
   ClassUtils._() {
     _ensureInitialized();
   }
+
+  /// Garbage collector key for primitive type to wrapper type cache.
+  static const String PRIMITIVE_GARBAGE_KEY = "internal::::class_utils::::key";
+
+  /// Map with primitive wrapper type as key and corresponding primitive
+  /// type as value, for example: `Class<Integer>() -> Class<int>()`.
+  static Map<Class, Class> get _primitiveWrapperTypeMap => GC.getOrCreate<Map<Class, Class>>(PRIMITIVE_GARBAGE_KEY, {}).getSource();
+
+  /// Garbage collector key for primitive type to wrapper cache.
+  static const String PRIMITIVE_TYPE_TO_WRAPPER_GARBAGE_KEY = "internal::::class_utils::::primitive_type_to_wrapper";
+  
+  /// Map with primitive type as key and corresponding wrapper
+  /// type as value, for example: `Class<int>() -> Class<Integer>()`.
+  static Map<Class, Class> get _primitiveTypeToWrapperMap => GC.getOrCreate<Map<Class, Class>>(PRIMITIVE_TYPE_TO_WRAPPER_GARBAGE_KEY, {}).getSource();
+
+  /// Garbage collector key for primitive type to name cache.
+  static const String PRIMITIVE_TYPE_NAME_GARBAGE_KEY = "internal::::class_utils::::primitive_type_name";
+  
+  /// Map with primitive type name as key and corresponding primitive
+  /// type as value, for example: `'int' -> Class<int>()`.
+  static Map<String, Class> get _primitiveTypeNameMap => GC.getOrCreate<Map<String, Class>>(PRIMITIVE_TYPE_NAME_GARBAGE_KEY, {}).getSource();
+
+  /// Garbage collector key for common class cache.
+  static const String COMMON_CLASS_CACHE_GARBAGE_KEY = "internal::::class_utils::::common_class_cache";
+
+  /// Map with common Dart language class name as key and corresponding Class as value.
+  /// Primarily for efficient deserialization of remote invocations.
+  static Map<String, Class> get _commonClassCache => GC.getOrCreate<Map<String, Class>>(COMMON_CLASS_CACHE_GARBAGE_KEY, {}).getSource();
+
+  /// Garbage collector key for class hierarchy cache.
+  static const String CLASS_HIERARCHY_GARBAGE_KEY = "internal::::class_utils::::class_hierarchy";
+
+  /// Cache for class hierarchies within a class.
+  /// 
+  /// A `null` value signals that no class hierarchy was found for the key.
+  static Map<Class, List<Class>?> get _classHierarchy => GC.getOrCreate<Map<Class, List<Class>?>>(CLASS_HIERARCHY_GARBAGE_KEY, {}).getSource();
 
   /// {@template jet_class_utils_ensure_initialized}
   /// Ensures that JetLeaf's primitive and common reflective type caches are
@@ -170,9 +173,7 @@ final class ClassUtils {
   /// - [PackageNames]
   /// {@endtemplate}
   static void _ensureInitialized() {
-    if (_initialized) return;
-
-    _classDeclarations = Runtime.getAllClasses();
+    if (GC.exists(PRIMITIVE_GARBAGE_KEY) && GC.exists(CLASS_HIERARCHY_GARBAGE_KEY) && GC.exists(COMMON_CLASS_CACHE_GARBAGE_KEY) && GC.exists(PRIMITIVE_TYPE_NAME_GARBAGE_KEY) && GC.exists(PRIMITIVE_TYPE_TO_WRAPPER_GARBAGE_KEY)) return;
 
     // 1. Primitive wrapper type mappings (JetLeaf → Dart)
     _primitiveWrapperTypeMap.put(Class<Boolean>(null, PackageNames.LANG), Class<bool>(null, PackageNames.DART));
@@ -236,8 +237,6 @@ final class ClassUtils {
       Class<MapEntry>(null, PackageNames.DART),
       Class<Optional>(null, PackageNames.LANG),
     ]);
-
-    _initialized = true;
   }
 
   /// {@template jet_class_utils_register_common_classes}
@@ -319,13 +318,13 @@ final class ClassUtils {
   /// class Mammal extends Animal {}
   /// class Dog extends Mammal implements Comparable<Dog> {}
   /// 
-  /// final hierarchy = ClassUtils.getClassHierarchy(Class.of<Dog>());
+  /// final hierarchy = ClassUtils.getClassHierarchy(Class<Dog>());
   /// // Result: [Dog, Mammal, Animal, Comparable<Dog>, Object]
   /// ```
   /// 
   /// ### Array Type Hierarchy
   /// ```dart
-  /// final hierarchy = ClassUtils.getClassHierarchy(Class.of<List<String>>());
+  /// final hierarchy = ClassUtils.getClassHierarchy(Class<List<String>>());
   /// // Includes both List<String> and String component relationships
   /// ```
   /// 
@@ -333,7 +332,7 @@ final class ClassUtils {
   /// ```dart
   /// enum Color { red, green, blue }
   /// 
-  /// final hierarchy = ClassUtils.getClassHierarchy(Class.of<Color>());
+  /// final hierarchy = ClassUtils.getClassHierarchy(Class<Color>());
   /// // Result: [Color, Enum, Object] plus any interfaces
   /// ```
   /// 
@@ -343,84 +342,69 @@ final class ClassUtils {
   /// - Processes interfaces efficiently without redundant traversal
   /// - Handles deep inheritance chains without stack overflow
   /// {@endtemplate}
-  static List<Class> getClassHierarchy(Class type) {
+  static Iterable<Class> getClassHierarchy(Class type) sync* {
     _ensureInitialized();
 
-    final result = _classHierarchy[type];
-    if(result != null) {
-      return result;
+    final cached = _classHierarchy[type];
+    if (cached != null) {
+      yield* cached;
+      return;
     }
 
-    final hierarchy = <Class>[];
     final visited = <Type>{};
-    final toProcess = <Class>[];
+    final collected = <Class>[];
 
-    _addToClassHierarchyEnd(type, hierarchy, visited);
-    toProcess.add(type);
+    Iterable<Class> walk(Class current) sync* {
+      if (!visited.add(current.getType())) return;
 
-    while (toProcess.isNotEmpty) {
-      final candidate = toProcess.removeAt(0);
+      collected.add(current);
+      yield current;
 
-      // Always get superclass from the actual candidate
-      final superclass = candidate.getSuperClass();
-      if (superclass != null && superclass.getType() != Object && !superclass.isEnum()) {
-        if (_addToClassHierarchyEnd(superclass, hierarchy, visited)) {
-          toProcess.add(superclass);
-        }
+      // 1️⃣ Superclass first (arrays handled specially below)
+      final superClass = current.getSuperClass();
+      if (superClass != null && superClass.getType() != Object && !superClass.isEnum()) {
+        yield* walk(superClass);
       }
 
-      // Always get interfaces from the actual candidate
-      final interfaces = candidate.getAllInterfaces();
-      for (final interface in interfaces) {
-        if (_addToClassHierarchyEnd(interface, hierarchy, visited)) {
-          toProcess.add(interface);
-        }
+      // 2️⃣ Interfaces
+      for (final interface in current.getAllInterfaces()) {
+        yield* walk(interface);
       }
 
-      // For arrays, also explore the component type separately
-      if (candidate.isArray()) {
-        final component = candidate.componentType()!;
-        if (_addToClassHierarchyEnd(component, hierarchy, visited)) {
-          toProcess.add(component);
+      // 3️⃣ Array handling — parent first, THEN component type
+      if (current.isArray()) {
+        final component = current.componentType();
+        if (component != null) {
+          yield* walk(component);
         }
       }
     }
 
+    // Start traversal
+    yield* walk(type);
+
+    // 4️⃣ Enum base class
     if (type.isEnum()) {
-      _addToClassHierarchyEnd(Class.of<Enum>(), hierarchy, visited);
-      final enumInterfaces = Class.of<Enum>().getAllInterfaces();
-      for (final interface in enumInterfaces) {
-        _addToClassHierarchyEnd(interface, hierarchy, visited);
+      final enumClass = Class<Enum>();
+      if (visited.add(enumClass.getType())) {
+        collected.add(enumClass);
+        yield enumClass;
+
+        for (final iface in enumClass.getAllInterfaces()) {
+          yield* walk(iface);
+        }
       }
     }
 
-    // Only add Object if not already present
+    // 5️⃣ Object last
     if (!visited.contains(Object)) {
-      hierarchy.add(Class.of<Object>());
+      final objectClass = Class<Object>();
+      collected.add(objectClass);
+      yield objectClass;
     }
 
-    _classHierarchy[type] = hierarchy;
-
-    return hierarchy;
-  }
-
-  /// Helper method that adds a class to the end of the hierarchy list
-  /// to prevent disruption of the traversal loop index.
-  /// Modified to return boolean indicating if class was actually added
-  /// 
-  /// - Parameters
-  /// type: the class to add to the hierarchy
-  /// hierarchy: the list being built containing the class hierarchy
-  /// visited: set tracking already processed classes to prevent duplicates
-  /// 
-  /// - Returns
-  /// `true` if the class was added to the hierarchy; otherwise, `false`.
-  static bool _addToClassHierarchyEnd(Class type, List<Class> hierarchy, Set<Type> visited) {
-    if (visited.add(type.getType())) {
-      hierarchy.add(type);
-      return true;
-    }
-    return false;
+    // Cache materialized result
+    _classHierarchy[type] = collected;
   }
 
   /// {@template get_qualified_name}
@@ -533,204 +517,14 @@ final class ClassUtils {
   /// when you need a quick textual representation of a component’s package.
   ///
   /// {@endtemplate}
-  static String? getPackageName(Object object) {
+  static String getPackageName(Object object) {
     _ensureInitialized();
     
     if (object is Class) {
-      return object.getPackage()?.getName();
+      return object.getPackage().getName();
     }
 
-    return object.getClass().getPackage()?.getName();
-  }
-
-  /// {@template getClassesAssignableTo}
-  /// Retrieves all classes in the current runtime that are assignable to the specified type.
-  /// 
-  /// This method scans all available class declarations in the runtime and returns
-  /// those that are assignable to (subtypes of) the given type. It performs deduplication
-  /// to ensure each class is only returned once, even if multiple class loaders
-  /// might provide different instances for the same class.
-  /// 
-  /// ## Type Assignment Rules
-  /// 
-  /// A class is considered assignable to the target type if:
-  /// - It is the same class as the target type
-  /// - It is a subclass of the target type
-  /// - It implements the target type (if the target is an interface)
-  /// - It is in the same type hierarchy as the target type
-  /// 
-  /// ## Performance Characteristics
-  /// 
-  /// - **Time Complexity**: O(n) where n is number of class declarations
-  /// - **Space Complexity**: O(m) where m is number of matching classes
-  /// - **Initialization**: Requires reflection system initialization
-  /// - **Deduplication**: Eliminates duplicate class instances by qualified name
-  /// 
-  /// Example:
-  /// ```dart
-  /// // Find all classes that implement Service interface
-  /// final serviceClasses = getClassesAssignableTo(Class<Service>());
-  /// for (final serviceClass in serviceClasses) {
-  ///   print('Found service: ${serviceClass.getQualifiedName()}');
-  /// }
-  /// 
-  /// // Find all subclasses of AbstractRepository
-  /// final repoClasses = getClassesAssignableTo(Class<AbstractRepository>());
-  /// for (final repoClass in repoClasses) {
-  ///   print('Found repository: ${repoClass.getQualifiedName()}');
-  /// }
-  /// 
-  /// // Find all classes in a specific type hierarchy
-  /// final componentClasses = getClassesAssignableTo(Class<Component>());
-  /// print('Found ${componentClasses.length} component classes');
-  /// ```
-  /// 
-  /// ## Use Cases
-  /// 
-  /// - **Plugin Discovery**: Find all classes implementing a plugin interface
-  /// - **Aspect Scanning**: Locate all classes that can be advised by aspects
-  /// - **Configuration Detection**: Discover configuration classes automatically
-  /// - **Service Registration**: Find service implementations for auto-registration
-  /// - **Testing Utilities**: Locate test classes or test utilities
-  /// 
-  /// ## Deduplication Strategy
-  /// 
-  /// The method uses qualified class names for deduplication to handle cases where:
-  /// - Multiple class loaders load the same class
-  /// - Different protection domains provide separate class instances
-  /// - Runtime environments with complex class loading scenarios
-  /// 
-  /// ## Error Handling
-  /// 
-  /// - Silently continues if a class cannot be accessed (protection domain issues)
-  /// - Handles malformed class declarations gracefully
-  /// - Returns empty list if no matching classes found
-  /// - Throws if reflection system is not properly initialized
-  /// 
-  /// ## Platform Considerations
-  /// 
-  /// Behavior may vary across platforms:
-  /// - **DVM**: Full reflection support with all class declarations
-  /// - **Native**: Limited to compiled-in classes and their dependencies
-  /// - **Web**: Restricted by browser security and tree shaking
-  /// 
-  /// {@endtemplate}
-  static List<Class> getClassesAssignableTo(Class type) {
-    _ensureInitialized();
-
-    final result = <Class>[];
-    for (final declaration in _classDeclarations) {
-      final clazz = Class.declared(declaration, ProtectionDomain.current());
-
-      if (isAssignable(type, clazz)) {
-        result.add(clazz);
-      }
-    }
-
-    return _deduplicateByIdentity(result).toList();
-  }
-
-  /// {@template _deduplicateByIdentity}
-  /// Removes duplicate class instances based on their qualified names.
-  /// 
-  /// This internal method ensures that each unique class (by qualified name)
-  /// is only represented once in the result, even if multiple class instances
-  /// exist for the same class due to different class loaders or protection domains.
-  /// 
-  /// ## Deduplication Strategy
-  /// 
-  /// The method uses qualified class names as the deduplication key because:
-  /// - Qualified names are unique within a runtime environment
-  /// - They remain consistent across different class loader instances
-  /// - They provide a stable identifier regardless of loading context
-  /// - They align with Java's class identity semantics
-  /// 
-  /// ## Error Resilience
-  /// 
-  /// The method gracefully handles cases where:
-  /// - A class cannot provide its qualified name (access restrictions)
-  /// - Class instances are in an invalid state
-  /// - Reflection operations fail unexpectedly
-  /// 
-  /// In such cases, the problematic class is silently skipped to ensure
-  /// the overall operation completes successfully.
-  /// 
-  /// Example internal behavior:
-  /// ```dart
-  /// final classes = [
-  ///   ClassA, // package:example/example.dart.ClassA
-  ///   ClassA, // package:example/example.dart.ClassA (duplicate from different loader)
-  ///   ClassB, // package:example/example.dart.ClassB
-  ///   ClassC, // package:example/example.dart.ClassC (fails to get qualified name)
-  /// ];
-  /// 
-  /// final deduplicated = _deduplicateByIdentity(classes);
-  /// // Result: [ClassA, ClassB] - ClassC is skipped due to error
-  /// ```
-  /// 
-  /// ## Performance Characteristics
-  /// 
-  /// - **Time Complexity**: O(n) where n is number of input classes
-  /// - **Space Complexity**: O(n) for the seen set and result list
-  /// - **Hash Operations**: O(1) for qualified name lookups
-  /// - **Exception Handling**: Minimal overhead for error cases
-  /// 
-  /// {@endtemplate}
-  static Iterable<Class> _deduplicateByIdentity(Iterable<Class> classes) {
-    final seen = <String>{};
-    final result = <Class>[];
-
-    for (final cls in classes) {
-      try {
-        if (seen.add(cls.getQualifiedName())) {
-          result.add(cls);
-        }
-      } catch (_) {
-        continue;
-      }
-    }
-
-    return result;
-  }
-
-  /// Finds all classes annotated with the specified annotation type.
-  /// 
-  /// - Parameters
-  /// annotation: the annotation type to search for
-  /// includeMeta: whether to include meta-annotations (annotations on annotations)
-  /// 
-  /// - Returns
-  /// a list of classes annotated with the specified annotation type
-  /// 
-  /// - Throws
-  /// PodDefinitionValidationException if the reflection system is not initialized
-  /// 
-  /// - Example
-  /// ```dart
-  /// final serviceClasses = ClassUtils.findClassesAnnotatedWith<Service>();
-  /// for (final serviceClass in serviceClasses) {
-  ///   print('Found service: ${serviceClass.getQualifiedName()}');
-  /// }
-  /// ```
-  static List<Class> findClassesAnnotatedWith<A>(Class<A> annotation, [bool includeMeta = false]) {
-    _ensureInitialized();
-
-    final result = <Class>[];
-    for (final declaration in _classDeclarations) {
-      final clazz = Class.declared(declaration, ProtectionDomain.current());
-
-      if (includeMeta) {
-        if (clazz.hasAnnotation<A>() || clazz.getAllAnnotations().any((ann) => ann.getType() == annotation.getType())) {
-          result.add(clazz);
-        }
-      } else {
-        if (clazz.hasDirectAnnotation<A>() || clazz.getAllDirectAnnotations().any((ann) => ann.getType() == annotation.getType())) {
-          result.add(clazz);
-        }
-      }
-    }
-
-    return _deduplicateByIdentity(result).toList();
+    return object.getClass().getPackage().getName();
   }
 
   /// Check if the right-hand side type may be assigned to the left-hand side type.
@@ -776,7 +570,7 @@ final class ClassUtils {
   /// 
   /// - Example
   /// ```dart
-  /// final method = ClassUtils.getStaticMethod(Class.of<UserService>(), 'configure');
+  /// final method = ClassUtils.getStaticMethod(Class<UserService>(), 'configure');
   /// ```
   /// {@endtemplate}
   static Method? getStaticMethod(Class target, String methodName) {
@@ -805,7 +599,7 @@ final class ClassUtils {
   /// 
   /// - Example
   /// ```dart
-  /// final method = ClassUtils.getMethodIfAvailable(Class.of<UserService>(), 'configure', [Class.of<String>()]);
+  /// final method = ClassUtils.getMethodIfAvailable(Class<UserService>(), 'configure', [Class<String>()]);
   /// ```
   /// {@endtemplate}
   static Method? getMethodIfAvailable(Class clazz, String methodName, [List<Class>? paramTypes]) {
@@ -820,31 +614,6 @@ final class ClassUtils {
 			}
 			return null;
 		}
-  }
-
-  /// {@template get_method_or_null}
-  /// Retrieves the method with the specified name and parameter types from the given class.
-  /// 
-  /// - Parameters
-  /// clazz: the class to analyze for method
-  /// methodName: the name of the method to retrieve
-  /// paramTypes: the parameter types of the method to retrieve
-  /// 
-  /// - Returns
-  /// The method with the specified name and parameter types from the given class.
-  /// 
-  /// - Throws
-  /// PodDefinitionValidationException if the specified method is not found in the given class.
-  /// 
-  /// - Example
-  /// ```dart
-  /// final method = ClassUtils.getMethodOrNull(Class.of<UserService>(), 'configure', [Class.of<String>()]);
-  /// ```
-  /// {@endtemplate}
-  static Method? getMethodOrNull(Class clazz, String methodName, List<Class> paramTypes) {
-    _ensureInitialized();
-
-    return clazz.getMethodBySignature(methodName, paramTypes);
   }
 
   /// {@template find_method_candidates_by_name}
@@ -877,6 +646,31 @@ final class ClassUtils {
 		}
 
 		return candidates;
+  }
+
+  /// {@template get_method_or_null}
+  /// Retrieves the method with the specified name and parameter types from the given class.
+  /// 
+  /// - Parameters
+  /// clazz: the class to analyze for method
+  /// methodName: the name of the method to retrieve
+  /// paramTypes: the parameter types of the method to retrieve
+  /// 
+  /// - Returns
+  /// The method with the specified name and parameter types from the given class.
+  /// 
+  /// - Throws
+  /// PodDefinitionValidationException if the specified method is not found in the given class.
+  /// 
+  /// - Example
+  /// ```dart
+  /// final method = ClassUtils.getMethodOrNull(Class<UserService>(), 'configure', [Class<String>()]);
+  /// ```
+  /// {@endtemplate}
+  static Method? getMethodOrNull(Class clazz, String methodName, List<Class> paramTypes) {
+    _ensureInitialized();
+
+    return clazz.getMethodBySignature(methodName, paramTypes);
   }
 
   /// {@template jet_method_utils_is_assignable_to_error}
@@ -1051,7 +845,7 @@ final class ClassUtils {
       return method.invoke(null);
     }
 
-    return proxyClass.getDeclaredInterface() ?? proxyClass;
+    return proxyClass.getInterface() ?? proxyClass;
   }
 
   /// Checks whether a class with the given [name] exists and can be loaded.
@@ -1076,28 +870,6 @@ final class ClassUtils {
     }
   }
 
-  /// Returns a [Class] representation of the given [type].
-  ///
-  /// This method performs runtime reflection to resolve the fully qualified
-  /// name of the type and returns a [Class] instance representing it.
-  /// It allows inspecting metadata, annotations, and other class-level
-  /// information at runtime.
-  ///
-  /// Example:
-  /// ```dart
-  /// final clazz = ClassUtils.getClass(User);
-  /// print(clazz.name); // Output: 'User'
-  /// print(clazz.qualifiedName); // Output: 'package:example/example/src/user.dart.User'
-  /// ```
-  ///
-  /// [type] – The Dart [Type] to resolve into a [Class] representation.
-  ///
-  /// Returns a [Class] instance corresponding to the provided type.
-  static Class getClass(Type type) {
-    _ensureInitialized();
-    return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(type));
-  }
-
   /// Attempts to resolve and load a [`Class`] instance from a given [object].
   ///
   /// This utility provides a unified way to dynamically convert different forms
@@ -1110,7 +882,7 @@ final class ClassUtils {
   /// The method evaluates the runtime type of [object] in the following order:
   ///
   /// 1. **[`ClassType`]** → Converts directly using [`ClassType.toClass()`].
-  /// 2. **[`Type`]** → Resolved reflectively using [`ClassUtils.getClass()`].
+  /// 2. **[`Type`]** → Resolved reflectively using [`data.getClass()`].
   /// 3. **[`String`]** → If recognized as a qualified class name (via
   ///    [`ClassUtils.isClass()`]), it is converted using
   ///    [`Class.fromQualifiedName()`].
@@ -1140,7 +912,7 @@ final class ClassUtils {
       if (object is ClassType) {
         return object.toClass();
       } else if (object is Type) {
-        return ClassUtils.getClass(object);
+        return object.getClass();
       } else if (object is String && ClassUtils.isClass(object)) {
         return Class.fromQualifiedName(object);
       }
@@ -1173,8 +945,8 @@ final class ClassUtils {
   /// ```
   static bool isVoid(dynamic object) {
     try {
-      Class.forObject(object);
-      return false;
+      final result = Class.forObject(object);
+      return result.getType() == Void;
     } catch (_) {
       return true;
     }

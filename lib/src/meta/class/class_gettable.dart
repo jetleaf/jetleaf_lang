@@ -28,7 +28,7 @@ import 'class.dart';
 /// ```dart
 /// class UserRepository implements ClassGettable<UserRepository> {
 ///   @override
-///   Class<UserRepository> toClass() => Class.of(UserRepository);
+///   Class<UserRepository> toClass() => Class.forType(UserRepository);
 /// }
 ///
 /// void main() {
@@ -77,7 +77,7 @@ abstract interface class ClassGettable<T> {
   /// ```
   ///
   /// ### See Also
-  /// - [Class.of] — Static helper to create a [Class] representation for any Dart type.
+  /// - [Class.forType] — Static helper to create a [Class] representation for any Dart type.
   /// - [Reflectable] — For objects designed to expose reflection-based operations.
   Class<T> toClass();
 }

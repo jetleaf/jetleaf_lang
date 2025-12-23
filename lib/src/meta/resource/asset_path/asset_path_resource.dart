@@ -1,20 +1,4 @@
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:jetleaf_build/jetleaf_build.dart';
-
-import '../../../extensions/primitives/string.dart';
-import '../../../commons/typedefs.dart';
-import '../../../exceptions.dart';
-import '../../../io/base.dart';
-import '../../../io/input_stream/byte_array_input_stream.dart';
-import '../../../io/input_stream/input_stream.dart';
-import '../../../io/input_stream/input_stream_source.dart';
-import '../asset_loader/bundler.dart';
-import '../asset_loader/interface.dart';
-
-part 'default_asset_path_resource.dart';
-part 'file_asset_path_resource.dart';
+part of 'asset_resource.dart';
 
 /// {@template asset_path_resource}
 /// Represents a resource that can be loaded from a path-based asset.
@@ -59,7 +43,10 @@ part 'file_asset_path_resource.dart';
 /// {@endtemplate}
 abstract class AssetPathResource implements Asset, InputStreamSource {
   /// {@macro asset_path_resource}
-  const AssetPathResource(String path);
+  factory AssetPathResource(String path) = DefaultAssetPathResource;
+
+  /// {@macro asset_path_resource}
+  factory AssetPathResource.file(String path, [AssetLoaderInterface? assetLoader]) = FileAssetPathResource;
 
   /// {@template asset_path_resource_exists}
   /// Checks whether the underlying resource exists.
@@ -163,67 +150,7 @@ abstract class AssetPathResource implements Asset, InputStreamSource {
 abstract interface class AssetBuilder with EqualsAndHashCode {
   /// Builds an [Asset] based on the provided [template] identifier.
   AssetPathResource build(String template);
-}
 
-/// {@template jetleaf_default_asset_builder}
-/// Default implementation of [AssetBuilder] used by JetLeaf to construct
-/// [Asset] instances from a given template path.
-///
-/// This builder automatically determines the most appropriate asset source:
-///
-/// 1. **Runtime-resolved assets** – If the asset exists in the current
-///    runtime registry (via [Runtime.getAllAssets]), it will be loaded
-///    using [DefaultAssetPathResource].
-///
-/// 2. **File system assets** – If the runtime lookup fails, it will
-///    fall back to [FileAssetPathResource], which attempts to load
-///    the asset directly from the local file system using `dart:io`.
-///
-/// 3. **Bundled package assets** – When the file does not exist locally,
-///    [FileAssetPathResource] may also delegate to the configured
-///    [AssetLoaderInterface] (e.g., [jetLeafAssetLoader]) to locate
-///    and load bundled resources.
-///
-/// This design provides a transparent, hierarchical resolution strategy
-/// for assets, supporting both **development-time** and **runtime**
-/// asset access seamlessly.
-///
-/// ### Example
-/// ```dart
-/// final builder = DefaultAssetBuilder();
-/// final asset = builder.build('templates/page.html');
-///
-/// print(asset.getFileName()); // -> page.html
-/// print(asset.getFilePath()); // -> assets/templates/page.html or bundle path
-/// ```
-///
-/// You can optionally inject a custom [AssetLoaderInterface] to control
-/// how package assets are resolved:
-///
-/// ```dart
-/// final customBuilder = DefaultAssetBuilder(
-///   AssetLoader.forPackage('my_app'),
-/// );
-/// ```
-/// {@endtemplate}
-final class DefaultAssetBuilder implements AssetBuilder {
-  /// Optional asset loader for bundled or package-level assets.
-  final AssetLoaderInterface? assetLoader;
-
-  /// {@macro jetleaf_default_asset_builder}
-  const DefaultAssetBuilder([this.assetLoader]);
-
-  @override
-  AssetPathResource build(String template) {
-    try {
-      // Attempt runtime asset resolution first.
-      return DefaultAssetPathResource(template);
-    } catch (_) {
-      // Fallback to file system or package-based loading.
-      return FileAssetPathResource(template, assetLoader);
-    }
-  }
-
-  @override
-  List<Object?> equalizedProperties() => [DefaultAssetBuilder];
+  /// {@macro jetleaf_asset_builder}
+  factory AssetBuilder([AssetLoaderInterface? assetLoader]) = DefaultAssetBuilder;
 }

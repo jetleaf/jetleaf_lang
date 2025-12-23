@@ -14,57 +14,12 @@
 
 part of 'field.dart';
 
-class _Field extends Field with EqualsAndHashCode {
-  final Declaration _declaration;
+final class _Field extends Source with EqualsAndHashCode implements Field {
+  final FieldDeclaration _declaration;
   final Declaration _parent;
   final ProtectionDomain _pd;
   
-  _Field(this._declaration, this._parent, this._pd) {
-    if(asField() == null && asAnnotation() == null && asRecord() == null && asEnum() == null) {
-      throw IllegalArgumentException('Declaration must be either of these: FieldDeclaration, AnnotationFieldDeclaration, RecordFieldDeclaration, or EnumFieldDeclaration');
-    }
-  }
-
-  @override
-  FieldDeclaration? asField() {
-    checkAccess('asField', DomainPermission.READ_FIELDS);
-
-    if(_declaration is FieldDeclaration && _parent is ClassDeclaration) {
-      return _declaration;
-    }
-
-    return null;
-  }
-
-  ClassDeclaration? asFieldParent() {
-    checkAccess('asFieldParent', DomainPermission.READ_FIELDS);
-
-    if(_parent is ClassDeclaration) {
-      return _parent;
-    }
-
-    return null;
-  }
-
-  AnnotationDeclaration? asAnnotationParent() {
-    checkAccess('asAnnotationParent', DomainPermission.READ_FIELDS);
-
-    if(_parent is AnnotationDeclaration) {
-      return _parent;
-    }
-
-    return null;
-  }
-
-  EnumDeclaration? asEnumParent() {
-    checkAccess('asEnumParent', DomainPermission.READ_FIELDS);
-
-    if(_parent is EnumDeclaration) {
-      return _parent;
-    }
-
-    return null;
-  }
+  _Field(this._declaration, this._parent, this._pd);
 
   @override
   AnnotationFieldDeclaration? asAnnotation() {
@@ -81,7 +36,7 @@ class _Field extends Field with EqualsAndHashCode {
   RecordFieldDeclaration? asRecord() {
     checkAccess('asRecord', DomainPermission.READ_FIELDS);
 
-    if(_declaration is RecordFieldDeclaration && _parent is RecordLinkDeclaration) {
+    if(_declaration is RecordFieldDeclaration && _parent is RecordDeclaration) {
       return _declaration;
     }
 
@@ -112,15 +67,7 @@ class _Field extends Field with EqualsAndHashCode {
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => getDeclaringClass().getVersion();
 
   @override
   List<String> getModifiers() {
@@ -142,22 +89,16 @@ class _Field extends Field with EqualsAndHashCode {
   Class<D> getDeclaringClass<D>() {
     checkAccess('getDeclaringClass', DomainPermission.READ_FIELDS);
 
-    ClassDeclaration? annotationParent;
-    try {
-      if(asAnnotationParent() != null) {
-        final link = asAnnotationParent()!.getLinkDeclaration();
-        annotationParent = Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getClassDeclaration();
-      }
-    } catch (e) {
-      annotationParent = null;
+    if(_parent case AnnotationDeclaration parent) {
+      final declaration = LangUtils.obtainClassFromLink(parent.getLinkDeclaration()).getClassDeclaration();
+      return Class<D>.declared(declaration, _pd);
     }
 
-    final parentClass = annotationParent ?? asEnumParent() ?? asFieldParent();
-    if (parentClass == null) {
-      throw IllegalStateException('Field ${getName()} has no declaring class');
+    if (_parent case ClassDeclaration parent) {
+      return Class<D>.declared(parent, _pd);
     }
 
-    return Class.declared<D>(parentClass, _pd);
+    throw IllegalStateException('Field ${getName()} has no declaring class');
   }
   
   @override
@@ -186,17 +127,18 @@ class _Field extends Field with EqualsAndHashCode {
   Class<Object> getReturnClass() {
     checkAccess('getDeclaringClass', DomainPermission.READ_FIELDS);
 
-    final enumClass = asEnumParent();
-    if(enumClass != null) {
+    if(_parent case EnumDeclaration enumClass) {
       return Class.declared(enumClass, _pd);
     }
-
-    final link = asField()?.getLinkDeclaration() ?? asAnnotation()?.getLinkDeclaration() ?? asRecord()?.getLinkDeclaration();
-    if (link == null) {
-      throw IllegalStateException('Field ${getName()} has no return class');
+    
+    if(_declaration case AnnotationFieldDeclaration annotationClass) {
+      return LangUtils.obtainClassFromLink(annotationClass.getLinkDeclaration());
     }
-
-    return LangUtils.obtainClassFromLink(link);
+    
+    if(_declaration case RecordFieldDeclaration annotationClass) {
+      return LangUtils.obtainClassFromLink(annotationClass.getLinkDeclaration());
+    }
+    return LangUtils.obtainClassFromLink(_declaration.getLinkDeclaration());
   }
   
   @override
@@ -220,7 +162,7 @@ class _Field extends Field with EqualsAndHashCode {
   @override
   bool isTopLevel() {
     checkAccess('isTopLevel', DomainPermission.READ_TYPE_INFO);
-    return asField()?.getIsTopLevel() ?? false;
+    return _declaration.getIsTopLevel();
   }
 
   @override
@@ -238,15 +180,16 @@ class _Field extends Field with EqualsAndHashCode {
   @override
   bool isNullable() {
     checkAccess('isNullable', DomainPermission.READ_FIELDS);
-    return asField()?.isNullable() ?? asRecord()?.getIsNullable() ?? asEnum()?.isNullable() ?? asAnnotation()?.isNullable() ?? false;
+    return _declaration.isNullable();
   }
 
   @override
-  List<Annotation> getAllDirectAnnotations() {
+  Iterable<Annotation> getAllDirectAnnotations() sync* {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
-    final annotations = asField()?.getAnnotations() ?? asEnum()?.getAnnotations() ?? [];
-    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
+    for (final annotation in _declaration.getAnnotations()) {
+      yield Annotation.declared(annotation, getProtectionDomain());
+    }
   }
 
   @override
@@ -264,31 +207,31 @@ class _Field extends Field with EqualsAndHashCode {
   @override
   bool isStatic() {
     checkAccess('isStatic', DomainPermission.READ_FIELDS);
-    return asField()?.getIsStatic() ?? false;
+    return _declaration.getIsStatic();
   }
   
   @override
   bool isFinal() {
     checkAccess('isFinal', DomainPermission.READ_FIELDS);
-    return asField()?.getIsFinal() ?? false;
+    return _declaration.getIsFinal();
   }
   
   @override
   bool isConst() {
     checkAccess('isConst', DomainPermission.READ_FIELDS);
-    return asField()?.getIsConst() ?? false;
+    return _declaration.getIsConst();
   }
   
   @override
   bool isLate() {
     checkAccess('isLate', DomainPermission.READ_FIELDS);
-    return asField()?.getIsLate() ?? false;
+    return _declaration.getIsLate();
   }
   
   @override
   bool isAbstract() {
     checkAccess('isAbstract', DomainPermission.READ_FIELDS);
-    return asField()?.getIsAbstract() ?? false;
+    return _declaration.getIsAbstract();
   }
   
   @override
@@ -296,7 +239,7 @@ class _Field extends Field with EqualsAndHashCode {
     checkAccess('getValue', DomainPermission.READ_FIELDS);
     
     if(isEnumField()) {
-      return asEnum()?.getValue();
+      return asEnum()?.getEnumValue();
     }
     
     if(isRecordField()) {
@@ -305,32 +248,19 @@ class _Field extends Field with EqualsAndHashCode {
     }
     
     if(isAnnotationField()) {
-      return asAnnotation()?.getValue();
+      return asAnnotation()?.getAnnotationValue();
     }
 
     final instanceValue = instance ?? (isStatic() ? getDeclaringClass().getType() : null);
-    return asField()?.getValue(instanceValue);
+    return _declaration.getValue(instanceValue);
   }
   
   @override
   void setValue(Object? instance, dynamic value) {
     checkAccess('setValue', DomainPermission.WRITE_FIELDS);
     
-    if(isEnumField()) {
-      throw UnsupportedOperationException('Enum field value setter is not supported at the moment.');
-    }
-    
-    if(isRecordField()) {
-      // asRecord()?.setValue(instance, value);
-      throw UnsupportedOperationException('Record field value setter is not supported at the moment.');
-    }
-    
-    if(isAnnotationField()) {
-      throw UnsupportedOperationException('Annotation field value setter is not supported at the moment.');
-    }
-    
     final instanceValue = instance ?? (isStatic() ? getDeclaringClass().getType() : null);
-    asField()?.setValue(instanceValue, value);
+    _declaration.setValue(instanceValue, value);
   }
   
   @override

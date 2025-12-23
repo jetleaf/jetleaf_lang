@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the DateTimeFormatter class from the jetleaf_lang library, for the Dart programming language.">
+  <title>DateTimeFormatter class - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li class="self-crumb">DateTimeFormatter class</li>
+  </ol>
+  <div class="self-name">DateTimeFormatter</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="jetleaf_lang&#47;jetleaf_lang-library-sidebar.html"
+    data-below-sidebar="jetleaf_lang&#47;DateTimeFormatter-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">DateTimeFormatter</span> class 
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A formatter and parser for date-time objects based on patterns, similar to Java's DateTimeFormatter.</p>
+<p>This class provides pattern-based formatting and parsing of date-time values with support for
+locales and timezones. It follows Java-like method naming conventions (e.g., <code>getDate()</code>, <code>getPattern()</code>).</p>
+<h2 id="pattern-syntax">Pattern Syntax</h2>
+<p>The formatter uses the following pattern symbols (case-sensitive):</p>
+<ul>
+<li><code>y</code> or <code>yyyy</code>: Year (e.g., 2024)</li>
+<li><code>M</code>: Month (1-12)</li>
+<li><code>MM</code>: Month (01-12)</li>
+<li><code>MMM</code>: Month abbreviation (Jan, Feb, etc.)</li>
+<li><code>MMMM</code>: Full month name (January, February, etc.)</li>
+<li><code>d</code>: Day of month (1-31)</li>
+<li><code>dd</code>: Day of month (01-31)</li>
+<li><code>EEE</code>: Day of week abbreviation (Mon, Tue, etc.)</li>
+<li><code>EEEE</code>: Full day of week name (Monday, Tuesday, etc.)</li>
+<li><code>H</code>: Hour (0-23)</li>
+<li><code>HH</code>: Hour (00-23)</li>
+<li><code>m</code>: Minute (0-59)</li>
+<li><code>mm</code>: Minute (00-59)</li>
+<li><code>s</code>: Second (0-59)</li>
+<li><code>ss</code>: Second (00-59)</li>
+<li><code>S</code>: Millisecond (0-999)</li>
+<li><code>SSS</code>: Millisecond (000-999)</li>
+<li><code>z</code>: Timezone abbreviation (EST, PST, etc.)</li>
+<li><code>zzz</code>: Timezone name (America/New_York, etc.)</li>
+<li><code>Z</code>: Timezone offset (+HH:mm)</li>
+<li><code>X</code>: ISO 8601 timezone offset (Z for UTC, ±HH:mm for others)</li>
+</ul>
+<h2 id="usage-examples">Usage Examples</h2>
+<pre class="language-dart"><code class="language-dart">// Create a formatter with a pattern
+final formatter = DateTimeFormatter.ofPattern('dd/MM/yyyy HH:mm:ss', Locale('en', 'US'));
+
+// Format a LocalDateTime
+final date = LocalDateTime.of(2024, 6, 27, 14, 30, 45);
+final formatted = formatter.getFormattedDate(date);
+print(formatted); // Output: 27/06/2024 14:30:45
+
+// Format a ZonedDateTime
+final zoned = ZonedDateTime.now(ZoneId.of('America/New_York'));
+final withZone = formatter.getFormattedZonedDate(zoned);
+print(withZone); // Output with timezone info
+
+// Parse a string back to LocalDateTime
+final parsed = formatter.parseDate('27/06/2024 14:30:45');
+print(parsed); // LocalDateTime(2024, 6, 27, 14, 30, 45)
+</code></pre>
+</section>
+
+
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="DateTimeFormatter.ofPattern" class="callable">
+          <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/DateTimeFormatter.ofPattern.html">DateTimeFormatter.ofPattern</a></span><span class="signature">(<span class="parameter" id="ofPattern-param-pattern"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">pattern</span>, [</span><span class="parameter" id="ofPattern-param-locale"><span class="type-annotation"><a href="../jetleaf_lang/Locale-class.html">Locale</a>?</span> <span class="parameter-name">locale</span>, </span><span class="parameter" id="ofPattern-param-zone"><span class="type-annotation"><a href="../jetleaf_lang/ZoneId-class.html">ZoneId</a>?</span> <span class="parameter-name">zone</span></span>])</span>
+        </dt>
+        <dd>
+          Creates a DateTimeFormatter with the specified pattern and optional locale and timezone.
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="format" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/format.html">format</a></span><span class="signature">(<wbr><span class="parameter" id="format-param-zonedDateTime"><span class="type-annotation"><a href="../jetleaf_lang/ZonedDateTime-class.html">ZonedDateTime</a></span> <span class="parameter-name">zonedDateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/ZonedDateTime-class.html">ZonedDateTime</a> object according to the pattern.
+  
+
+</dd>
+
+        <dt id="formatDateTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/formatDateTime.html">formatDateTime</a></span><span class="signature">(<wbr><span class="parameter" id="formatDateTime-param-dateTime"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/DateTime-class.html">DateTime</a></span> <span class="parameter-name">dateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a standard Dart <a href="https://api.dart.dev/stable/3.9.2/dart-core/DateTime-class.html">DateTime</a> object according to the pattern.
+  
+
+</dd>
+
+        <dt id="formatLocalDateTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/formatLocalDateTime.html">formatLocalDateTime</a></span><span class="signature">(<wbr><span class="parameter" id="formatLocalDateTime-param-localDateTime"><span class="type-annotation"><a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a></span> <span class="parameter-name">localDateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a> object according to the pattern.
+  
+
+</dd>
+
+        <dt id="getFormattedDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedDate.html">getFormattedDate</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedDate-param-dateTime"><span class="type-annotation"><a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a></span> <span class="parameter-name">dateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a> according to the pattern.
+  
+
+</dd>
+
+        <dt id="getFormattedDateOnly" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedDateOnly.html">getFormattedDateOnly</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedDateOnly-param-dateTime"><span class="type-annotation"><a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a></span> <span class="parameter-name">dateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats only the date component of a <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a>.
+  
+
+</dd>
+
+        <dt id="getFormattedLocalDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedLocalDate.html">getFormattedLocalDate</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedLocalDate-param-date"><span class="type-annotation"><a href="../jetleaf_lang/LocalDate-class.html">LocalDate</a></span> <span class="parameter-name">date</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/LocalDate-class.html">LocalDate</a>.
+  
+
+</dd>
+
+        <dt id="getFormattedLocalTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedLocalTime.html">getFormattedLocalTime</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedLocalTime-param-time"><span class="type-annotation"><a href="../jetleaf_lang/LocalTime-class.html">LocalTime</a></span> <span class="parameter-name">time</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/LocalTime-class.html">LocalTime</a>.
+  
+
+</dd>
+
+        <dt id="getFormattedTimeOnly" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedTimeOnly.html">getFormattedTimeOnly</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedTimeOnly-param-dateTime"><span class="type-annotation"><a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a></span> <span class="parameter-name">dateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats only the time component of a <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a>.
+  
+
+</dd>
+
+        <dt id="getFormattedZonedDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getFormattedZonedDate.html">getFormattedZonedDate</a></span><span class="signature">(<wbr><span class="parameter" id="getFormattedZonedDate-param-dateTime"><span class="type-annotation"><a href="../jetleaf_lang/ZonedDateTime-class.html">ZonedDateTime</a></span> <span class="parameter-name">dateTime</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Formats a <a href="../jetleaf_lang/ZonedDateTime-class.html">ZonedDateTime</a> including timezone information.
+  
+
+</dd>
+
+        <dt id="getLocale" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getLocale.html">getLocale</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/Locale-class.html">Locale</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the locale.
+  
+
+</dd>
+
+        <dt id="getPattern" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getPattern.html">getPattern</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the pattern string.
+  
+
+</dd>
+
+        <dt id="getZone" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getZone.html">getZone</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/ZoneId-class.html">ZoneId</a>?</span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns the timezone if set, or null.
+  
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="parseDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/parseDate.html">parseDate</a></span><span class="signature">(<wbr><span class="parameter" id="parseDate-param-dateString"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">dateString</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Parses a string into a <a href="../jetleaf_lang/LocalDateTime-class.html">LocalDateTime</a> according to the pattern.
+  
+
+</dd>
+
+        <dt id="parseLocalDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/parseLocalDate.html">parseLocalDate</a></span><span class="signature">(<wbr><span class="parameter" id="parseLocalDate-param-dateString"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">dateString</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/LocalDate-class.html">LocalDate</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Parses a string into a <a href="../jetleaf_lang/LocalDate-class.html">LocalDate</a>.
+  
+
+</dd>
+
+        <dt id="parseLocalTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/parseLocalTime.html">parseLocalTime</a></span><span class="signature">(<wbr><span class="parameter" id="parseLocalTime-param-timeString"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span> <span class="parameter-name">timeString</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/LocalTime-class.html">LocalTime</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Parses a string into a <a href="../jetleaf_lang/LocalTime-class.html">LocalTime</a>.
+  
+
+</dd>
+
+        <dt id="toString" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  A string representation of this object.
+  <div class="features"><span class="feature">override</span></div>
+
+</dd>
+
+        <dt id="withZone" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/withZone.html">withZone</a></span><span class="signature">(<wbr><span class="parameter" id="withZone-param-zone"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">zone</span></span>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Returns a copy of this <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a> with the specified time zone.
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section class="summary offset-anchor" id="static-properties">
+    <h2>Static Properties</h2>
+    <dl class="properties">
+        <dt id="RFC_1123_DATE_TIME" class="property">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/RFC_1123_DATE_TIME.html">RFC_1123_DATE_TIME</a></span>
+  <span class="signature">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  
+
+</dt>
+<dd>
+  A preconfigured <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a> for the RFC-1123 date-time format.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section class="summary offset-anchor" id="static-methods">
+    <h2>Static Methods</h2>
+    <dl class="callables">
+        <dt id="getBasicIsoDate" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getBasicIsoDate.html">getBasicIsoDate</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Date only: "yyyy-MM-dd"
+  
+
+</dd>
+
+        <dt id="getBasicIsoTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getBasicIsoTime.html">getBasicIsoTime</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Time only: "HH:mm:ss"
+  
+
+</dd>
+
+        <dt id="getHttpHeaderFormatter" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getHttpHeaderFormatter.html">getHttpHeaderFormatter</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  HTTP header date formatter
+  
+
+</dd>
+
+        <dt id="getIso8601DateTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getIso8601DateTime.html">getIso8601DateTime</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  ISO 8601 formatter: "yyyy-MM-dd'T'HH:mm:ss"
+  
+
+</dd>
+
+        <dt id="getIso8601DateTimeWithZone" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getIso8601DateTimeWithZone.html">getIso8601DateTimeWithZone</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  ISO 8601 with timezone: "yyyy-MM-dd'T'HH:mm:ssZ"
+  
+
+</dd>
+
+        <dt id="getRfc1123DateTime" class="callable">
+  <span class="name"><a href="../jetleaf_lang/DateTimeFormatter/getRfc1123DateTime.html">getRfc1123DateTime</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="../jetleaf_lang/DateTimeFormatter-class.html">DateTimeFormatter</a></span>
+  </span>
+  
+
+</dt>
+<dd>
+  RFC 1123 formatter: "EEE, dd MMM yyyy HH:mm:ss zzz"
+  
+
+</dd>
+
+    </dl>
+  </section>
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang</a></li>
+    <li class="self-crumb">DateTimeFormatter class</li>
+</ol>
+
+    <h5>jetleaf_lang library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the AdaptableMap class from the jetleaf_lang library, for the Dart programming language.">
+  <title>AdaptableMap class - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li class="self-crumb">AdaptableMap class</li>
+  </ol>
+  <div class="self-name">AdaptableMap</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="jetleaf_lang&#47;jetleaf_lang-library-sidebar.html"
+    data-below-sidebar="jetleaf_lang&#47;AdaptableMap-class-sidebar.html">
+    <div>
+<h1><span class="kind-class">AdaptableMap</span> class 
+    <a href="https://dart.dev/language/class-modifiers#final" class="feature feature-final" title="This class can neither be extended, implemented, nor mixed in.">final</a>
+ 
+</h1></div>
+
+    
+<section class="desc markdown">
+  <p>A specialized <strong>map collection</strong> that can <strong>adapt itself or another source</strong>
+into a strongly-typed <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a> of keys and values.</p>
+<p>The <a href="../jetleaf_lang/AdaptableMap-class.html">AdaptableMap</a> extends <a href="../jetleaf_lang/HashMap-class.html">HashMap&lt;Object, Object&gt;</a> and provides a
+generic <a href="../jetleaf_lang/AdaptableMap/adapt.html">adapt</a> method to convert:</p>
+<ul>
+<li>JetLeaf-specific <a href="../jetleaf_lang/HashMap-class.html">HashMap</a></li>
+<li>Dart <a href="https://api.dart.dev/stable/3.9.2/dart-collection/HashMap-class.html">collection.HashMap</a></li>
+<li>Native Dart <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a>
+into a <code>Map&lt;K, V&gt;</code>.</li>
+</ul>
+<h3 id="purpose">Purpose</h3>
+<p>This class is intended to:</p>
+<ul>
+<li>Facilitate type-safe conversion for heterogeneous or dynamic maps.</li>
+<li>Allow seamless adaptation between JetLeaf and standard Dart map types.</li>
+<li>Support framework-level or service-level map transformation.</li>
+</ul>
+<h3 id="features">Features</h3>
+<ul>
+<li><strong>Generic adaptation:</strong> Converts keys and values to types <code>K</code> and <code>V</code>.</li>
+<li><strong>Multiple source types:</strong> Supports <a href="../jetleaf_lang/HashMap-class.html">HashMap</a>, <a href="https://api.dart.dev/stable/3.9.2/dart-collection/HashMap-class.html">collection.HashMap</a>, and <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a>.</li>
+<li><strong>Exception safety:</strong> Throws <a href="../jetleaf_lang/IllegalArgumentException-class.html">IllegalArgumentException</a> if adaptation is not possible.</li>
+</ul>
+<h3 id="lifecycle-and-usage">Lifecycle and Usage</h3>
+<pre class="language-dart"><code class="language-dart">final adaptable = AdaptableMap();
+adaptable['key'] = 42;
+final typedMap = adaptable.adapt&lt;String, int&gt;(); // Map&lt;String, int&gt;
+
+final source = collection.HashMap&lt;dynamic, dynamic&gt;();
+source['name'] = 'JetLeaf';
+final map = adaptable.adapt&lt;String, String&gt;(source); // Map&lt;String, String&gt;
+</code></pre>
+<h3 id="extensibility">Extensibility</h3>
+<ul>
+<li>Subclass <a href="../jetleaf_lang/AdaptableMap-class.html">AdaptableMap</a> to implement custom key/value conversion rules.</li>
+<li>Can integrate with conversion services or framework-specific registries.</li>
+</ul>
+<h3 id="error-handling">Error Handling</h3>
+<ul>
+<li>Throws <a href="../jetleaf_lang/IllegalArgumentException-class.html">IllegalArgumentException</a> for unsupported sources.</li>
+</ul>
+<h3 id="see-also">See Also</h3>
+<ul>
+<li><a href="../jetleaf_lang/HashMap-class.html">HashMap</a></li>
+<li><a href="../jetleaf_lang/AdaptableList-class.html">AdaptableList</a></li>
+<li><a href="../jetleaf_lang/AdaptableSet-class.html">AdaptableSet</a></li>
+</ul>
+</section>
+
+
+    <section>
+      <dl class="dl-horizontal">
+        
+  <dt>Inheritance</dt>
+  <dd>
+    <ul class="gt-separated dark clazz-relationships">
+      <li><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></li>
+        <li><a href="../jetleaf_lang/HashMap-class.html">HashMap</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></li>
+      <li>AdaptableMap</li>
+    </ul>
+  </dd>
+
+        
+        
+
+
+        
+        
+
+
+      </dl>
+    </section>
+
+    
+  <section class="summary offset-anchor" id="constructors">
+    <h2>Constructors</h2>
+    <dl class="constructor-summary-list">
+        <dt id="AdaptableMap.new" class="callable">
+          <span class="name"><a href="../jetleaf_lang/AdaptableMap/AdaptableMap.html">AdaptableMap.new</a></span><span class="signature">()</span>
+        </dt>
+        <dd>
+          A specialized <strong>map collection</strong> that can <strong>adapt itself or another source</strong>
+into a strongly-typed <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a> of keys and values.
+        </dd>
+        <dt id="AdaptableMap.create" class="callable">
+          <span class="name"><a href="../jetleaf_lang/AdaptableMap/AdaptableMap.create.html">AdaptableMap.create</a></span><span class="signature">(<span class="parameter" id="create-param-entries"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span> <span class="parameter-name">entries</span></span>)</span>
+        </dt>
+        <dd>
+          A specialized <strong>map collection</strong> that can <strong>adapt itself or another source</strong>
+into a strongly-typed <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a> of keys and values.
+            <div class="constructor-modifier features">factory</div>
+        </dd>
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="instance-properties">
+    <h2>Properties</h2>
+    <dl class="properties">
+        <dt id="entries" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/entries.html">entries</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/MapEntry-class.html">MapEntry</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>&gt;</span></span>
+  
+
+</dt>
+<dd class="inherited">
+  The map entries of this <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a>.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="hashCode" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/hashCode.html">hashCode</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The hash code for this object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="isEmpty" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/isEmpty.html">isEmpty</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether there is no key/value pair in the map.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="isNotEmpty" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/isNotEmpty.html">isNotEmpty</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether there is at least one key/value pair in the map.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="keys" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/keys.html">keys</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd class="inherited">
+  The keys of this <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a>.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="length" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/length.html">length</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/int-class.html">int</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  The number of key/value pairs in the map.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="runtimeType" class="property inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/runtimeType.html">runtimeType</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Type-class.html">Type</a></span>
+  
+
+</dt>
+<dd class="inherited">
+  A representation of the runtime type of the object.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="values" class="property inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/values.html">values</a></span>
+  <span class="signature">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd class="inherited">
+  The values of this <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a>.
+  <div class="features"><span class="feature">no setter</span><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+
+    
+  <section
+      class="summary offset-anchor"
+      id="instance-methods">
+    <h2>Methods</h2>
+    <dl class="callables">
+        <dt id="adapt" class="callable">
+  <span class="name"><a href="../jetleaf_lang/AdaptableMap/adapt.html">adapt</a></span><span class="signature">&lt;<wbr><span class="type-parameter">K</span>, <span class="type-parameter">V</span>&gt;</span><span class="signature">(<wbr>[<span class="parameter" id="adapt-param-source"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">source</span></span>])
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter">K</span>, <span class="type-parameter">V</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd>
+  Converts the given <code>source</code> or <code>this</code> into a strongly-typed <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map&lt;K, V&gt;</a>.
+  
+
+</dd>
+
+        <dt id="addAll" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/addAll.html">addAll</a></span><span class="signature">(<wbr><span class="parameter" id="addAll-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Adds all key/value pairs of <code>other</code> to this map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="addEntries" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/addEntries.html">addEntries</a></span><span class="signature">(<wbr><span class="parameter" id="addEntries-param-newEntries"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Iterable-class.html">Iterable</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/MapEntry-class.html">MapEntry</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>, <span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>&gt;</span></span>&gt;</span></span> <span class="parameter-name">newEntries</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Adds all key/value pairs of <code>newEntries</code> to this map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="cast" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/cast.html">cast</a></span><span class="signature">&lt;<wbr><span class="type-parameter">RK</span>, <span class="type-parameter">RV</span>&gt;</span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter">RK</span>, <span class="type-parameter">RV</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Provides a view of this map as having <code>RK</code> keys and <code>RV</code> instances,
+if necessary.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="clear" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/clear.html">clear</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Removes all entries from the map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="containsKey" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/containsKey.html">containsKey</a></span><span class="signature">(<wbr><span class="parameter" id="containsKey-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">key</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether this map contains the given <code>key</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="containsValue" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/containsValue.html">containsValue</a></span><span class="signature">(<wbr><span class="parameter" id="containsValue-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Whether this map contains the given <code>value</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="forEach" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/forEach.html">forEach</a></span><span class="signature">(<wbr><span class="parameter" id="forEach-param-action"><span class="type-annotation">void</span> <span class="parameter-name">action</span>(<span class="parameter" id="param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)</span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Applies <code>action</code> to each key/value pair of the map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="map" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/map.html">map</a></span><span class="signature">&lt;<wbr><span class="type-parameter">K2</span>, <span class="type-parameter">V2</span>&gt;</span><span class="signature">(<wbr><span class="parameter" id="map-param-convert"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/MapEntry-class.html">MapEntry</a><span class="signature">&lt;<wbr><span class="type-parameter">K2</span>, <span class="type-parameter">V2</span>&gt;</span></span> <span class="parameter-name">convert</span>(<span class="parameter" id="param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter">K2</span>, <span class="type-parameter">V2</span>&gt;</span></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Returns a new map where all entries of this map are transformed by
+the given <code>convert</code> function.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="noSuchMethod" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/noSuchMethod.html">noSuchMethod</a></span><span class="signature">(<wbr><span class="parameter" id="noSuchMethod-param-invocation"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Invocation-class.html">Invocation</a></span> <span class="parameter-name">invocation</span></span>)
+    <span class="returntype parameter">&#8594; dynamic</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Invoked when a nonexistent method or property is accessed.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="putIfAbsent" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/putIfAbsent.html">putIfAbsent</a></span><span class="signature">(<wbr><span class="parameter" id="putIfAbsent-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="putIfAbsent-param-ifAbsent"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">ifAbsent</span>()</span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Look up the value of <code>key</code>, or add a new entry if it isn't there.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="remove" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/remove.html">remove</a></span><span class="signature">(<wbr><span class="parameter" id="remove-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">key</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Removes <code>key</code> and its associated value, if present, from the map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="removeWhere" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/removeWhere.html">removeWhere</a></span><span class="signature">(<wbr><span class="parameter" id="removeWhere-param-test"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">test</span>(<span class="parameter" id="param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)</span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Removes all entries of this map that satisfy the given <code>test</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="toString" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/toString.html">toString</a></span><span class="signature">(<wbr>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  A string representation of this object.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="update" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/update.html">update</a></span><span class="signature">(<wbr><span class="parameter" id="update-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="update-param-update"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">update</span>(<span class="parameter" id="param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>), {</span><span class="parameter" id="update-param-ifAbsent"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">ifAbsent</span>()?</span>})
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Updates the value for the provided <code>key</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="updateAll" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/updateAll.html">updateAll</a></span><span class="signature">(<wbr><span class="parameter" id="updateAll-param-update"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">update</span>(<span class="parameter" id="param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)</span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Updates all values.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section
+      class="summary offset-anchor inherited"
+      id="operators">
+    <h2>Operators</h2>
+    <dl class="callables">
+        <dt id="operator ==" class="callable inherited">
+  <span class="name"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object/operator_equals.html">operator ==</a></span><span class="signature">(<wbr><span class="parameter" id="==-param-other"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">other</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The equality operator.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="operator []" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/operator_get.html">operator []</a></span><span class="signature">(<wbr><span class="parameter" id="[]-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span> <span class="parameter-name">key</span></span>)
+    <span class="returntype parameter">&#8594; <a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a>?</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  The value for the given <code>key</code>, or <code>null</code> if <code>key</code> is not in the map.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+        <dt id="operator []=" class="callable inherited">
+  <span class="name"><a href="../jetleaf_lang/HashMap/operator_put.html">operator []=</a></span><span class="signature">(<wbr><span class="parameter" id="[]=-param-key"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">key</span>, </span><span class="parameter" id="[]=-param-value"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Object-class.html">Object</a></span> <span class="parameter-name">value</span></span>)
+    <span class="returntype parameter">&#8594; void</span>
+  </span>
+  
+
+</dt>
+<dd class="inherited">
+  Associates the <code>key</code> with the given <code>value</code>.
+  <div class="features"><span class="feature">inherited</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+  <section class="summary offset-anchor" id="static-properties">
+    <h2>Static Properties</h2>
+    <dl class="properties">
+        <dt id="CLASS" class="property">
+  <span class="name"><a href="../jetleaf_lang/AdaptableMap/CLASS.html">CLASS</a></span>
+  <span class="signature">&#8594; <a href="../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/AdaptableSet-class.html">AdaptableSet</a></span>&gt;</span></span>
+  
+
+</dt>
+<dd>
+  Represents the metadata class for <code>AdaptableSet</code>.
+  <div class="features"><span class="feature">final</span></div>
+
+</dd>
+
+    </dl>
+  </section>
+    
+    
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang</a></li>
+    <li class="self-crumb">AdaptableMap class</li>
+</ol>
+
+    <h5>jetleaf_lang library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

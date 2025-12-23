@@ -44,97 +44,55 @@ part of 'class_path_resource.dart';
 /// ```
 ///
 /// {@endtemplate}
-final class DefaultClassPathResource extends ClassPathResource {
-  List<ClassDeclaration> _declarations = [];
-  List<MethodDeclaration> _methodDeclarations = [];
-  LibraryDeclaration? _library;
-  Stream<List<int>> _stream = Stream<List<int>>.empty();
+@internal
+final class DefaultClassPathResource implements ClassPathResource {
+  /// {@template classpath_package_uri}
+  /// The package URI associated with this resource.
+  ///
+  /// Example: `"package:my_app/src/models/user.dart"`
+  ///
+  /// This is typically used internally to locate and resolve the
+  /// corresponding classes, fields, or methods within the package.
+  /// {@endtemplate}
+  @protected
+  final String packageUri;
 
-  DefaultClassPathResource(super.packageUri) {
-    _declarations.addAll(Runtime.getAllEnums().where((c) => _matches(c.getPackageUri())));
-    _declarations.addAll(Runtime.getAllMixins().where((c) => _matches(c.getPackageUri())));
-    _declarations.addAll(Runtime.getAllClasses().where((c) => _matches(c.getPackageUri())));
+  Iterable<ClassDeclaration> _classes = [];
 
-    final lib = Runtime.getAllLibraries().find((l) => l.getSourceLocation() != null && _matches(l.getSourceLocation()!.toString()));
-    if(lib == null) {
-      throw _throwIfNotFound();
-    }
-    
-    _methodDeclarations = lib.getDeclarations().whereType<MethodDeclaration>().toList();
-    _library = lib;
-
-    _readSourceCodeAsStream(lib.getSourceLocation() ?? Uri.parse(packageUri));
+  /// {@macro default_classpath_resource}
+  DefaultClassPathResource(this.packageUri) {
+    _classes = Runtime.getAllClassesInAPackageUri(packageUri);
   }
-
-  bool _matches(String uri) => uri == packageUri || uri.endsWith(packageUri);
 
   Exception _throwIfNotFound([String? name]) => IllegalStateException("${name ?? 'Class'} for $packageUri not found");
 
-  ClassDeclaration? _findFromLibrary([String? name]) {
-    // Check for ClassDeclaration type
-    ClassDeclaration? declaration;
-    
-    // Check for EnumDeclaration type
-    declaration = _library?.getDeclarations().whereType<EnumDeclaration>().find((d) => d.getSimpleName() == name);
-    declaration ??= _library?.getDeclarations().whereType<MixinDeclaration>().find((d) => d.getSimpleName() == name);
-    return declaration ??= _library?.getDeclarations().whereType<ClassDeclaration>().find((d) => d.getSimpleName() == name);
-  }
-
-  List<ClassDeclaration> _findFromLibraryAll() {
-    List<ClassDeclaration> declarations = [];
-
-    // Check for EnumDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<EnumDeclaration>().toList() ?? []);
-    // Check for MixinDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<MixinDeclaration>().toList() ?? []);
-    // Check for ClassDeclaration type
-    declarations.addAll(_library?.getDeclarations().whereType<ClassDeclaration>().toList() ?? []);
-    
-    return declarations;
-  }
-
-  void _readSourceCodeAsStream(Uri uri) async {
-    try {
-      final filePath = (await RuntimeUtils.resolveUri(uri) ?? uri).toFilePath();
-      final file = File(filePath);
-
-      if (await file.exists()) {
-        // Stream the file as bytes
-        _stream = file.openRead();
-      } else {
-        _stream = Stream<List<int>>.empty();
-      }
-    } catch (e) {
-      _stream = Stream<List<int>>.empty();
-    }
+  @override
+  Class findClass<T>() {
+    final declaration = Runtime.findClass<T>();
+    return Class<T>.declared(declaration, ProtectionDomain.system());
   }
 
   @override
-  Class getClass([Type? type]) {
-    final className = type?.toString();
-    var declaration = _declarations.find((d) => d.getSimpleName() == className);
-    declaration ??= _findFromLibrary(className);
-    if(declaration == null) {
-      throw _throwIfNotFound(className);
-    }
-    
+  Class getClassOfType(Type type) {
+    final declaration = Runtime.findClassByType(type);
     return Class.declared(declaration, ProtectionDomain.system());
   }
 
   @override
-  List<Class> getClasses() {
-    if(_declarations.isEmpty) {
-      _declarations = _findFromLibraryAll();
+  List<Class> getClasses() => _classes.map((d) => Class.declared(d, ProtectionDomain.system())).toList();
+
+  @override
+  InputStream getInputStream() {
+    if(Runtime.getSourceLibrary(packageUri) case final source?) {
+      return StringInputStream(source.sourceCode());
     }
-    return _declarations.map((d) => Class.declared(d, ProtectionDomain.system())).toList();
+
+    return StringInputStream("No content");
   }
 
   @override
-  InputStream getInputStream() => NetworkInputStream(_stream);
-
-  @override
   Method getMethod([String? methodName]) {
-    var declaration = _methodDeclarations.find((d) => d.getName() == methodName);
+    var declaration = _classes.flatMap((c) => c.getMethods()).find((d) => d.getName() == methodName);
     if(declaration == null) {
       throw _throwIfNotFound(methodName);
     }
@@ -143,14 +101,14 @@ final class DefaultClassPathResource extends ClassPathResource {
   }
 
   @override
-  List<Method> getMethods() => _methodDeclarations.map((d) => Method.declared(d, ProtectionDomain.system())).toList();
+  List<Method> getMethods() => _classes.flatMap((c) => c.getMethods()).map((d) => Method.declared(d, ProtectionDomain.system())).toList();
 
   @override
   Package getPackage() {
-    if(_library == null) {
-      throw _throwIfNotFound();
+    if(Runtime.getSourceLibrary(packageUri) case final source?) {
+      return source.getPackage();
     }
     
-    return _library!.getPackage();
+    throw _throwIfNotFound();
   }
 }

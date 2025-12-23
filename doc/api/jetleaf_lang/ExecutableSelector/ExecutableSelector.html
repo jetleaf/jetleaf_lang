@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the ExecutableSelector.new constructor from Class ExecutableSelector from the jetleaf_lang library, for the Dart programming language.">
+  <title>ExecutableSelector.new constructor - ExecutableSelector - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li><a href="../../jetleaf_lang/ExecutableSelector-class.html">ExecutableSelector</a></li>
+    <li class="self-crumb">ExecutableSelector.new factory constructor</li>
+  </ol>
+  <div class="self-name">ExecutableSelector.new</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="jetleaf_lang&#47;ExecutableSelector-class-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-constructor">ExecutableSelector</span> constructor 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+      <span class="name ">ExecutableSelector</span>(<wbr>)
+    </section>
+    
+<section class="desc markdown">
+  <p>Creates a new selector backed by the internal implementation
+<code>_ExecutableSelector</code>.</p>
+<p>A flexible <strong>executable filtering and selection utility</strong> used to pick a
+single <a href="../../jetleaf_lang/Executable-class.html">Executable</a> (e.g., a constructor, method, or function overload) from
+a provided list based on declarative matching rules.</p>
+<p><code>ExecutableSelector</code> supports two categories of selection criteria:</p>
+<h3 id="1-type-based-matching">1. <strong>Type-Based Matching</strong></h3>
+<p>Using <a href="../../jetleaf_lang/ExecutableSelector/and.html">and</a>, you can require that at least one parameter of the executable
+matches a given <a href="../../jetleaf_lang/Class-class.html">Class</a> type.</p>
+<p>Matching behavior depends on <code>isAssignableFrom</code>:</p>
+<ul>
+<li>
+<p>If <code>true</code> (default):<br>
+The executable’s parameter type may be a <strong>subtype</strong> of the given type.<br>
+Example: selecting constructors accepting <code>ApplicationContext</code> when
+registering <code>ContextAware</code>.</p>
+</li>
+<li>
+<p>If <code>false</code>:<br>
+The executable’s parameter type must be a <strong>supertype</strong> or exact match.
+Useful when selecting overloads with more specific parameter constraints.</p>
+</li>
+</ul>
+<h3 id="2-predicate-based-matching">2. <strong>Predicate-Based Matching</strong></h3>
+<p>Using <a href="../../jetleaf_lang/ExecutableSelector/when.html">when</a>, callers can register arbitrary custom filters that operate on
+individual parameters.</p>
+<p>These allow highly granular control such as:</p>
+<ul>
+<li>selecting executables with parameters named <code>"config"</code></li>
+<li>matching only positional parameters</li>
+<li>detecting the presence of certain annotations</li>
+<li>checking for nullability, generic types, or metadata flags</li>
+</ul>
+<p>Predicates are evaluated against <strong>all parameters</strong> of each executable.<br>
+If <em>any</em> parameter satisfies the predicate, the executable qualifies for that rule.</p>
+<hr>
+<h2 id="-selection-process">🔍 Selection Process</h2>
+<p>When <a href="../../jetleaf_lang/ExecutableSelector/select.html">select</a> is invoked:</p>
+<ol>
+<li>All registered type-based and predicate-based rules are applied to each
+executable in the provided list.</li>
+<li>An executable must satisfy <strong>all</strong> rules to be considered a match.</li>
+<li>If multiple matches exist, the internal implementation may apply
+prioritization (e.g., first declared, most specific, etc.).</li>
+<li>The selected executable is returned; if none match, an error may be
+thrown or <code>null</code> returned depending on the implementation.</li>
+</ol>
+<hr>
+<h2 id="-example">🧪 Example</h2>
+<pre class="language-dart"><code class="language-dart">final selector = ExecutableSelector()
+  .and(Class&lt;ApplicationContext&gt;())
+  .when((param) =&gt; param.isNamed &amp;&amp; param.name == 'logger');
+
+final executable = selector.select(myClass.getConstructors());
+</code></pre>
+<p>This example selects a constructor or method that:</p>
+<ul>
+<li>has a parameter assignable from <code>ApplicationContext</code></li>
+<li>AND has a named parameter called <code>"logger"</code></li>
+</ul>
+<hr>
+<h2 id="-use-cases">🧩 Use Cases</h2>
+<ul>
+<li>Choosing the “best” constructor when instantiating classes via reflection</li>
+<li>Selecting method overloads based on runtime type information</li>
+<li>Filtering plugin entry points or lifecycle methods</li>
+<li>Creating extensible and declarative DI-friendly selection logic</li>
+</ul>
+<hr>
+<h2 id="-notes">⚠️ Notes</h2>
+<ul>
+<li>Selection rules are <strong>additive</strong>; an executable must satisfy every rule.</li>
+<li>Ordering of rules does not affect correctness but may influence
+optimization in internal implementations.</li>
+<li>If the list contains only one executable, selection may short-circuit.</li>
+</ul>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">factory ExecutableSelector() =&gt; _ExecutableSelector();</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/ExecutableSelector-class.html">ExecutableSelector</a></li>
+    <li class="self-crumb">ExecutableSelector.new factory constructor</li>
+</ol>
+
+    <h5>ExecutableSelector class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

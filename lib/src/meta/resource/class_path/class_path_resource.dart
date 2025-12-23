@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:jetleaf_build/jetleaf_build.dart';
 import 'package:meta/meta.dart';
 
@@ -7,7 +5,7 @@ import '../../../exceptions.dart';
 import '../../../extensions/primitives/iterable.dart';
 import '../../../io/input_stream/input_stream.dart';
 import '../../../io/input_stream/input_stream_source.dart';
-import '../../../io/input_stream/network_input_stream.dart';
+import '../../../io/input_stream/string_input_stream.dart';
 import '../../class/class.dart';
 import '../../method/method.dart';
 import '../../protection_domain/protection_domain.dart';
@@ -47,20 +45,9 @@ part 'default_class_path_resource.dart';
 /// This class is abstract and must be implemented by subclasses
 /// that define how to load and resolve package resources.
 /// {@endtemplate}
-abstract class ClassPathResource implements InputStreamSource {
-  /// {@template classpath_package_uri}
-  /// The package URI associated with this resource.
-  ///
-  /// Example: `"package:my_app/src/models/user.dart"`
-  ///
-  /// This is typically used internally to locate and resolve the
-  /// corresponding classes, fields, or methods within the package.
-  /// {@endtemplate}
-  @protected
-  final String packageUri;
-
+abstract final class ClassPathResource implements InputStreamSource {
   /// {@macro classpath_resource}
-  ClassPathResource(this.packageUri);
+  factory ClassPathResource(String packageUri) = DefaultClassPathResource;
 
   /// {@template classpath_get_package}
   /// Retrieves metadata about the package.
@@ -88,7 +75,21 @@ abstract class ClassPathResource implements InputStreamSource {
   /// print('Found class: ${userClass.name}');
   /// ```
   /// {@endtemplate}
-  Class getClass([Type? type]);
+  Class getClassOfType(Type type);
+
+  /// {@template classpath_get_class}
+  /// Retrieves a class by its name from the package.
+  ///
+  /// - If [type] is provided, it returns the matching class.  
+  /// - If omitted or `null`, returns a default or primary class.  
+  ///
+  /// ### Example
+  /// ```dart
+  /// final userClass = resource.getClass<User>();
+  /// print('Found class: ${userClass.name}');
+  /// ```
+  /// {@endtemplate}
+  Class findClass<T>();
 
   /// {@template classpath_get_classes}
   /// Returns all classes defined in the package.

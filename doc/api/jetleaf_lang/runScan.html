@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the runScan function from the jetleaf_lang library, for the Dart programming language.">
+  <title>runScan function - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li class="self-crumb">runScan function</li>
+  </ol>
+  <div class="self-name">runScan</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="jetleaf_lang&#47;jetleaf_lang-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">runScan</span> function 
+ 
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+<span class="returntype"><a href="https://api.dart.dev/stable/3.9.2/dart-core/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="../jetleaf_lang/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a></span>&gt;</span></span>
+<span class="name ">runScan</span>(<wbr>{<ol class="parameter-list"> <li><span class="parameter" id="runScan-param-source"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-io/Directory-class.html">Directory</a>?</span> <span class="parameter-name">source</span>, </span></li>
+<li><span class="parameter" id="runScan-param-config"><span class="type-annotation"><a href="../jetleaf_lang/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a>?</span> <span class="parameter-name">config</span>, </span></li>
+<li><span class="parameter" id="runScan-param-forceLoadLibraries"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">forceLoadLibraries</span> = <span class="default-value">false</span>, </span></li>
+<li><span class="parameter" id="runScan-param-onInfo"><span class="type-annotation"><a href="../jetleaf_lang/OnLogged.html">OnLogged</a>?</span> <span class="parameter-name">onInfo</span>, </span></li>
+<li><span class="parameter" id="runScan-param-onWarning"><span class="type-annotation"><a href="../jetleaf_lang/OnLogged.html">OnLogged</a>?</span> <span class="parameter-name">onWarning</span>, </span></li>
+<li><span class="parameter" id="runScan-param-onError"><span class="type-annotation"><a href="../jetleaf_lang/OnLogged.html">OnLogged</a>?</span> <span class="parameter-name">onError</span>, </span></li>
+<li><span class="parameter" id="runScan-param-args"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.dart.dev/stable/3.9.2/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">args</span> = <span class="default-value">const []</span>, </span></li>
+<li><span class="parameter" id="runScan-param-configuredScanner"><span class="type-annotation"><a href="../jetleaf_lang/RuntimeScanner-class.html">RuntimeScanner</a>?</span> <span class="parameter-name">configuredScanner</span>, </span></li>
+<li><span class="parameter" id="runScan-param-overrideConfig"><span class="type-annotation"><a href="https://api.dart.dev/stable/3.9.2/dart-core/bool-class.html">bool</a></span> <span class="parameter-name">overrideConfig</span> = <span class="default-value">false</span>, </span></li>
+</ol>})
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Executes a <strong>full application runtime scan</strong>, builds a runtime context,
+and registers it globally.</p>
+<p>This method is the <strong>primary entry point</strong> for initializing JetLeaf’s
+runtime model in real applications. It orchestrates:</p>
+<ul>
+<li>Source discovery</li>
+<li>Package scanning and exclusion</li>
+<li>Declaration and link generation</li>
+<li>Runtime context creation</li>
+</ul>
+<p>The resulting runtime context is automatically registered into
+<a href="../lang/Runtime.html">Runtime</a>, making all scanned types, hints, and declarations immediately
+available for runtime execution.</p>
+<hr>
+<h2 id="parameters">Parameters</h2>
+<h3 id="source"><code>source</code></h3>
+<p>Optional root <a href="https://api.dart.dev/stable/3.9.2/dart-io/Directory-class.html">Directory</a> used as the base for scanning.</p>
+<p>If omitted, the scanner will infer the source root using the current
+working directory and runtime environment.</p>
+<p>This is commonly used when:</p>
+<ul>
+<li>Running scans in monorepos</li>
+<li>Testing alternate project layouts</li>
+<li>Executing scans from tooling or build systems</li>
+</ul>
+<hr>
+<h3 id="config"><code>config</code></h3>
+<p>Optional <a href="../jetleaf_lang/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a> used to customize scanning behavior.</p>
+<p>When provided, this configuration is <strong>merged</strong> with JetLeaf’s
+default production-safe configuration:</p>
+<ul>
+<li>Default exclusions are preserved</li>
+<li>Provided values override defaults selectively</li>
+</ul>
+<p>This prevents accidental scanning of:</p>
+<ul>
+<li>Tests</li>
+<li>Tooling</li>
+<li>Build artifacts</li>
+<li>Analyzer internals</li>
+</ul>
+<hr>
+<h3 id="forceloadlibraries"><code>forceLoadLibraries</code></h3>
+<p>Forces all discovered libraries to be loaded eagerly.</p>
+<p>This flag is useful when:</p>
+<ul>
+<li>Performing deep reflection analysis</li>
+<li>Generating complete declaration graphs</li>
+<li>Debugging missing type resolution</li>
+</ul>
+<p>If <code>config.forceLoadLibraries</code> is set, it takes precedence over this value.</p>
+<hr>
+<h3 id="oninfo-onwarning-onerror"><code>onInfo</code>, <code>onWarning</code>, <code>onError</code></h3>
+<p>Optional logging callbacks invoked during scanning.</p>
+<p>If not provided, default handlers print messages to stdout using
+clearly distinguishable markers:</p>
+<ul>
+<li><code>(∞INFO∞)</code></li>
+<li><code>(∞WARN∞)</code></li>
+<li><code>(∞ERROR∞)</code></li>
+</ul>
+<p>These callbacks allow integration with structured loggers,
+CI pipelines, or developer tooling.</p>
+<hr>
+<h3 id="args"><code>args</code></h3>
+<p>Command-line arguments forwarded to the scanner.</p>
+<p>These arguments may influence:</p>
+<ul>
+<li>Conditional compilation</li>
+<li>Environment-specific scanning logic</li>
+<li>Feature toggles used by generators</li>
+</ul>
+<hr>
+<h2 id="configuration-merging-strategy">Configuration Merging Strategy</h2>
+<p>The scanner builds a <strong>derived configuration</strong> that:</p>
+<ul>
+<li>Uses JetLeaf-safe defaults</li>
+<li>Applies user overrides selectively</li>
+<li>Preserves exclusion rules critical to performance and correctness</li>
+</ul>
+<p>Key defaults include:</p>
+<ul>
+<li>Skipping test directories</li>
+<li>Excluding analyzer and compiler internals</li>
+<li>Preventing accidental scans of <code>.dart_tool</code> and <code>build</code> directories</li>
+</ul>
+<hr>
+<h2 id="execution-flow">Execution Flow</h2>
+<ol>
+<li>An <a href="../jetleaf_lang/ApplicationRuntimeScanner-class.html">ApplicationRuntimeScanner</a> is instantiated with logging hooks.</li>
+<li>A merged <a href="../jetleaf_lang/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a> is constructed.</li>
+<li>The scanner performs a full runtime scan using:
+<ul>
+<li>The resolved configuration</li>
+<li>Command-line arguments</li>
+<li>Optional source directory</li>
+</ul>
+</li>
+<li>A <a href="../jetleaf_lang/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a> is produced.</li>
+<li>The resulting runtime context is registered globally via
+<code>Runtime.register</code>.</li>
+</ol>
+<hr>
+<h2 id="returns">Returns</h2>
+<p>A <a href="../jetleaf_lang/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a> containing:</p>
+<ul>
+<li>Scan statistics</li>
+<li>Discovered libraries and declarations</li>
+<li>Generated runtime context</li>
+</ul>
+<p>This object can be used for:</p>
+<ul>
+<li>Diagnostics</li>
+<li>Build tooling</li>
+<li>Reporting and analysis</li>
+</ul>
+<hr>
+<h2 id="example">Example</h2>
+<pre class="language-dart"><code class="language-dart">final summary = await runScan(
+  source: Directory('lib'),
+  config: RuntimeScannerConfiguration(
+    enableTreeShaking: true,
+  ),
+);
+
+print('Scanned ${summary.libraryCount} libraries');
+</code></pre>
+<hr>
+<h2 id="intended-use-cases">Intended Use Cases</h2>
+<ul>
+<li>Application startup initialization</li>
+<li>Build-time runtime generation</li>
+<li>Tooling and code generation pipelines</li>
+<li>Production runtime bootstrapping</li>
+</ul>
+<hr>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="../jetleaf_lang/ApplicationRuntimeScanner-class.html">ApplicationRuntimeScanner</a></li>
+<li><a href="../jetleaf_lang/RuntimeScannerConfiguration-class.html">RuntimeScannerConfiguration</a></li>
+<li><a href="../jetleaf_lang/RuntimeScannerSummary-class.html">RuntimeScannerSummary</a></li>
+<li><a href="../lang/Runtime.html">Runtime</a></li>
+</ul>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;RuntimeScannerSummary&gt; runScan({
+  Directory? source,
+  RuntimeScannerConfiguration? config,
+  bool forceLoadLibraries = false,
+  OnLogged? onInfo,
+  OnLogged? onWarning,
+  OnLogged? onError,
+  List&lt;String&gt; args = const [],
+  RuntimeScanner? configuredScanner,
+  bool overrideConfig = false
+}) async {
+  final scanner = configuredScanner ?? ApplicationRuntimeScanner(
+    onInfo: onInfo ?? (msg, overwrite) =&gt; print(&quot;(∞INFO∞) ${overwrite ? &#39;\r$msg&#39; : msg}&quot;),
+    onWarning: onWarning ?? (msg, overwrite) =&gt; print(&quot;(∞WARN∞) ${overwrite ? &#39;\r$msg&#39; : msg}&quot;),
+    onError: onError ?? (msg, overwrite) =&gt; print(&quot;(∞ERROR∞) ${overwrite ? &#39;\r$msg&#39; : msg}&quot;),
+  );
+
+  final defaultConfig = RuntimeScannerConfiguration(
+    skipTests: config?.skipTests ?? true,
+    reload: config?.reload ?? true,
+    packagesToScan: config?.packagesToScan ?? [],
+    packagesToExclude: [
+      &#39;collection&#39;,
+      &#39;analyzer&#39;,
+      &#39;_fe_analyzer&#39;,
+      &quot;r:.*&#47;example&#47;.*&quot;,
+      &quot;r:.*&#47;test&#47;.*&quot;,
+      &quot;r:.*&#47;tool&#47;.*&quot;,
+      &quot;r:.*&#47;benchmark&#47;.*&quot;,
+      &quot;r:.*&#47;.dart_tool&#47;.*&quot;,
+      &quot;r:.*&#47;build&#47;.*&quot;,
+      ...config?.packagesToExclude ?? []
+    ],
+    additions: config?.additions ?? [],
+    updateAssets: config?.updateAssets ?? false,
+    writeDeclarationsToFiles: config?.writeDeclarationsToFiles ?? false,
+    forceLoadLibraries: config?.forceLoadLibraries ?? forceLoadLibraries,
+    scanClasses: config?.scanClasses ?? [],
+    filesToScan: config?.filesToScan ?? [],
+    filesToExclude: config?.filesToExclude ?? [],
+    enableTreeShaking: config?.enableTreeShaking ?? false,
+    excludeClasses: config?.excludeClasses ?? [],
+    updatePackages: config?.updatePackages ?? false,
+    removals: config?.removals ?? [],
+    outputPath: config?.outputPath ?? &quot;build&#47;generated&quot;
+  );
+
+  return await scanner.scan(overrideConfig ? config ?? defaultConfig : defaultConfig, args, source: source);
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">jetleaf_lang</a></li>
+    <li><a href="../jetleaf_lang/">jetleaf_lang</a></li>
+    <li class="self-crumb">runScan function</li>
+</ol>
+
+    <h5>jetleaf_lang library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

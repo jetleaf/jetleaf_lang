@@ -111,6 +111,7 @@ void main() {
     test('matches() type checking', () {
       final serviceClass = Class<AnnotatedService>();
       final annotation = serviceClass.getAllAnnotations();
+      print(serviceClass.getAllAnnotations());
       
       expect(annotation, isNotNull);
       expect(annotation.any((ann) => ann.matches<Todo>()), isTrue);
@@ -243,7 +244,7 @@ void main() {
       
       expect(method, isNotNull);
       final parameters = method!.getParameters();
-      final param = parameters[0];
+      final param = parameters.elementAt(0);
       
       final annotations = param.getAllDirectAnnotations();
       expect(annotations.length, greaterThanOrEqualTo(1));

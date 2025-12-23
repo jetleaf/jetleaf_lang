@@ -554,46 +554,6 @@ class IllegalArgumentException extends RuntimeException {
   String toString() => 'IllegalArgumentException: $message';
 }
 
-/// {@template classNotFoundException}
-/// A runtime exception in **Jetleaf** thrown when a requested class 
-/// cannot be found by the runtime provider.
-///
-/// This typically occurs in scenarios where:
-/// - The class has not been registered with the runtime provider.
-/// - There is a typo in the requested class name.
-/// - The class is missing from the current `ClassLoader` or context.
-///
-/// ### Usage Example:
-/// ```dart
-/// try {
-///   final clazz = Class.forName('NonExistentClass');
-/// } on ClassNotFoundException catch (e) {
-///   print(e); 
-///   // Output: ClassNotFoundException: Class "NonExistentClass" was not found in the runtime provider.
-/// }
-/// ```
-/// {@endtemplate}
-class ClassNotFoundException extends RuntimeException {
-  /// The name of the class that could not be located.
-  ///
-  /// Useful for error handling, debugging, and logging to 
-  /// determine what class resolution failed.
-  final String className;
-
-  /// {@macro classNotFoundException}
-  ClassNotFoundException(this.className) : super(
-    'Class "$className" could not be found.\n'
-    'This typically means:\n'
-    ' • The class has not been registered with the runtime provider.\n'
-    ' • A typo exists in the requested class name.\n'
-    ' • The class is missing from the current ClassLoader context.\n',
-  );
-
-  @override
-  String toString() =>
-      'ClassNotFoundException: Class "$className" was not found in the runtime provider.';
-}
-
 /// {@template bundler_exception}
 /// An exception thrown when an asset cannot be loaded by the JetLeaf bundler.
 ///

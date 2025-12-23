@@ -69,7 +69,7 @@ final class _ExecutableSelector implements ExecutableSelector {
   }
 
   @override
-  E? select<E extends Executable>(List<E> executables) {
+  E? select<E extends Executable>(Iterable<E> executables) {
     E? best;
     int bestScore = -1;
 

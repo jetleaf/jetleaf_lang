@@ -14,7 +14,7 @@
 
 part of 'constructor.dart';
 
-class _Constructor extends Constructor with EqualsAndHashCode {
+final class _Constructor extends Executable with EqualsAndHashCode implements Constructor {
   final ConstructorDeclaration _declaration;
   final ProtectionDomain _pd;
   
@@ -52,19 +52,11 @@ class _Constructor extends Constructor with EqualsAndHashCode {
     if(link == null) {
       throw IllegalStateException('Constructor ${getName()} has no declaring class');
     }
-    return Class.fromQualifiedName<D>(link.getPointerQualifiedName(), _pd, link);
+    return Class<D>.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => getDeclaringClass().getVersion();
 
   @override
   Class<Object> getReturnClass() {
@@ -92,49 +84,56 @@ class _Constructor extends Constructor with EqualsAndHashCode {
   ProtectionDomain getProtectionDomain() => _pd;
 
   @override
-  List<Annotation> getAllDirectAnnotations() {
+  Iterable<Annotation> getAllDirectAnnotations() sync* {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
-    final annotations = _declaration.getAnnotations();
-    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
+    for (final annotation in _declaration.getAnnotations()) {
+      yield Annotation.declared(annotation, getProtectionDomain());
+    }
   }
 
-  // =========================================== PARAMETER METHODS ===========================================
-  
+  // ---------------------------------------------------------------------------------------------------------
+  // === Parameter Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
   @override
-  List<Parameter> getParameters() {
-    checkAccess('getParameters', DomainPermission.READ_CONSTRUCTORS);
-    return UnmodifiableListView(_declaration.getParameters().map((p) => Parameter.declared(p, this, _pd)));
+  Iterable<Parameter> getParameters() sync* {
+    checkAccess('getParameters', DomainPermission.READ_METHODS);
+
+    for (final parameter in _declaration.getParameters()) {
+      yield Parameter.declared(parameter, this, _pd);
+    }
   }
-  
+
   @override
   int getParameterCount() {
-    checkAccess('getParameterCount', DomainPermission.READ_CONSTRUCTORS);
+    checkAccess('getParameterCount', DomainPermission.READ_METHODS);
     return getParameters().length;
   }
-  
+
   @override
   Parameter? getParameter(String name) {
-    checkAccess('getParameter', DomainPermission.READ_CONSTRUCTORS);
-
-    final parameters = _declaration.getParameters();
-    final parameter = parameters.where((p) => p.getName() == name).firstOrNull;
-    return parameter != null ? Parameter.declared(parameter, this, _pd) : null;
+    checkAccess('getParameter', DomainPermission.READ_METHODS);
+    final parameters = getParameters();
+    return parameters.where((p) => p.getName() == name).firstOrNull;
   }
-  
+
   @override
   Parameter? getParameterAt(int index) {
-    checkAccess('getParameterAt', DomainPermission.READ_CONSTRUCTORS);
-
-    final parameters = _declaration.getParameters();
+    checkAccess('getParameterAt', DomainPermission.READ_METHODS);
+    final parameters = getParameters();
     if (index < 0 || index >= parameters.length) return null;
-    return Parameter.declared(parameters[index], this, _pd);
+    return parameters.elementAt(index);
   }
-  
+
   @override
-  List<Class> getParameterTypes() {
-    checkAccess('getParameterTypes', DomainPermission.READ_CONSTRUCTORS);
-    return getParameters().map((p) => p.getReturnClass()).toList();
+  Iterable<Class> getParameterTypes() sync* {
+    checkAccess('getParameterTypes', DomainPermission.READ_METHODS);
+
+    for (final parameter in _declaration.getParameters()) {
+      final link = parameter.getLinkDeclaration();
+      yield LangUtils.obtainClassFromLink(link);
+    }
   }
 
   // =========================================== HELPER METHODS ============================================

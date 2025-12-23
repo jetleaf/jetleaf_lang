@@ -1,13 +1,9 @@
 import 'package:dart_internal/extract_type_arguments.dart';
 import 'package:jetleaf_build/jetleaf_build.dart';
 
-import '../extensions/primitives/string.dart';
-import '../exceptions.dart';
 import '../meta/class/class.dart';
 import '../meta/class/class_type.dart';
-import '../meta/function/function_class.dart';
 import '../meta/protection_domain/protection_domain.dart';
-import '../meta/record/record_class.dart';
 
 /// {@template lang_utils}
 /// Utility class providing **type resolution helpers** for JetLeaf meta-APIs.
@@ -21,8 +17,8 @@ import '../meta/record/record_class.dart';
 /// type information.
 ///
 /// The utilities handle:
-/// - Functions → converted to [FunctionClass]  
-/// - Records → converted to [RecordClass]  
+/// - Functions → converted to [Class]  
+/// - Records → converted to [Class]  
 /// - Collections → generic type arguments extracted  
 /// - Maps → key/value type arguments extracted  
 /// - Dynamic / void types → mapped to JetLeaf singletons  
@@ -38,8 +34,8 @@ abstract final class LangUtils {
   /// [Class] instance, handling a wide range of cases:
   ///
   /// ### Behavior
-  /// 1. **Functions** → returns a [FunctionClass] representing the function signature.  
-  /// 2. **Records** → returns a [RecordClass] representing the record shape.  
+  /// 1. **Functions** → returns a [Class] representing the function signature.  
+  /// 2. **Records** → returns a [Class] representing the record shape.  
   /// 3. **Collections** (`List`, `Set`, `Iterable`) → extracts generic type arguments.  
   /// 4. **Maps** → extracts key and value type arguments.  
   /// 5. **Dynamic / Void / Other types** → uses qualified names or runtime type for resolution.  
@@ -61,14 +57,6 @@ abstract final class LangUtils {
   /// ```
   static Class<Object> obtainClass(Object object, {ProtectionDomain? pd, String? package, LinkDeclaration? link}) {
     final Object self = object;
-
-    if (ReflectionUtils.isThisAFunction(self)) {
-      //
-    }
-
-    if (ReflectionUtils.isThisARecord(self)) {
-      //
-    }
 
     try {
       if (self is Iterable<Object?>) {
@@ -103,17 +91,9 @@ abstract final class LangUtils {
         return extractMapTypeArguments(self, f) as Class<Object>;
       }
       
-      if(self.runtimeType.toString().notEqualsIgnoreCase("type") || self.runtimeType.toString().notEqualsIgnoreCase("dynamic")) {
-        return Class.fromQualifiedName(ReflectionUtils.findQualifiedNameFromType(self.runtimeType), pd ?? ProtectionDomain.system(), link);
-      }
-
-      return Class.fromQualifiedName(ReflectionUtils.findQualifiedName(self), pd ?? ProtectionDomain.system(), link);
+      return Class.declared(Runtime.obtainClassDeclaration(object), pd ?? ProtectionDomain.current());
     } on ClassNotFoundException catch (_) {
-      if(self.runtimeType.toString().notEqualsIgnoreCase("type")) {
-        return Class.forName<Object>(self.runtimeType.toString(), pd ?? ProtectionDomain.current(), package, link);
-      }
-
-      return Class.forName<Object>(self.toString(), pd ?? ProtectionDomain.current(), package, link);
+      return Class.declared(Runtime.obtainClassDeclaration(object), pd ?? ProtectionDomain.current());
     }
   }
 
@@ -176,12 +156,12 @@ abstract final class LangUtils {
   /// {@endtemplate}
   static Class<Object> obtainClassFromLink(LinkDeclaration declaration, [ProtectionDomain? pd]) {
     try {
-      if (declaration is FunctionLinkDeclaration) {
-        return FunctionClass.linked(declaration, pd);
+      if (declaration is FunctionDeclaration) {
+        return Class.declared(declaration, pd ?? ProtectionDomain.current());
       }
 
-      if (declaration is RecordLinkDeclaration) {
-        return RecordClass.linked(declaration, pd);
+      if (declaration is RecordDeclaration) {
+        return Class.declared(declaration, pd ?? ProtectionDomain.current());
       }
 
       if (declaration.getType() == Dynamic || declaration.getPointerQualifiedName() == Dynamic.getQualifiedName()) {
@@ -206,7 +186,329 @@ abstract final class LangUtils {
         return DYNAMIC_CLASS;
       }
 
-      return Class.forType(declaration.getType(), pd, null, declaration);
+      try {
+        return obtainClass(declaration.getType(), pd: pd, link: declaration);
+      } on ClassNotFoundException catch (_) {}
+
+      try {
+        return obtainClass(declaration.getPointerType(), pd: pd, link: declaration);
+      } on ClassNotFoundException catch (_) {}
+
+      try {
+        return Class.forType(declaration.getType(), pd, null, declaration);
+      } on ClassNotFoundException catch (_) {}
+
+      return Class.forType(declaration.getPointerType(), pd, null, declaration);
     }
+  }
+
+  /// Resolves a **strongly-typed [Class]** from a [LinkDeclaration] using a
+  /// multi-phase resolution strategy.
+  ///
+  /// This method is the **typed counterpart** to [obtainClassFromLink].
+  /// It attempts to resolve a JetLeaf [Class] while preserving the **expected
+  /// generic type parameter [K]** whenever possible.
+  ///
+  /// ---
+  ///
+  /// #### Resolution Strategy (in order)
+  ///
+  /// The method attempts the following strategies **in sequence**, stopping
+  /// at the first successful resolution:
+  ///
+  /// 1. **Type-based resolution**
+  /// 2. **Pointer-based resolution**
+  /// 3. **Default combined logic**
+  /// 4. **Type fallback**
+  /// 5. **Pointer fallback**
+  /// 6. **Final default fallback**
+  ///
+  /// Each phase exists to handle a specific failure mode in Dart’s
+  /// reflection and type erasure behavior.
+  ///
+  /// ---
+  ///
+  /// #### Generic Behavior
+  ///
+  /// - If `K == dynamic`, resolution is relaxed and avoids forced casting
+  /// - If generics are detected, resolution prefers
+  ///   `Class.fromQualifiedName(...)`
+  /// - If generics are not present, resolution prefers
+  ///   `Class.forType(...)`
+  ///
+  /// ---
+  ///
+  /// #### Parameters
+  /// - [link]: The link-time declaration describing the type
+  /// - [pd]: The active [ProtectionDomain] for reflective access
+  ///
+  /// ---
+  ///
+  /// #### Returns
+  /// A resolved [Class] instance aligned with the expected type [K].
+  ///
+  /// ---
+  ///
+  /// #### Example
+  /// ```dart
+  /// Class<String> clazz =
+  ///   LangUtils.obtainTypedClassFromLink<String>(link, pd);
+  ///
+  /// print(clazz.getName()); // "String"
+  /// ```
+  static Class obtainTypedClassFromLink<K>(LinkDeclaration link, ProtectionDomain pd) {
+    try {
+      return _handleTypeLogic<K>(link, pd);
+    } on ClassNotFoundException catch (_) {}
+
+    try {
+      return _handlePointerLogic<K>(link, pd);
+    } on ClassNotFoundException catch (_) {}
+
+    try {
+      return _handleDefaultLogic<K>(link, pd);
+    } on ClassNotFoundException catch (_) {}
+
+    try {
+      return _handleTypeFallback<K>(link, pd);
+    } on ClassNotFoundException catch (_) {}
+
+    try {
+      return _handlePointerFallback<K>(link, pd);
+    } on ClassNotFoundException catch (_) {}
+
+    return _handleDefaultFallback<K>(link, pd);
+  }
+
+  /// Attempts **primary resolution using the declaration’s declared Dart type**.
+  ///
+  /// This is the most precise resolution path and is attempted first.
+  ///
+  /// ---
+  ///
+  /// ## Behavior
+  /// - If the declared type contains generics, resolution uses the
+  ///   qualified name to preserve structure
+  /// - If [K] is `dynamic`, strict typing is relaxed
+  /// - Otherwise, resolution binds directly to `Class<K>`
+  ///
+  /// ---
+  ///
+  /// ## Failure Mode
+  /// Throws [ClassNotFoundException] when:
+  /// - Generic metadata is incomplete
+  /// - The type cannot be materialized directly
+  static Class _handleTypeLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName(), pd);
+    }
+    
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
+  }
+
+  /// Attempts resolution using the **pointer type** instead of the declared type.
+  ///
+  /// Pointer types represent the *actual runtime target* and may differ
+  /// from the declared type due to:
+  /// - Aliases
+  /// - Type forwarding
+  /// - Analyzer indirections
+  ///
+  /// ---
+  ///
+  /// ## Behavior
+  /// - Prefers qualified-name resolution when generics are present
+  /// - Falls back to runtime type resolution when safe
+  ///
+  /// ---
+  ///
+  /// ## When This Is Used
+  /// - Declared type failed to resolve
+  /// - Pointer type provides more accurate runtime metadata
+  static Class _handlePointerLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName());
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName());
+    }
+
+    if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName(), pd);
+    }
+
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getPointerType(), pd);
+    }
+
+    return Class.forType<K>(link.getPointerType() as K, pd);
+  }
+
+  /// Applies **combined default logic** when neither strict type nor pointer
+  /// resolution succeeds.
+  ///
+  /// This method:
+  /// - Compares declared type vs pointer type
+  /// - Chooses the safest resolution path
+  /// - Preserves generics when possible
+  ///
+  /// ---
+  ///
+  /// ## Design Intent
+  /// This phase handles ambiguous cases where:
+  /// - Declared and pointer types differ
+  /// - Generic metadata exists but is partial
+  /// - Runtime type information is inconsistent
+  static Class _handleDefaultLogic<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName());
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName());
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName(), pd);
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.fromQualifiedName(link.getPointerQualifiedName(), pd);
+      }
+
+      return Class<K>.fromQualifiedName(link.getPointerQualifiedName(), pd);
+    }
+    
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
+  }
+
+  /// Fallback strategy prioritizing the **declared type**, even when generic
+  /// integrity cannot be preserved.
+  ///
+  /// ---
+  ///
+  /// ## Use Case
+  /// - Qualified-name resolution failed
+  /// - Pointer type is unreliable
+  ///
+  /// ---
+  ///
+  /// ## Trade-off
+  /// - Generic fidelity may be reduced
+  /// - Type correctness is prioritized over structure
+  static Class _handleTypeFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
+    }
+
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
+  }
+
+  /// Fallback strategy prioritizing the **pointer type** when declared
+  /// resolution fails.
+  ///
+  /// ---
+  ///
+  /// ## Use Case
+  /// - Declared type is synthetic or erased
+  /// - Pointer type represents the actual runtime instance
+  static Class _handlePointerFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getPointerType(), pd);
+    }
+
+    return Class.forType<K>(link.getPointerType() as K, pd);
+  }
+
+  /// Final resolution fallback guaranteeing a [Class] result.
+  ///
+  /// This method ensures that resolution **never fails catastrophically**.
+  /// It selects the most reasonable remaining option based on:
+  ///
+  /// - Declared vs pointer type equality
+  /// - Generic presence
+  /// - Whether [K] is dynamic
+  ///
+  /// ---
+  ///
+  /// ## Guarantee
+  /// This method **always returns a [Class]** unless the runtime itself
+  /// cannot represent the type.
+  static Class _handleDefaultFallback<K>(LinkDeclaration link, ProtectionDomain pd) {
+    if (link.getType() == link.getPointerType()) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getPointerType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getType(), pd);
+      }
+
+      return Class.forType<K>(link.getType() as K, pd);
+    }
+    
+    if (GenericTypeParser.shouldCheckGeneric(link.getType())) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
+    }
+    
+    if (link.getType() != link.getPointerType()) {
+      if (Dynamic.isDynamic<K>()) {
+        return Class.forType(link.getPointerType(), pd);
+      }
+
+      return Class.forType<K>(link.getPointerType() as K, pd);
+    }
+    
+    if (Dynamic.isDynamic<K>()) {
+      return Class.forType(link.getType(), pd);
+    }
+
+    return Class.forType<K>(link.getType() as K, pd);
   }
 }
