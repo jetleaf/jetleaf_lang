@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the toClass method from the ClassGettable class, for the Dart programming language.">
+  <title>toClass method - ClassGettable class - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li><a href="../../jetleaf_lang/ClassGettable-class.html">ClassGettable<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">toClass abstract method</li>
+  </ol>
+  <div class="self-name">toClass</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+<div
+    id="dartdoc-main-content"
+    class="main-content"
+    data-above-sidebar="jetleaf_lang&#47;ClassGettable-class-sidebar.html"
+    data-below-sidebar="">
+    <div>
+<h1><span class="kind-method">toClass</span> abstract method 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+<span class="returntype"><a href="../../jetleaf_lang/Class-class.html">Class</a><span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></span>
+<span class="name ">toClass</span>(<wbr>)
+
+      
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Provides a contract for types capable of exposing their associated
+runtime <a href="../../jetleaf_lang/Class-class.html">Class</a> metadata representation within the JetLeaf reflection system.</p>
+<p>The <a href="../../jetleaf_lang/ClassGettable-class.html">ClassGettable</a> interface serves as a lightweight abstraction for
+objects that can describe or resolve their own <strong>type metadata</strong> through
+the <a href="../../jetleaf_lang/Class-class.html">Class&lt;T&gt;</a> model. This pattern is central to JetLeaf’s <strong>reflection
+and dependency injection subsystem</strong>, enabling runtime introspection,
+metadata lookup, and type-safe dependency graph operations.</p>
+<h3 id="purpose">Purpose</h3>
+<p>The interface exists to unify access to type descriptors for both:</p>
+<ul>
+<li><strong>Concrete instances</strong> (objects that can report their reflective type)</li>
+<li><strong>Meta-level objects</strong> (such as factories, proxies, or providers that
+represent or wrap a type)</li>
+</ul>
+<p>By implementing <a href="../../jetleaf_lang/ClassGettable-class.html">ClassGettable</a>, any object can seamlessly participate
+in JetLeaf’s reflection pipeline, allowing for:</p>
+<ul>
+<li>Automatic discovery of annotated classes</li>
+<li>Type-safe dependency injection lookups</li>
+<li>Interceptor resolution and method metadata analysis</li>
+</ul>
+<h3 id="example">Example</h3>
+<pre class="language-dart"><code class="language-dart">class UserRepository implements ClassGettable&lt;UserRepository&gt; {
+  @override
+  Class&lt;UserRepository&gt; toClass() =&gt; Class.forType(UserRepository);
+}
+
+void main() {
+  final repo = UserRepository();
+  final clazz = repo.toClass();
+
+  print(clazz.getQualifiedName()); // prints "com.example.UserRepository"
+}
+</code></pre>
+<h3 id="typical-usage-in-jetleaf">Typical Usage in JetLeaf</h3>
+<p>The interface is commonly used in:</p>
+<ul>
+<li><strong>AOP</strong>: To locate metadata for method interception or annotation scanning.</li>
+<li><strong>IoC container</strong>: To resolve and cache dependency metadata.</li>
+<li><strong>Runtime analysis tools</strong>: To retrieve information about constructors,
+fields, or annotations.</li>
+</ul>
+<h3 id="related-references">Related References</h3>
+<ul>
+<li><a href="../../jetleaf_lang/Class-class.html">Class</a> — Core JetLeaf reflection type encapsulating metadata about a Dart class.</li>
+<li><a href="../../jetleaf_lang/Method-class.html">Method</a> — Metadata representation of class methods obtained via <a href="../../jetleaf_lang/Class/getMethods.html">Class.getMethods</a>.</li>
+<li><code>AnnotationMetadata</code> — Used in combination with <a href="../../jetleaf_lang/Class-class.html">Class</a> for annotation-driven logic.</li>
+<li><code>Reflectable</code> — Marker for types that participate in JetLeaf’s reflective ecosystem.</li>
+</ul>
+<h3 id="notes">Notes</h3>
+<ul>
+<li>Implementations <strong>must not perform expensive reflection</strong> in <code>toClass()</code>.
+It should ideally return a cached or precomputed instance of <a href="../../jetleaf_lang/Class-class.html">Class</a>.</li>
+<li>The returned <a href="../../jetleaf_lang/Class-class.html">Class</a> should correspond exactly to the generic type parameter <code>T</code>.</li>
+<li>Implementations are typically registered automatically by JetLeaf’s
+class scanner during bootstrap.</li>
+</ul>
+<p>Returns the <a href="../../jetleaf_lang/Class-class.html">Class</a> metadata object representing the runtime
+type associated with this instance or meta-object.</p>
+<h3 id="returns">Returns</h3>
+<p>A <a href="../../jetleaf_lang/Class-class.html">Class&lt;T&gt;</a> descriptor that exposes reflection metadata for
+the type parameter <code>T</code>.</p>
+<h3 id="example-2">Example</h3>
+<pre class="language-dart"><code class="language-dart">final clazz = instance.toClass();
+print(clazz.getName()); // "UserService"
+</code></pre>
+<h3 id="see-also">See Also</h3>
+<ul>
+<li><a href="../../jetleaf_lang/Class/forType.html">Class.forType</a> — Static helper to create a <a href="../../jetleaf_lang/Class-class.html">Class</a> representation for any Dart type.</li>
+<li><code>Reflectable</code> — For objects designed to expose reflection-based operations.</li>
+</ul>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Class&lt;T&gt; toClass();</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/ClassGettable-class.html">ClassGettable<span class="signature">&lt;<wbr><span class="type-parameter">T</span>&gt;</span></a></li>
+    <li class="self-crumb">toClass abstract method</li>
+</ol>
+
+    <h5>ClassGettable class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+</div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

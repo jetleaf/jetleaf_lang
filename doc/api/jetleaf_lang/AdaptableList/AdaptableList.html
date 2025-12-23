@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the AdaptableList.new constructor from Class AdaptableList from the jetleaf_lang library, for the Dart programming language.">
+  <title>AdaptableList.new constructor - AdaptableList - jetleaf_lang library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../../static-assets/styles.css?v1">
+  <link rel="icon" href="../../static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="../../" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang.dart</a></li>
+    <li><a href="../../jetleaf_lang/AdaptableList-class.html">AdaptableList</a></li>
+    <li class="self-crumb">AdaptableList.new constructor</li>
+  </ol>
+  <div class="self-name">AdaptableList.new</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="jetleaf_lang&#47;AdaptableList-class-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-constructor">AdaptableList</span> constructor 
+</h1></div>
+
+    <section class="multi-line-signature">
+      
+      <span class="name ">AdaptableList</span>(<wbr>)
+    </section>
+    
+<section class="desc markdown">
+  <p>A specialized <strong>list collection</strong> that can <strong>adapt itself or another source</strong>
+into a strongly-typed <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a> of elements.</p>
+<p>The <a href="../../jetleaf_lang/AdaptableList-class.html">AdaptableList</a> extends <a href="../../jetleaf_lang/ArrayList-class.html">ArrayList&lt;Object&gt;</a> and provides a generic
+method <a href="../../jetleaf_lang/AdaptableList/adapt.html">adapt</a> that converts another collection or itself into a <code>List&lt;E&gt;</code>.</p>
+<h3 id="purpose">Purpose</h3>
+<p>This class is intended to:</p>
+<ul>
+<li>Provide a type-safe adaptation mechanism for heterogeneous lists.</li>
+<li>Enable automatic conversion from JetLeaf-specific <a href="../../jetleaf_lang/ArrayList-class.html">ArrayList</a> and native
+Dart <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a> types into a typed list.</li>
+<li>Serve as a utility for frameworks, services, or libraries that require
+generic list adaptation.</li>
+</ul>
+<h3 id="features">Features</h3>
+<ul>
+<li><strong>Generic conversion:</strong> Converts elements to a specific type <code>E</code>.</li>
+<li><strong>Multiple source support:</strong> Accepts <a href="../../jetleaf_lang/ArrayList-class.html">ArrayList</a>, <a href="https://api.dart.dev/stable/3.9.2/dart-core/List-class.html">List</a>, or defaults to <code>this</code>.</li>
+<li><strong>Exception safety:</strong> Throws <a href="../../jetleaf_lang/IllegalArgumentException-class.html">IllegalArgumentException</a> if the conversion is impossible.</li>
+</ul>
+<h3 id="lifecycle-and-usage">Lifecycle and Usage</h3>
+<p>Each instance of <a href="../../jetleaf_lang/AdaptableList-class.html">AdaptableList</a> can adapt itself or other compatible sources:</p>
+<pre class="language-dart"><code class="language-dart">final adaptable = AdaptableList();
+adaptable.addAll([1, 2, 3]);
+final typedList = adaptable.adapt&lt;int&gt;(); // List&lt;int&gt;
+
+final anotherList = ArrayList&lt;dynamic&gt;()..addAll(['a', 'b']);
+final stringList = adaptable.adapt&lt;String&gt;(anotherList); // List&lt;String&gt;
+</code></pre>
+<h3 id="extensibility">Extensibility</h3>
+<ul>
+<li>Can be subclassed to override <a href="../../jetleaf_lang/AdaptableList/adapt.html">adapt</a> behavior for project-specific
+conversion rules.</li>
+<li>Supports integration with generic frameworks or conversion services.</li>
+</ul>
+<h3 id="error-handling">Error Handling</h3>
+<ul>
+<li>Throws <a href="../../jetleaf_lang/IllegalArgumentException-class.html">IllegalArgumentException</a> when the <code>source</code> cannot be adapted.</li>
+</ul>
+<h3 id="see-also">See Also</h3>
+<ul>
+<li><a href="../../jetleaf_lang/ArrayList-class.html">ArrayList</a></li>
+<li><a href="../../jetleaf_lang/AdaptableMap-class.html">AdaptableMap</a></li>
+<li><a href="../../jetleaf_lang/AdaptableSet-class.html">AdaptableSet</a></li>
+</ul>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">AdaptableList();</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../../index.html">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/">jetleaf_lang</a></li>
+    <li><a href="../../jetleaf_lang/AdaptableList-class.html">AdaptableList</a></li>
+    <li class="self-crumb">AdaptableList.new constructor</li>
+</ol>
+
+    <h5>AdaptableList class</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="../../static-assets/highlight.pack.js?v1"></script>
+<script src="../../static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+

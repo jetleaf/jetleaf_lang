@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="jetleaf_lang API docs, for the Dart programming language.">
+  <title>jetleaf_lang - Dart API docs</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="static-assets/github.css?v1">
+  <link rel="stylesheet" href="static-assets/styles.css?v1">
+  <link rel="icon" href="static-assets/favicon.png?v1">
+  
+</head>
+
+<body data-base-href="" data-using-base-href="false" class="light-theme">
+<div id="overlay-under-drawer"></div>
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="https://jetleaf.hapnium.com">jetleaf_lang package</a></li>
+  </ol>
+  <div class="self-name">jetleaf_lang</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <button class="toggle" id="theme-button" title="Toggle between light and dark mode" aria-label="Light and dark mode toggle">
+    <span id="dark-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      dark_mode
+    </span>
+    <span id="light-theme-button" class="material-symbols-outlined" aria-hidden="true">
+      light_mode
+    </span>
+  </button>
+</header>
+<main>
+  <div id="dartdoc-main-content" class="main-content">
+      
+<section class="desc markdown">
+  <h1 id="-jetleaf-lang">🍃 JetLeaf Lang</h1>
+<p><a href="https://github.com/hapnium/jetleaf_framework/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-JetLeaf-blue" alt="License"></a>
+<a href="https://pub.dev/packages/jetleaf_lang"><img src="https://img.shields.io/pub/v/jetleaf_lang" alt="Pub Version"></a>
+<a href="https://github.com/hapnium/jetleaf_framework/actions/workflows/dart.yml"><img src="https://github.com/hapnium/jetleaf_framework/actions/workflows/dart.yml/badge.svg" alt="Dart CI"></a></p>
+<h2 id="overview">Overview</h2>
+<p>JetLeaf Lang is a comprehensive utility library for Dart that provides extended language features, collections, I/O operations, and more. It's part of the JetLeaf Framework ecosystem, designed to enhance Dart's standard library with additional functionality and convenience methods.</p>
+<h2 id="features">Features</h2>
+<ul>
+<li><strong>Extended Primitives</strong>: Enhanced versions of Dart's built-in types</li>
+<li><strong>Collections</strong>: Specialized collection types and utilities</li>
+<li><strong>I/O Operations</strong>: Extended file and stream handling</li>
+<li><strong>Concurrency</strong>: Threading and synchronization utilities</li>
+<li><strong>Math &amp; Statistics</strong>: Advanced mathematical operations and statistical functions</li>
+<li><strong>Time &amp; Date</strong>: Extended date/time manipulation</li>
+<li><strong>Networking</strong>: Network-related utilities</li>
+<li><strong>System Interaction</strong>: System-level operations and utilities</li>
+</ul>
+<h2 id="documentation">Documentation</h2>
+<ul>
+<li><a href="doc/getting_started.md">Getting Started</a> - How to add and use JetLeaf Lang in your project</li>
+<li><a href="doc/core_features.md">Core Features</a> - Detailed documentation of core features</li>
+<li><a href="doc/api_reference.md">API Reference</a> - Complete API documentation</li>
+<li><a href="doc/examples/">Examples</a> - Code examples and usage patterns</li>
+</ul>
+<h2 id="installation">Installation</h2>
+<p>Add the following to your <code>pubspec.yaml</code>:</p>
+<pre class="language-yaml"><code class="language-yaml">dependencies:
+  jetleaf_lang: ^1.0.0  # Use the latest version
+</code></pre>
+<p>Then run:</p>
+<pre class="language-bash"><code class="language-bash">dart pub get
+</code></pre>
+<h2 id="usage">Usage</h2>
+<pre class="language-dart"><code class="language-dart">import 'package:jetleaf_lang/jetleaf_lang.dart';
+
+void main() {
+  // Example usage
+  final optional = Optional.of('Hello, JetLeaf!');
+  print(optional.orElse('Default'));
+}
+</code></pre>
+<h2 id="contributing">Contributing</h2>
+<p>Contributions are welcome! Please read our <a href="CONTRIBUTING.md">Contributing Guidelines</a> before submitting pull requests.</p>
+<h2 id="license">License</h2>
+<p>This project is licensed under the JetLeaf License - see the <a href="LICENSE">LICENSE</a> file for details.</p>
+<h2 id="support">Support</h2>
+<p>For support, please open an issue on our <a href="https://github.com/hapnium/jetleaf_framework">GitHub repository</a>.</p>
+</section>
+
+
+      <section class="summary">
+          <h2>Libraries</h2>
+        <dl>
+          <dt id="jetleaf_lang">
+  <span class="name"><a href="jetleaf_lang/">jetleaf_lang</a></span> 
+
+</dt>
+<dd>🍃 <strong>JetLeaf Language Utilities</strong>
+</dd>
+
+          <dt id="lang">
+  <span class="name"><a href="lang/">lang</a></span> 
+
+</dt>
+<dd>🍃 <strong>JetLeaf Standard Library</strong>
+</dd>
+
+        </dl>
+      </section>
+  </div> <!-- /.main-content -->
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="https://jetleaf.hapnium.com">jetleaf_lang package</a></li>
+</ol>
+
+    <h5 class="hidden-xs"><span class="package-name">jetleaf_lang</span> <span class="package-kind">package</span></h5>
+    <ol>
+      <li class="section-title">Libraries</li>
+      <li><a href="jetleaf_lang/">jetleaf_lang</a></li>
+      <li><a href="lang/">lang</a></li>
+</ol>
+
+  </div>
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div>
+</main>
+<footer>
+  <span class="no-break">
+    jetleaf_lang
+      1.1.1
+  </span>
+  
+</footer>
+
+
+<script src="static-assets/highlight.pack.js?v1"></script>
+<script src="static-assets/docs.dart.js"></script>
+
+</body>
+</html>
+
