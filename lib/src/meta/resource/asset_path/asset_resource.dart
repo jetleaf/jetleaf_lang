@@ -1,10 +1,22 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:jetleaf_build/jetleaf_build.dart';
+import 'package:meta/meta.dart';
 
+import '../../../extensions/primitives/string.dart';
+import '../../../commons/typedefs.dart';
+import '../../../exceptions.dart';
 import '../../../io/base.dart';
+import '../../../io/input_stream/byte_array_input_stream.dart';
+import '../../../io/input_stream/input_stream.dart';
+import '../../../io/input_stream/input_stream_source.dart';
+import '../asset_loader/bundler.dart';
+import '../asset_loader/interface.dart';
 
+part '_asset_path_resource.dart';
 part '_asset_resource.dart';
+part 'asset_path_resource.dart';
 
 /// {@template asset_resource_extension_strategy}
 /// A function signature for determining the extension of an [AssetResource].
@@ -101,22 +113,7 @@ typedef AssetResourceContentDetector = bool Function(Object source);
 /// });
 /// ```
 /// {@endtemplate}
-abstract class AssetResource extends Asset {
-  /// {@template asset_resource_source}
-  /// The underlying source of this resource.
-  ///
-  /// This can be either:
-  /// - A [String], which may represent inline content or a path-like string.
-  /// - An [Asset] object.
-  ///
-  /// ### Example
-  /// ```dart
-  /// final resource = AssetResource('config: value');
-  /// print(resource.source); // 'config: value'
-  /// ```
-  /// {@endtemplate}
-  Object get source;
-
+abstract final class AssetResource extends Asset {
   /// {@template asset_resource_factory}
   /// Factory constructor for creating an [AssetResource].
   ///
@@ -131,10 +128,22 @@ abstract class AssetResource extends Asset {
   /// final resource2 = AssetResource(asset); // from an Asset
   /// ```
   /// {@endtemplate}
-  factory AssetResource(Object source) {
-    if (source is Asset) return _AssetResource.fromAsset(source);
-    return _AssetResource(source);
-  }
+  factory AssetResource(Object source) = _AssetResource;
+
+  /// {@template asset_resource_source}
+  /// The underlying source of this resource.
+  ///
+  /// This can be either:
+  /// - A [String], which may represent inline content or a path-like string.
+  /// - An [Asset] object.
+  ///
+  /// ### Example
+  /// ```dart
+  /// final resource = AssetResource('config: value');
+  /// print(resource.source); // 'config: value'
+  /// ```
+  /// {@endtemplate}
+  Object getSource();
 
   /* ------------------------- Dynamic extension system ------------------------- */
 
@@ -148,7 +157,7 @@ abstract class AssetResource extends Asset {
   /// [registerExtensionStrategy].
   /// {@endtemplate}
   static final List<AssetResourceExtensionStrategy> _extensionStrategies = [
-    _defaultExtensionStrategy,
+    _AssetResource._defaultExtensionStrategy,
   ];
 
   /// {@template asset_resource_content_detectors}
@@ -162,7 +171,7 @@ abstract class AssetResource extends Asset {
   /// [registerContentDetector].
   /// {@endtemplate}
   static final List<AssetResourceContentDetector> _contentDetectors = [
-    _defaultContentDetector,
+    _AssetResource._defaultContentDetector,
   ];
 
   /// {@template asset_resource_register_extension_strategy}
@@ -250,49 +259,5 @@ abstract class AssetResource extends Asset {
     }
 
     return _AssetResource.getIsContent(source);
-  }
-
-  // Default strategies are private helpers for initial behavior.
-  static String? _defaultExtensionStrategy(Object source) {
-    if (source is String) {
-      if (getIsContent(source)) {
-        return _AssetResource._determineExtensionFromContent(source);
-      } else {
-        return _AssetResource._determineExtensionFromPath(source);
-      }
-    }
-
-    if (source is Asset) {
-      final pathExt = _AssetResource._determineExtensionFromPath(source.getFilePath()) ??
-          _AssetResource._determineExtensionFromPath(source.getFileName());
-      if (pathExt != null) return pathExt;
-      return _AssetResource._determineExtensionFromContent(source.getContentAsString());
-    }
-
-    return null;
-  }
-
-  static bool _defaultContentDetector(Object source) {
-    // Asset objects are *not* content here.
-    if (source is Asset) return false;
-    if (source is! String) return false;
-
-    final text = source;
-
-    // Quick heuristics: newlines, JSON/XML/YAML openers, or characters
-    // unlikely to appear in filenames.
-    if (text.contains('\n')) return true;
-    final trimmed = text.trimLeft();
-
-    if (trimmed.startsWith('{') || trimmed.startsWith('[') || trimmed.startsWith('<')) {
-      return true;
-    }
-
-    if (text.contains('{') || text.contains('<') || text.contains(': ')) return true;
-
-    // Defer to the richer heuristics in _AssetResource.
-    return _AssetResource._looksLikeYaml(text) ||
-        _AssetResource._looksLikeProperties(text) ||
-        _AssetResource._looksLikeDart(text);
   }
 }

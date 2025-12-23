@@ -1,8 +1,8 @@
 part of 'record_field.dart';
 
-final class _RecordField extends RecordField {
+final class _RecordField extends PermissionManager implements RecordField {
   final RecordFieldDeclaration _fieldDeclaration;
-  final RecordLinkDeclaration _parent;
+  final RecordDeclaration _parent;
   final ProtectionDomain _pd;
 
   _RecordField(this._fieldDeclaration, this._parent, this._pd);
@@ -20,15 +20,7 @@ final class _RecordField extends RecordField {
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getReturnClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => getReturnClass().getVersion();
 
   @override
   ProtectionDomain getProtectionDomain() => _pd;
@@ -64,7 +56,7 @@ final class _RecordField extends RecordField {
   }
 
   @override
-  RecordLinkDeclaration getParent() {
+  RecordDeclaration getParent() {
     checkAccess("getParent", DomainPermission.READ_TYPE_INFO);
     return _parent;
   }

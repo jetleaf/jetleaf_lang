@@ -240,7 +240,7 @@ final class _TypeBinding {
 /// ### Example (illustrative)
 /// ```dart
 /// final binding = _PredicateBinding(
-///   (p) => p.name == 'timeout' && p.type == Class.of(int),
+///   (p) => p.name == 'timeout' && p.type == Class.forType(int),
 ///   5000,
 /// );
 /// ```

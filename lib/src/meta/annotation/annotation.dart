@@ -4,6 +4,7 @@ import 'package:jetleaf_build/jetleaf_build.dart';
 
 import '../../commons/version.dart';
 import '../../exceptions.dart';
+import '../../utils/lang_utils.dart';
 import '../class/class.dart';
 import '../field/field.dart';
 import '../core.dart';
@@ -53,7 +54,7 @@ part '_annotation.dart';
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract class Annotation extends PermissionManager implements FieldAccess {
+abstract final class Annotation extends PermissionManager implements FieldAccess {
   /// Gets the class metadata of the annotation type.
   ///
   /// {@template annotation_get_class}
@@ -67,6 +68,9 @@ abstract class Annotation extends PermissionManager implements FieldAccess {
   /// ```
   /// {@endtemplate}
   Class getDeclaringClass();
+
+  @Deprecated("This api is deprecated and will be removed in newer versions. Use `getDeclaringClass`")
+  Class getClass();
 
   /// Gets the declaration metadata associated with this annotation.
   ///
@@ -363,7 +367,5 @@ abstract class Annotation extends PermissionManager implements FieldAccess {
   /// }
   /// ```
   /// {@endtemplate}
-  static Annotation declared(AnnotationDeclaration declaration, ProtectionDomain domain) {
-    return _Annotation(declaration, domain);
-  }
+  factory Annotation.declared(AnnotationDeclaration declaration, ProtectionDomain domain) = _Annotation;
 }

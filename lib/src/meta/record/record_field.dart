@@ -26,7 +26,7 @@ part '_record_field.dart';
 /// JetLeaf ensures type-safety and complete modeling of record structures
 /// via `RecordField` and `RecordClass`.
 /// {@endtemplate}
-abstract class RecordField extends PermissionManager {
+abstract final class RecordField extends PermissionManager {
   /// Gets the **declared type** of the record field as a [Class] object.
   ///
   /// This allows users to inspect the type at a meta-level. For example,
@@ -75,9 +75,9 @@ abstract class RecordField extends PermissionManager {
   RecordFieldDeclaration getFieldDeclaration();
 
   /// Returns the **parent record** to which this field belongs.
-  RecordLinkDeclaration getParent();
+  RecordDeclaration getParent();
 
-  /// Links a [RecordFieldDeclaration] and parent [RecordLinkDeclaration] to create
+  /// Links a [RecordFieldDeclaration] and parent [RecordDeclaration] to create
   /// a new `RecordField` instance within the given [ProtectionDomain].
   ///
   /// This is the **primary factory** for creating `RecordField` objects.
@@ -90,7 +90,5 @@ abstract class RecordField extends PermissionManager {
   /// Returns a [RecordField] instance.
   /// 
   /// {@macro record_field}
-  static RecordField linked(RecordFieldDeclaration declaration, RecordLinkDeclaration record, ProtectionDomain pd) {
-    return _RecordField(declaration, record, pd);
-  }
+  factory RecordField.linked(RecordFieldDeclaration declaration, RecordDeclaration record, ProtectionDomain pd) = _RecordField;
 }

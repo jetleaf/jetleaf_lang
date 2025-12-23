@@ -7,72 +7,111 @@ import '../../commons/version.dart';
 import '../../extensions/primitives/iterable.dart';
 import '../../extensions/primitives/string.dart';
 import '../../exceptions.dart';
+import '../../garbage_collector/garbage_collector.dart';
 import '../../utils/lang_utils.dart';
-import '../class_loader/default_class_loader.dart';
 import '../annotation/annotation.dart';
 import '../constructor/constructor.dart';
 import '../enum/enum_value.dart';
 import '../field/field.dart';
 import '../core.dart';
-import '../function/function_class.dart';
 import '../generic_source.dart';
 import '../method/method.dart';
 import '../protection_domain/protection_domain.dart';
-import '../qualified_name/qualified_name.dart';
-import '../record/record_class.dart';
+import '../record/record_field.dart';
 import 'class_type.dart';
 
 part '_class.dart';
 
-/// {@template class_interface}
-/// Provides reflective access to Dart class types and their metadata.
+/// {@template class}
+/// Provides a **unified, reflective interface** to access Dart class types
+/// and their associated metadata at runtime.
 ///
-/// This interface enables runtime inspection and manipulation of class:
-/// - Type information and hierarchy
-/// - Constructors and instantiation
-/// - Methods and fields
-/// - Annotations and metadata
-/// - Generic type parameters
+/// The [Class] interface abstracts the complexities of runtime reflection and
+/// static analysis, allowing developers to:
+/// - Inspect class type information and hierarchy
+/// - Access constructors and create instances dynamically
+/// - Inspect and modify fields and methods
+/// - Read annotations and metadata
+/// - Resolve and manipulate generic type parameters
 ///
-/// {@template class_interface_features}
+/// This interface is central to runtime introspection frameworks like JetLeaf,
+/// where classes must be analyzed, invoked, or transformed dynamically.
+/// 
 /// ## Key Features
-/// - Type-safe reflection operations
-/// - Generic type parameter support
-/// - Class hierarchy navigation
-/// - Instance creation
-/// - Member inspection
-/// - Annotation access
+///
+/// 1. **Type-Safe Reflection**
+///    Access class members and hierarchy without unsafe casts.
+///
+/// 2. **Generic Type Support**
+///    Resolve type arguments and work with parameterized classes.
+///
+/// 3. **Class Hierarchy Navigation**
+///    Inspect superclasses, subclasses, interfaces, and mixins.
+///
+/// 4. **Instance Creation**
+///    Construct objects dynamically using resolved constructors.
+///
+/// 5. **Member Inspection**
+///    Read or invoke fields and methods at runtime.
+///
+/// 6. **Annotation Access**
+///    Discover metadata attached to classes, fields, and methods.
 ///
 /// ## Implementation Notes
-/// Concrete implementations typically wrap platform-specific reflection objects
-/// while providing this uniform interface.
-/// {@endtemplate}
-///
-/// {@template class_interface_example}
+/// - Concrete implementations wrap platform-specific reflection objects
+///   (e.g., `dart:mirrors`, analyzer elements, or runtime descriptors).
+/// - Provides a **consistent, cross-platform interface** for introspection
+///   and code generation pipelines.
+/// 
 /// ## Example Usage
+///
 /// ```dart
-/// // Get class metadata
+/// // Obtain reflective metadata for the User class
 /// final userClass = Class.forType<User>();
 ///
-/// // Create instances
+/// // Create a new instance using a constructor with named parameters
 /// final user = userClass.newInstance({'name': 'Alice', 'age': 30});
 ///
-/// // Inspect fields
+/// // Access a field dynamically
 /// final nameField = userClass.getField('name');
-/// print(nameField?.get(user)); // 'Alice'
+/// print(nameField?.get(user)); // Output: 'Alice'
+///
+/// // Update field dynamically
+/// nameField?.set(user, 'Bob');
+/// print(nameField?.get(user)); // Output: 'Bob'
 ///
 /// // Check type hierarchy
 /// if (userClass.isSubclassOf(Class.forType<Person>())) {
-///   print('User is a Person subclass');
+///   print('User is a subclass of Person');
+/// }
+///
+/// // Iterate over all methods
+/// for (final method in userClass.getAllMethods()) {
+///   print(method.name);
+/// }
+///
+/// // Access generic type parameters
+/// final genericArgs = userClass.getAllGenericArguments();
+/// for (final arg in genericArgs) {
+///   print(arg.getName());
+/// }
+///
+/// // Discover annotations
+/// final serializable = userClass.getAnnotation<Serializable>();
+/// if (serializable != null) {
+///   print('User class is serializable');
 /// }
 /// ```
-/// {@endtemplate}
 ///
 /// Type Parameters:
-/// - `T`: The class type being reflected
+/// - `T`: The concrete Dart type that this [Class] instance represents.
 /// {@endtemplate}
 @Generic(Class)
-abstract class Class<T> extends Source implements FieldAccess, QualifiedName, GenericSource {
+abstract final class Class<T> extends Source implements FieldAccess, QualifiedName, GenericSource {
+  /// The garbage key identifier used by [Class] in [GC] to store cache and perform any other actions
+  /// in the garbage collector
+  static const String GARBAGE_KEY = "jl:::class:::declaration";
+
   @override
   Declaration getDeclaration() {
     checkAccess("getDeclaration", DomainPermission.READ_TYPE_INFO);
@@ -84,7 +123,6 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// {@template class_get_type_declaration}
   /// Returns:
   /// - The [ClassDeclaration] representing the class
-  /// - `null` for core types or unavailable declarations
   /// {@endtemplate}
   ClassDeclaration getClassDeclaration();
 
@@ -96,11 +134,11 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// {@template class_simple_name}
   /// Returns:
-  /// - The base class name (e.g., `List` for `List<String>`)
+  /// - The base class name (e.g., `Iterable` for `Iterable<String>`)
   ///
   /// Example:
   /// ```dart
-  /// Class.forType<List<String>>().getSimpleName(); // 'List'
+  /// Class.forType<Iterable<String>>().getSimpleName(); // 'Iterable'
   /// ```
   /// {@endtemplate}
   String getSimpleName();
@@ -119,9 +157,9 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// Example:
   /// ```dart
-  /// final mapClass = Class.forType<Map<String, List<int>>>();
+  /// final mapClass = Class.forType<Map<String, Iterable<int>>>();
   /// print(mapClass.getName());          // May return 'Map'
-  /// print(mapClass.getCanonicalName()); // Returns 'Map<String, List<int>>'
+  /// print(mapClass.getCanonicalName()); // Returns 'Map<String, Iterable<int>>'
   /// ```
   ///
   /// ## Use Cases
@@ -176,57 +214,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// ```
   ///
   /// {@endtemplate}
-  Package? getPackage();
-
-  /// Returns the concrete generic type arguments declared on this class.
-  ///
-  /// {@template class_get_type_arguments}
-  /// This method exposes the resolved generic parameters associated with
-  /// this [Class] instance.
-  ///
-  /// For example, given:
-  /// ```dart
-  /// class Box<T> {}
-  /// class StringBox extends Box<String> {}
-  /// ```
-  /// Calling `getTypeArguments()` on `Class<StringBox>` would return a list
-  /// containing `Class<String>`.
-  ///
-  /// ### Behavior
-  /// - Returns an empty list if the class is not generic.
-  /// - The order of elements matches the declaration order of the
-  ///   type parameters.
-  /// - Returned [Class] objects represent the *actual* resolved types,
-  ///   not just the formal type variables.
-  ///
-  /// ### Returns
-  /// - A list of [Class<Object>] representing the resolved type arguments.
-  /// {@endtemplate}
-  List<Class<Object>> getTypeArguments();
-
-  /// Returns metadata links describing how generic type arguments are bound.
-  ///
-  /// {@template class_get_type_argument_links}
-  /// This method provides structural information about the relationship
-  /// between declared type parameters and their resolved arguments.
-  ///
-  /// [LinkDeclaration] instances may encode:
-  /// - The source type parameter,
-  /// - The target concrete type,
-  /// - Variance or positional binding information,
-  /// - Indirections through inherited or delegated generic declarations.
-  ///
-  /// This is primarily intended for advanced reflection, diagnostics,
-  /// and framework-level type resolution.
-  ///
-  /// ### Behavior
-  /// - Returns an empty list if no generic linkage information is available.
-  /// - The order corresponds to the declaration order of type parameters.
-  ///
-  /// ### Returns
-  /// - A list of [LinkDeclaration] objects describing generic bindings.
-  /// {@endtemplate}
-  List<LinkDeclaration> getTypeArgumentLinks();
+  Package getPackage();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Type Information ===
@@ -246,7 +234,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// ### Usage
   /// ```dart
   /// final type = clazz.getType();
-  /// print(type); // e.g. List<String> or List<dynamic>
+  /// print(type); // e.g. Iterable<String> or Iterable<dynamic>
   /// ```
   ///
   /// ### Notes
@@ -276,8 +264,8 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// ### Example
   /// ```dart
-  /// final runtimeType = clazz.getType();     // e.g. List<dynamic>
-  /// final originalType = clazz.getOriginal(); // e.g. List<String>
+  /// final runtimeType = clazz.getType();     // e.g. Iterable<dynamic>
+  /// final originalType = clazz.getOriginal(); // e.g. Iterable<String>
   /// ```
   ///
   /// ### Design Notes
@@ -289,289 +277,132 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   Type getOriginal();
 
   // ---------------------------------------------------------------------------------------------------------
-  // === Type Design ===
+  // === Type Comparators ===
   // ---------------------------------------------------------------------------------------------------------
-
-  /// Checks whether this class represents a **record type**.
+  
+  /// Checks type assignability from another class.
   ///
-  /// {@template class_is_record}
+  /// {@template class_is_assignable}
+  /// Parameters:
+  /// - [other]: The potential supertype to check
+  ///
   /// Returns:
-  /// - `true` if this class represents a Dart **record type**
-  ///   (e.g. `(int, String)` or `({int id, String name})`).
-  /// - `false` for all non-record types such as classes, enums, functions,
-  ///   mixins, or primitives.
-  ///
-  /// Record types are a Dart 3.0+ language feature that allow lightweight,
-  /// immutable aggregates with positional and/or named fields.
-  ///
-  /// ### Usage
-  /// ```dart
-  /// if (clazz.isRecord()) {
-  ///   // Treat as a record type and inspect its fields
-  /// }
-  /// ```
-  ///
-  /// ### Design Notes
-  /// - This method is intended for reflective and type-introspection logic
-  ///   that needs to distinguish record types from traditional classes.
-  /// - A `true` result indicates the underlying reflective model represents
-  ///   a record, not merely a class containing record-typed fields.
-  ///
-  /// ### Compatibility
-  /// - Available for Dart 3.0+ where records are supported by the language.
-  /// - Framework support for records may be partial depending on the
-  ///   JetLeaf version.
-  ///
-  /// {@endtemplate}
-  bool isRecord();
-
-  /// Checks whether this class represents a **function type**.
-  ///
-  /// {@template class_is_function}
-  /// Returns:
-  /// - `true` if this class represents a function or callable type
-  ///   (i.e. `Function`, a function signature, or a framework-recognized
-  ///   function class).
-  /// - `false` for all non-function types such as classes, enums, records,
-  ///   mixins, or primitives.
-  ///
-  /// A function type may represent:
-  /// - The Dart core `Function` type
-  /// - A concrete function signature (e.g. `int Function(String)`)
-  /// - A framework-specific `FunctionClass` abstraction used to model
-  ///   executable types reflectively
-  ///
-  /// ### Usage
-  /// ```dart
-  /// if (clazz.isFunction()) {
-  ///   // Treat as an invokable function type
-  /// }
-  /// ```
-  ///
-  /// ### Design Notes
-  /// - This method is used by reflection, invocation, and executable-selection
-  ///   logic to determine whether a type should be treated as callable.
-  /// - Implementations typically check whether the underlying reflective model
-  ///   resolves to a `FunctionClass`.
-  /// - A `true` result does **not** guarantee invokability without parameters;
-  ///   callers must still inspect parameter metadata.
-  ///
-  /// ### Compatibility
-  /// - Supported across all Dart versions where function types are available.
-  /// - Independent of record-type support.
-  ///
-  /// {@endtemplate}
-  bool isFunction();
-
-  /// Checks if this class represents a standard class type.
-  ///
-  /// {@template class_is_class}
-  /// Returns:
-  /// - `true` for regular class declarations
-  /// - `false` for other declaration types (mixin, enum, etc.)
+  /// - `true` if this class can be assigned to [other]
+  /// - `false` otherwise
   ///
   /// Example:
   /// ```dart
-  /// class User {}
-  /// Class<User>().isClass(); // true
+  /// Class.forType<Circle>().isAssignableFrom(Class.forType<Shape>()); // true
   /// ```
-  /// {@endtemplate}
   /// 
-  /// **Note**: This method will always return true since version 1.0.9.
-  /// Make use of other methods to distinguish which [Class] API you are accessing.
-  /// 
-  /// See: [isMixin], [isEnum]
-  /// 
-  /// Deprecated
-  bool isClass();
-
-  /// Checks if this class is a mixin declaration.
+  /// #### Type Assignability Table:
+  /// ```sql
+  /// DART TYPE ASSIGNABILITY TABLE
+  /// ────────────────────────────────────────────────────────────────────────────
+  /// From (B) → To (A)                     A.isAssignableFrom(B)   Valid?   Notes
+  /// ────────────────────────────────────────────────────────────────────────────
+  /// Object    ← String                   ✅ true                  ✅      String extends Object
+  /// String    ← Object                   ❌ false                 ❌      Super not assignable from subclass
+  /// num       ← int                      ✅ true                  ✅      int is a subclass of num
+  /// int       ← num                      ❌ false                 ❌      num is broader than int
+  /// Iterable<int> ← Iterable<int>                ✅ true                  ✅      Same type
+  /// Iterable<T>   ← Iterable<S>                  ❌ false                 ❌      Dart generics are invariant
+  /// Iterable<dynamic> ← Iterable<int>            ❌ false                 ❌      Still invariant
+  /// A         ← B (B extends A)          ✅ true                  ✅      Subclass to superclass is OK
+  /// A         ← C (unrelated)            ❌ false                 ❌      No inheritance/interface link
+  /// Interface ← Class implements Itf     ✅ true                  ✅      Implements is assignable to interface
+  /// Mixin     ← Class with Mixin         ✅ true                  ✅      Mixed-in type present
+  /// dynamic   ← anything                 ✅ true                  ✅      dynamic accepts all types
+  /// anything  ← dynamic                  ✅ true (unsafe)         ✅      Allowed but unchecked
+  /// Never     ← anything                 ❌ false                 ❌      Never can’t accept anything
+  /// anything  ← Never                    ✅ true                  ✅      Never fits anywhere (bottom type)
+  /// ────────────────────────────────────────────────────────────────────────────
   ///
-  /// {@template class_is_mixin}
-  /// Returns:
-  /// - `true` if declared with `mixin` keyword
-  /// - `false` for regular classes
-  ///
-  /// Example:
-  /// ```dart
-  /// mixin Serializable {}
-  /// Class<Serializable>().isMixin(); // true
+  /// RULE OF THUMB:
+  /// A.isAssignableFrom(B) → Can you do: A a = B();
+  /// ✓ Subclass → Superclass: OK
+  /// ✗ Superclass → Subclass: Not OK
+  /// ✓ Class implements Interface → Interface: OK
+  /// ✗ Interface → Class: Not OK
+  /// ✓ Identical types: OK
+  /// ✗ Unrelated types: Not OK
   /// ```
-  /// {@endtemplate}
-  bool isMixin();
-
-  /// Checks if this class is an enum declaration.
   ///
-  /// {@template class_is_enum}
-  /// Returns:
-  /// - `true` for enum types
-  /// - `false` for other class kinds
-  ///
-  /// Example:
-  /// ```dart
-  /// enum Status { active, inactive }
-  /// Class<Status>().isEnum(); // true
-  /// ```
-  /// {@endtemplate}
-  bool isEnum();
-
-  // ---------------------------------------------------------------------------------------------------------
-  // === Access Comparators ===
-  // ---------------------------------------------------------------------------------------------------------
-
-  /// Checks if the display name matches the canonical name.
+  /// Checks if this type is assignable from the given [other] type.
   /// 
-  /// {@template class_is_canonical}
-  /// Returns:
-  /// - `true` if [getName] and [getCanonicalName] return identical values
-  /// - `false` if they differ (e.g., simplified vs complete generic names)
+  /// Returns `true` if a value of type [other] can be assigned to a variable of this type.
+  /// This follows Dart's assignability rules including inheritance, interfaces, and mixins.
+  /// {@endtemplate}
+  bool isAssignableFrom(Class other);
+
+  /// Checks if this type is assignable to another type.
   ///
-  /// ## Purpose
-  /// Determines whether the class name includes complete generic information
-  /// or uses a simplified representation. This is important for:
-  /// - Type resolution accuracy
-  /// - Generic parameter preservation
-  /// - Cache key consistency
+  /// {@template class_is_assignable_to}
+  /// Parameters:
+  /// - [other]: The target type to check assignability to
+  ///
+  /// Returns:
+  /// - `true` if this type can be assigned to [other]
+  /// - `false` otherwise
+  ///
+  /// ## Assignability Rules
+  /// This method implements Dart's type assignability rules:
+  /// - Subclass to superclass: ✅ Allowed
+  /// - Superclass to subclass: ❌ Not allowed
+  /// - Class to implemented interface: ✅ Allowed
+  /// - Interface to implementing class: ❌ Not allowed
+  /// - Identical types: ✅ Allowed
+  /// - Unrelated types: ❌ Not allowed
+  ///
+  /// #### Type Assignability Table:
+  /// ```sql
+  /// DART TYPE ASSIGNABILITY TABLE
+  /// ────────────────────────────────────────────────────────────────────────────
+  /// From (A) → To (B)                   A.isAssignableTo(B)   Valid?   Notes
+  /// ────────────────────────────────────────────────────────────────────────────
+  /// String    → Object                 ✅ true               ✅      String extends Object
+  /// Object    → String                 ❌ false              ❌      Superclass to subclass not allowed
+  /// int       → num                    ✅ true               ✅      int is a subtype of num
+  /// num       → int                    ❌ false              ❌      Can't assign broader to narrower
+  /// Iterable<int> → Iterable<int>              ✅ true               ✅      Identical type
+  /// Iterable<S>   → Iterable<T>                ❌ false              ❌      Dart generics are invariant
+  /// Iterable<int> → Iterable<dynamic>          ❌ false              ❌      Invariant generics
+  /// B         → A (B extends A)        ✅ true               ✅      Subclass to superclass: OK
+  /// C         → A (no relation)        ❌ false              ❌      Unrelated types
+  /// Class     → Interface (implements) ✅ true               ✅      Implements interface
+  /// Class     → Mixin (with mixin)     ✅ true               ✅      Class includes mixin
+  /// anything  → dynamic                ✅ true               ✅      Everything is assignable to dynamic
+  /// dynamic   → anything               ✅ true (unchecked)   ✅      Allowed but unsafe
+  /// anything  → Never                  ❌ false              ❌      Can't assign anything to Never
+  /// Never     → anything               ✅ true               ✅      Never fits anywhere
+  /// ────────────────────────────────────────────────────────────────────────────
+  ///
+  /// RULE OF THUMB:
+  /// A.isAssignableTo(B) → Can you do: B b = A();
+  /// ✓ Subclass → Superclass: OK
+  /// ✗ Superclass → Subclass: Not OK
+  /// ✓ Class → Interface it implements: OK
+  /// ✗ Interface → Class: Not OK
+  /// ✓ Identical types: OK
+  /// ✗ Unrelated types: Not OK
+  /// ```
   ///
   /// ## Example
   /// ```dart
-  /// final listClass = Class.forType<List<String>>();
-  /// if (!listClass.isCanonical()) {
-  ///   // Use getCanonicalName() for precise type information
-  ///   final fullName = listClass.getCanonicalName();
-  /// }
-  /// ```
-  ///
-  /// ## Implementation Note
-  /// Normally, [getName] can return simplified names for display purposes,
-  /// while [getCanonicalName] preserves complete generic specifications.
-  /// This method helps determine which name format is being used.
-  /// {@endtemplate}
-  bool isCanonical();
-
-  /// Checks if this class is abstract.
-  ///
-  /// {@template class_is_abstract}
-  /// Returns:
-  /// - `true` if the class is declared with `abstract` modifier
-  /// - `false` for concrete classes
-  ///
-  /// Example:
-  /// ```dart
-  /// abstract class Animal {}
-  /// class Dog extends Animal {}
-  ///
-  /// Class.forType<Animal>().isAbstract(); // true
-  /// Class.forType<Dog>().isAbstract();    // false
-  /// ```
-  /// {@endtemplate}
-  bool isAbstract();
-
-  /// Checks if this class is final (cannot be extended).
-  ///
-  /// {@template class_is_final}
-  /// Returns:
-  /// - `true` if the class is declared with `final` modifier
-  /// - `false` for extendable classes
-  ///
-  /// Example:
-  /// ```dart
-  /// final class Immutable {}
-  /// class Mutable {}
-  ///
-  /// Class.forType<Immutable>().isFinal(); // true
-  /// Class.forType<Mutable>().isFinal();   // false
-  /// ```
-  /// {@endtemplate}
-  bool isFinal();
-
-  /// Checks if this class is sealed (exhaustive pattern matching).
-  ///
-  /// {@template class_is_sealed}
-  /// Returns:
-  /// - `true` if the class is declared with `sealed` modifier
-  /// - `false` for non-sealed classes
-  ///
-  /// Note:
-  /// Sealed classes enable exhaustive checking in pattern matching.
-  /// {@endtemplate}
-  bool isSealed();
-
-  /// Checks if this class is an interface (abstract with no concrete members).
-  ///
-  /// {@template class_is_interface}
-  /// Returns:
-  /// - `true` if the class serves as a pure interface
-  /// - `false` for classes with implementations
-  ///
-  /// Example:
-  /// ```dart
-  /// interface class PureInterface {
-  ///   void method();
-  /// }
-  /// ```
-  /// {@endtemplate}
-  bool isInterface();
-
-  /// Checks if this class is a base class (can be extended but not implemented).
-  ///
-  /// {@template class_is_base}
-  /// Returns:
-  /// - `true` if the class is declared with `base` modifier
-  /// - `false` for non-base classes
-  ///
-  /// Note:
-  /// Base classes enforce inheritance control.
-  /// {@endtemplate}
-  bool isBase();
-
-  /// Checks if this class is invokable.
+  /// final stringClass = Class.forType<String>();
+  /// final objectClass = Class.forType<Object>();
   /// 
-  /// Invokable classes are classes that is not an abstract class or an abstract that has
-  /// atleast one factory constructor.
-  ///
-  /// {@template class_is_invokable}
-  /// Returns:
-  /// - `true` if the class is invokable
-  /// - `false` for non-invokable classes
-  ///
-  /// Example:
-  /// ```dart
-  /// class Invokable {}
-  /// class NonInvokable {}
-  ///
-  /// Class.forType<Invokable>().isInvokable(); // true
-  /// Class.forType<NonInvokable>().isInvokable();   // false
+  /// print(stringClass.isAssignableTo(objectClass)); // true - String → Object
+  /// print(objectClass.isAssignableTo(stringClass)); // false - Object → String
   /// ```
+  ///
+  /// ## Relationship to isAssignableFrom
+  /// This is the inverse of [isAssignableFrom]:
+  /// - `A.isAssignableTo(B)` ≡ `B.isAssignableFrom(A)`
+  /// - Use [isAssignableTo] when asking "Can I assign this to that?"
+  /// - Use [isAssignableFrom] when asking "Can that be assigned to this?"
   /// {@endtemplate}
-  bool isInvokable();
-
-    /// Checks whether this class represents the `void` type.
-  ///
-  /// {@template class_is_void}
-  /// Returns:
-  /// - `true` if the class corresponds to Dart's `void` type
-  /// - `false` for all other types
-  ///
-  /// ## Notes
-  /// - Useful in reflection or code-generation contexts to differentiate
-  ///   between methods that return `void` versus any other type.
-  /// - Aligns with `Type`-level checks but operates on the JetLeaf `Class` abstraction.
-  /// {@endtemplate}
-  bool isVoid();
-
-  /// Checks whether this class represents the `dynamic` type.
-  ///
-  /// {@template class_is_dynamic}
-  /// Returns:
-  /// - `true` if the class corresponds to Dart's `dynamic` type
-  /// - `false` for all other types
-  ///
-  /// ## Notes
-  /// - Essential for reflection, type resolution, and argument normalization.
-  /// - Differentiates between fully typed generics and untyped or dynamic values.
-  /// {@endtemplate}
-  bool isDynamic();
+  bool isAssignableTo(Class other);
 
   /// Indicates whether this class is **synthetic** (framework-generated)
   /// rather than directly declared in user source code.
@@ -635,583 +466,887 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// {@endtemplate}
   bool isAsync();
 
-  // ---------------------------------------------------------------------------------------------------------
-  // === Type Comparators ===
-  // ---------------------------------------------------------------------------------------------------------
-
-  /// Checks if this class represents an array type.
-  ///
-  /// {@template class_is_array}
-  /// Returns:
-  /// - `true` for List types with fixed length semantics
-  /// - `false` for regular List types
-  /// {@endtemplate}
-  bool isArray();
-
-  /// Checks if this class represents a primitive type.
-  ///
-  /// {@template class_is_primitive}
-  /// Returns:
-  /// - `true` for Dart core primitives (int, double, bool, String, etc.)
-  /// - `false` for object types
-  /// {@endtemplate}
-  bool isPrimitive();
-
-  /// Checks if an object is an instance of this class.
-  ///
-  /// {@template class_is_instance}
-  /// Parameters:
-  /// - [obj]: The object to check
-  ///
-  /// Returns:
-  /// - `true` if obj is non-null and an instance of T
-  /// - `false` otherwise
-  ///
-  /// Example:
-  /// ```dart
-  /// Class.forType<String>().isInstance('hello'); // true
-  /// ```
-  /// {@endtemplate}
-  bool isInstance(Object? obj);
-  
-  /// Checks type assignability from another class.
-  ///
-  /// {@template class_is_assignable}
-  /// Parameters:
-  /// - [other]: The potential supertype to check
-  ///
-  /// Returns:
-  /// - `true` if this class can be assigned to [other]
-  /// - `false` otherwise
-  ///
-  /// Example:
-  /// ```dart
-  /// Class.forType<Circle>().isAssignableFrom(Class.forType<Shape>()); // true
-  /// ```
+  /// Checks if the display name matches the canonical name.
   /// 
-  /// #### Type Assignability Table:
-  /// ```sql
-  /// DART TYPE ASSIGNABILITY TABLE
-  /// ────────────────────────────────────────────────────────────────────────────
-  /// From (B) → To (A)                     A.isAssignableFrom(B)   Valid?   Notes
-  /// ────────────────────────────────────────────────────────────────────────────
-  /// Object    ← String                   ✅ true                  ✅      String extends Object
-  /// String    ← Object                   ❌ false                 ❌      Super not assignable from subclass
-  /// num       ← int                      ✅ true                  ✅      int is a subclass of num
-  /// int       ← num                      ❌ false                 ❌      num is broader than int
-  /// List<int> ← List<int>                ✅ true                  ✅      Same type
-  /// List<T>   ← List<S>                  ❌ false                 ❌      Dart generics are invariant
-  /// List<dynamic> ← List<int>            ❌ false                 ❌      Still invariant
-  /// A         ← B (B extends A)          ✅ true                  ✅      Subclass to superclass is OK
-  /// A         ← C (unrelated)            ❌ false                 ❌      No inheritance/interface link
-  /// Interface ← Class implements Itf     ✅ true                  ✅      Implements is assignable to interface
-  /// Mixin     ← Class with Mixin         ✅ true                  ✅      Mixed-in type present
-  /// dynamic   ← anything                 ✅ true                  ✅      dynamic accepts all types
-  /// anything  ← dynamic                  ✅ true (unsafe)         ✅      Allowed but unchecked
-  /// Never     ← anything                 ❌ false                 ❌      Never can’t accept anything
-  /// anything  ← Never                    ✅ true                  ✅      Never fits anywhere (bottom type)
-  /// ────────────────────────────────────────────────────────────────────────────
-  ///
-  /// RULE OF THUMB:
-  /// A.isAssignableFrom(B) → Can you do: A a = B();
-  /// ✓ Subclass → Superclass: OK
-  /// ✗ Superclass → Subclass: Not OK
-  /// ✓ Class implements Interface → Interface: OK
-  /// ✗ Interface → Class: Not OK
-  /// ✓ Identical types: OK
-  /// ✗ Unrelated types: Not OK
-  /// ```
-  ///
-  /// Checks if this type is assignable from the given [other] type.
-  /// 
-  /// Returns `true` if a value of type [other] can be assigned to a variable of this type.
-  /// This follows Dart's assignability rules including inheritance, interfaces, and mixins.
-  /// {@endtemplate}
-  bool isAssignableFrom(Class other);
-
-  /// Checks if this type is assignable to another type.
-  ///
-  /// {@template class_is_assignable_to}
-  /// Parameters:
-  /// - [other]: The target type to check assignability to
-  ///
+  /// {@template class_is_canonical}
   /// Returns:
-  /// - `true` if this type can be assigned to [other]
-  /// - `false` otherwise
+  /// - `true` if [getName] and [getCanonicalName] return identical values
+  /// - `false` if they differ (e.g., simplified vs complete generic names)
   ///
-  /// ## Assignability Rules
-  /// This method implements Dart's type assignability rules:
-  /// - Subclass to superclass: ✅ Allowed
-  /// - Superclass to subclass: ❌ Not allowed
-  /// - Class to implemented interface: ✅ Allowed
-  /// - Interface to implementing class: ❌ Not allowed
-  /// - Identical types: ✅ Allowed
-  /// - Unrelated types: ❌ Not allowed
-  ///
-  /// #### Type Assignability Table:
-  /// ```sql
-  /// DART TYPE ASSIGNABILITY TABLE
-  /// ────────────────────────────────────────────────────────────────────────────
-  /// From (A) → To (B)                   A.isAssignableTo(B)   Valid?   Notes
-  /// ────────────────────────────────────────────────────────────────────────────
-  /// String    → Object                 ✅ true               ✅      String extends Object
-  /// Object    → String                 ❌ false              ❌      Superclass to subclass not allowed
-  /// int       → num                    ✅ true               ✅      int is a subtype of num
-  /// num       → int                    ❌ false              ❌      Can't assign broader to narrower
-  /// List<int> → List<int>              ✅ true               ✅      Identical type
-  /// List<S>   → List<T>                ❌ false              ❌      Dart generics are invariant
-  /// List<int> → List<dynamic>          ❌ false              ❌      Invariant generics
-  /// B         → A (B extends A)        ✅ true               ✅      Subclass to superclass: OK
-  /// C         → A (no relation)        ❌ false              ❌      Unrelated types
-  /// Class     → Interface (implements) ✅ true               ✅      Implements interface
-  /// Class     → Mixin (with mixin)     ✅ true               ✅      Class includes mixin
-  /// anything  → dynamic                ✅ true               ✅      Everything is assignable to dynamic
-  /// dynamic   → anything               ✅ true (unchecked)   ✅      Allowed but unsafe
-  /// anything  → Never                  ❌ false              ❌      Can't assign anything to Never
-  /// Never     → anything               ✅ true               ✅      Never fits anywhere
-  /// ────────────────────────────────────────────────────────────────────────────
-  ///
-  /// RULE OF THUMB:
-  /// A.isAssignableTo(B) → Can you do: B b = A();
-  /// ✓ Subclass → Superclass: OK
-  /// ✗ Superclass → Subclass: Not OK
-  /// ✓ Class → Interface it implements: OK
-  /// ✗ Interface → Class: Not OK
-  /// ✓ Identical types: OK
-  /// ✗ Unrelated types: Not OK
-  /// ```
+  /// ## Purpose
+  /// Determines whether the class name includes complete generic information
+  /// or uses a simplified representation. This is important for:
+  /// - Type resolution accuracy
+  /// - Generic parameter preservation
+  /// - Cache key consistency
   ///
   /// ## Example
   /// ```dart
-  /// final stringClass = Class.forType<String>();
-  /// final objectClass = Class.forType<Object>();
-  /// 
-  /// print(stringClass.isAssignableTo(objectClass)); // true - String → Object
-  /// print(objectClass.isAssignableTo(stringClass)); // false - Object → String
+  /// final listClass = Class.forType<Iterable<String>>();
+  /// if (!listClass.isCanonical()) {
+  ///   // Use getCanonicalName() for precise type information
+  ///   final fullName = listClass.getCanonicalName();
+  /// }
   /// ```
   ///
-  /// ## Relationship to isAssignableFrom
-  /// This is the inverse of [isAssignableFrom]:
-  /// - `A.isAssignableTo(B)` ≡ `B.isAssignableFrom(A)`
-  /// - Use [isAssignableTo] when asking "Can I assign this to that?"
-  /// - Use [isAssignableFrom] when asking "Can that be assigned to this?"
+  /// ## Implementation Note
+  /// Normally, [getName] can return simplified names for display purposes,
+  /// while [getCanonicalName] preserves complete generic specifications.
+  /// This method helps determine which name format is being used.
   /// {@endtemplate}
-  bool isAssignableTo(Class other);
-  
-  /// Checks if this class directly extends another class.
+  bool isCanonical();
+
+  /// Checks whether this declaration represents a **closure-backed class**.
   ///
-  /// {@template class_is_subclass}
-  /// Parameters:
-  /// - [other]: The potential superclass
+  /// A *closure* in JetLeaf is a synthetic class representation created for
+  /// anonymous functions, lambdas, or inline function expressions that do not
+  /// have an explicit class declaration in source code.
   ///
+  /// When `true`, this declaration:
+  /// - Represents a runtime **function object** rather than a named class
+  /// - Is typically generated from a `ClosureMirror`
+  /// - Wraps an executable function via a [ClosureDeclaration]
+  ///
+  /// ---
+  ///
+  /// #### What Returns `true`
+  ///
+  /// - Anonymous functions:
+  ///   ```dart
+  ///   final fn = () => print('hello');
+  ///   ```
+  /// - Inline callbacks:
+  ///   ```dart
+  ///   list.forEach((item) => print(item));
+  ///   ```
+  /// - Any runtime-reflected function without a concrete class declaration
+  ///
+  /// ---
+  ///
+  /// #### What Returns `false`
+  ///
+  /// - Regular classes
+  /// - Mixins
+  /// - Enums
+  /// - Records or named function types
+  ///
+  /// ---
+  ///
+  /// #### Relationship to Other Type Checks
+  ///
+  /// | Method        | Purpose                         |
+  /// |---------------|---------------------------------|
+  /// | [isClass]     | Standard class declaration      |
+  /// | [isMixin]     | Mixin declaration               |
+  /// | [isEnum]      | Enum declaration                |
+  /// | **[isClosure]** | Anonymous / function-backed type |
+  ///
+  /// ---
+  ///
+  /// #### Example
+  ///
+  /// ```dart
+  /// final callback = () => 42;
+  /// final decl = Runtime.obtainClassDeclaration(callback);
+  ///
+  /// if (decl.isClosure()) {
+  ///   print('This declaration represents a closure');
+  /// }
+  /// ```
+  ///
+  /// Use this method to distinguish **function-backed runtime types** from
+  /// source-defined classes when performing reflection or code generation.
+  bool isClosure();
+
+  /// Checks if this class represents a standard class type.
+  ///
+  /// {@template class_is_class}
   /// Returns:
-  /// - `true` if this directly extends [other]
+  /// - `true` for regular class declarations
+  /// - `false` for other declaration types (mixin, enum, etc.)
+  ///
+  /// Example:
+  /// ```dart
+  /// class User {}
+  /// Class<User>().isClass(); // true
+  /// ```
+  /// {@endtemplate}
+  /// 
+  /// See: [isMixin], [isEnum]
+  /// 
+  /// Deprecated
+  bool isClass();
+
+  /// Determines whether this class is a **subclass** of [other].
+  ///
+  /// This checks the inheritance hierarchy to see if this class
+  /// directly or transitively extends the given [other] class.
+  ///
+  /// ---
+  ///
+  /// ### Parameters
+  /// - [other]: The class to test against
+  ///
+  /// ### Returns
+  /// - `true` if this class extends or derives from [other]
   /// - `false` otherwise
   ///
-  /// See also:
-  /// - [isAssignableFrom] for indirect hierarchy checks
-  /// {@endtemplate}
+  /// ### Example
+  /// ```dart
+  /// Class<Admin>().isSubclassOf(Class<User>()); // true
+  /// ```
   bool isSubclassOf(Class other);
+
+  /// Checks whether this class represents an **array-like type**.
+  ///
+  /// Array types include:
+  /// - `List<T>`
+  /// - `Set<T>`
+  /// - Other collection types treated as arrays by the runtime
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is considered array-like
+  /// - `false` otherwise
+  bool isArray();
+
+  /// Checks whether this class represents a **primitive type**.
+  ///
+  /// Primitive types typically include:
+  /// - `int`, `double`, `num`
+  /// - `bool`
+  /// - `String`
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is a primitive type
+  /// - `false` otherwise
+  bool isPrimitive();
+
+  /// Checks whether the given [obj] is an **instance of this class** at runtime.
+  ///
+  /// This performs a runtime-compatible instance check, accounting for
+  /// generics, type erasure, and reflection constraints.
+  ///
+  /// ---
+  ///
+  /// ### Parameters
+  /// - [obj]: The object to test
+  ///
+  /// ### Returns
+  /// - `true` if [obj] is an instance of this class
+  /// - `false` otherwise
+  ///
+  /// ### Example
+  /// ```dart
+  /// final user = User();
+  /// Class<User>().isInstance(user); // true
+  /// ```
+  bool isInstance(Object? obj);
+
+  /// Checks whether this class represents a **record type**.
+  ///
+  /// Record types are modeled using [RecordDeclaration] and correspond
+  /// to Dart record syntax.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class represents a record
+  /// - `false` otherwise
+  bool isRecord();
+
+  /// Checks whether this class represents a **function type**.
+  ///
+  /// Function types are modeled using [FunctionDeclaration] and include:
+  /// - Top-level functions
+  /// - Closures
+  /// - Callable class types
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class represents a function type
+  /// - `false` otherwise
+  bool isFunction();
+
+  /// Checks whether this class represents a **mixin declaration**.
+  ///
+  /// Mixins are represented by [MixinDeclaration] and are declared
+  /// using the `mixin` keyword.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class is a mixin
+  /// - `false` otherwise
+  bool isMixin();
+
+  /// Checks whether this class represents an **enum declaration**.
+  ///
+  /// Enums are represented using [EnumDeclaration].
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class is an enum
+  /// - `false` otherwise
+  bool isEnum();
+
+  /// Checks whether this class is declared as **abstract**.
+  ///
+  /// Abstract classes cannot be directly instantiated and may contain
+  /// abstract members.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is abstract
+  /// - `false` otherwise
+  bool isAbstract();
+
+  /// Checks whether this class is declared as **final**.
+  ///
+  /// Final classes cannot be extended by other classes.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is final
+  /// - `false` otherwise
+  bool isFinal();
+
+  /// Checks whether this class is declared as **sealed**.
+  ///
+  /// Sealed classes restrict which classes may extend them and enable
+  /// exhaustive pattern matching.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is sealed
+  /// - `false` otherwise
+  bool isSealed();
+
+  /// Checks whether this class represents an **interface**.
+  ///
+  /// Interfaces are abstract classes that:
+  /// - Have no concrete instance members
+  /// - Are intended to be implemented, not extended
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is an interface
+  /// - `false` otherwise
+  bool isInterface();
+
+  /// Checks whether this class is declared as a **base class**.
+  ///
+  /// Base classes may be extended but cannot be implemented outside
+  /// their defining library.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class is a base class
+  /// - `false` otherwise
+  bool isBase();
+
+  /// Checks whether this class is **invokable**.
+  ///
+  /// A class is considered invokable if:
+  /// - It is not abstract, or
+  /// - It is abstract but declares at least one factory constructor
+  ///
+  /// Invokable classes can be instantiated or executed via the runtime.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if the class can be invoked
+  /// - `false` otherwise
+  bool isInvokable();
+
+  /// Checks whether this class represents the **void** type.
+  ///
+  /// This is commonly represented using the [Void] design abstraction
+  /// within JetLeaf.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class represents `void`
+  /// - `false` otherwise
+  bool isVoid();
+
+  /// Checks whether this class represents the **dynamic** type.
+  ///
+  /// This is commonly represented using the [Dynamic] design abstraction
+  /// within JetLeaf and indicates absence of static typing.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - `true` if this class represents `dynamic`
+  /// - `false` otherwise
+  bool isDynamic();
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Function Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  /// Returns the **declared return type** of the function signature.
+  ///
+  /// {@template function_class_get_return_type}
+  /// This describes what the function *produces* when invoked,
+  /// not the type of the parameter holding it.
+  ///
+  /// ### Example
+  /// ```dart
+  /// // Parameter type:
+  /// // String Function() user
+  ///
+  /// final param = method.getParameter('user');
+  /// final fc = param.getClass() as FunctionClass;
+  ///
+  /// fc.getReturnType(); // → Class<String>
+  /// ```
+  ///
+  /// This enables precise differentiation between:
+  /// - `String user`
+  /// - `String Function() user`
+  /// 
+  /// For non function declarations, this will always return the current class.
+  /// {@endtemplate}
+  Class<Object> getReturnType();
+
+  /// Indicates whether the function type itself is nullable.
+  ///
+  /// {@template function_class_get_is_nullable}
+  /// This reflects Dart null-safety at the *type-signature* level:
+  ///
+  /// - `String Function()` → non-nullable
+  /// - `String Function()?` → nullable
+  ///
+  /// This does **not** describe the return type’s nullability.
+  /// {@endtemplate}
+  bool getIsNullable();
+
+  /// Returns the reflective `call()` method if the function originates
+  /// from a callable object.
+  ///
+  /// {@template function_class_get_method_call}
+  /// This is primarily used when a function type is backed by
+  /// an object implementing `call()`.
+  ///
+  /// For pure function signatures, this may be `null`.
+  ///
+  /// This distinction allows JetLeaf to unify:
+  /// - Lambdas
+  /// - Function tear-offs
+  /// - Callable objects
+  /// {@endtemplate}
+  Method? getMethodCall();
+
+  /// Returns the ordered list of **parameter types** accepted by the function.
+  ///
+  /// {@template function_class_get_parameters}
+  /// These parameters describe the callable contract itself,
+  /// not the surrounding method or constructor.
+  ///
+  /// ### Example
+  /// ```dart
+  /// // Parameter type:
+  /// // int Function(String name, bool active)
+  ///
+  /// final fc = param.getClass() as FunctionClass;
+  ///
+  /// fc.getParameters(); // → [Class<String>, Class<bool>]
+  /// ```
+  ///
+  /// This allows tooling and frameworks to:
+  /// - Validate compatibility
+  /// - Perform dependency resolution
+  /// - Generate adapters or proxies
+  /// {@endtemplate}
+  Iterable<Class<Object>> getParameters();
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Record Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  /// Returns a list of all fields in this record.
+  ///
+  /// - Positional fields are listed in order.
+  /// - Named fields may appear in any order, but their `RecordField` object
+  ///   contains the name for identification.
+  Iterable<RecordField> getRecordFields();
+
+  /// Retrieves a single record field by its identifier.
+  ///
+  /// The [id] can be:
+  /// - `int` → for positional fields (zero-based index)
+  /// - `String` → for named fields
+  ///
+  /// Returns the corresponding [RecordField] or `null` if no field matches.
+  RecordField? getRecordField(Object id);
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Generic Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  /// Returns the concrete generic type arguments declared on this class.
+  ///
+  /// {@template class_get_type_arguments}
+  /// This method exposes the resolved generic parameters associated with
+  /// this [Class] instance.
+  ///
+  /// For example, given:
+  /// ```dart
+  /// class Box<T> {}
+  /// class StringBox extends Box<String> {}
+  /// ```
+  /// Calling `getTypeArguments()` on `Class<StringBox>` would return a list
+  /// containing `Class<String>`.
+  ///
+  /// ### Behavior
+  /// - Returns an empty list if the class is not generic.
+  /// - The order of elements matches the declaration order of the
+  ///   type parameters.
+  /// - Returned [Class] objects represent the *actual* resolved types,
+  ///   not just the formal type variables.
+  ///
+  /// ### Returns
+  /// - A list of [Class<Object>] representing the resolved type arguments.
+  /// {@endtemplate}
+  Iterable<Class<Object>> getTypeArguments();
+
+  /// Returns metadata links describing how generic type arguments are bound.
+  ///
+  /// {@template class_get_type_argument_links}
+  /// This method provides structural information about the relationship
+  /// between declared type parameters and their resolved arguments.
+  ///
+  /// [LinkDeclaration] instances may encode:
+  /// - The source type parameter,
+  /// - The target concrete type,
+  /// - Variance or positional binding information,
+  /// - Indirections through inherited or delegated generic declarations.
+  ///
+  /// This is primarily intended for advanced reflection, diagnostics,
+  /// and framework-level type resolution.
+  ///
+  /// ### Behavior
+  /// - Returns an empty list if no generic linkage information is available.
+  /// - The order corresponds to the declaration order of type parameters.
+  ///
+  /// ### Returns
+  /// - A list of [LinkDeclaration] objects describing generic bindings.
+  /// {@endtemplate}
+  List<LinkDeclaration> getTypeArgumentLinks();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Super Class Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets the direct superclass with proper generic typing.
+  /// Returns the direct superclass of this class, if one exists.
   ///
-  /// {@template class_get_superclass}
-  /// Type Parameters:
+  /// This represents the class specified in the `extends` clause of the
+  /// declaration. For `Object` and root-level types, this will return `null`.
+  ///
+  /// ---
+  ///
+  /// ### Type Parameters
   /// - `S`: The expected superclass type
   ///
-  /// Returns:
-  /// - The superclass with resolved generic parameters
-  /// - `null` if no superclass exists
+  /// ### Returns
+  /// - The superclass declaration if it exists and matches [S]
+  /// - `null` if:
+  ///   - The class does not extend another class, or
+  ///   - The superclass does not match the requested type
   ///
-  /// Example:
+  /// ### Example
   /// ```dart
-  /// class Parent<T> {}
-  /// class Child extends Parent<String> {}
+  /// class Admin extends User {}
   ///
-  /// final childClass = Class.forType<Child>();
-  /// final parentClass = childClass.getSuperClass<Parent>();
-  /// print(parentClass?.componentType<String>()); // Class<String>
+  /// Class<Admin>().getSuperClass<User>(); // → Class<User>
   /// ```
-  /// {@endtemplate}
   Class<S>? getSuperClass<S>();
 
-  /// Gets the generic arguments from the superclass declaration.
+  /// Returns the **generic type arguments** supplied to the superclass.
   ///
-  /// {@template class_get_superclass_arguments}
-  /// Type Parameters:
-  /// - `S`: The superclass type to examine
+  /// This extracts the concrete type arguments used in the `extends` clause
+  /// when the superclass is a generic type.
   ///
-  /// Returns:
-  /// - List of generic type arguments
-  /// - Empty list if no generics exist
+  /// ---
   ///
-  /// Example:
+  /// ### Returns
+  /// - An [Iterable] of superclass generic type arguments
+  /// - An empty iterable if:
+  ///   - The class has no superclass, or
+  ///   - The superclass is non-generic
+  ///
+  /// ### Example
   /// ```dart
-  /// class Converter extends ConverterFactory<num, num> {}
+  /// class Box<T> {}
+  /// class IntBox extends Box<int> {}
   ///
-  /// final args = Class.forType<Converter>()
-  ///   .getSuperClassArguments<ConverterFactory>();
-  /// print(args); // [Class<num>, Class<num>]
+  /// Class<IntBox>().getSuperClassArguments(); // → [Class<int>]
   /// ```
-  /// {@endtemplate}
-  List<Class> getSuperClassArguments();
-
-  /// Gets the declared superclass without generic resolution.
-  ///
-  /// {@template class_get_declared_superclass}
-  /// Returns:
-  /// - The raw superclass as declared in source
-  /// - `null` if no superclass exists
-  ///
-  /// Contrast with [getSuperClass] which resolves generics.
-  /// {@endtemplate}
-  Class? getDeclaredSuperClass();
+  Iterable<Class> getSuperClassArguments();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Sub Class Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets all direct subclasses of this class.
+  /// Returns all known direct subclasses of this class within the active
+  /// reflection runtime.
   ///
-  /// {@template class_get_subclasses}
-  /// Returns:
-  /// - List of all classes that directly extend this class
-  /// - Empty list if no subclasses exist
+  /// A subclass is any class that directly extends this class. Results are
+  /// determined from the materialized runtime graph and are scoped to the
+  /// currently loaded libraries.
   ///
-  /// Note:
-  /// Only returns classes known to the current reflection context.
-  /// {@endtemplate}
-  List<Class> getSubClasses();
+  /// ---
+  ///
+  /// ### Returns
+  /// - An [Iterable] of subclass declarations
+  /// - An empty iterable if no subclasses are known
+  ///
+  /// ### Notes
+  /// - Only direct subclasses are included
+  /// - Indirect (transitive) subclasses are not returned
+  /// - Results are deterministic after the library is frozen
+  ///
+  /// ### Example
+  /// ```dart
+  /// abstract class Shape {}
+  /// class Circle extends Shape {}
+  /// class Square extends Shape {}
+  ///
+  /// Class<Shape>().getSubClasses();
+  /// // → [Class<Circle>, Class<Square>]
+  /// ```
+  Iterable<Class> getSubClasses();
 
-  /// Gets a specific direct subclass by type.
+  /// Returns a specific direct subclass that matches type [S], if present.
   ///
-  /// {@template class_get_subclass}
-  /// Type Parameters:
-  /// - `S`: The expected subclass type
+  /// ---
   ///
-  /// Returns:
-  /// - The subclass if it exists
-  /// - `null` if no matching subclass found
-  /// {@endtemplate}
+  /// ### Type Parameters
+  /// - `S`: The subclass type to retrieve
+  ///
+  /// ### Returns
+  /// - The matching subclass declaration
+  /// - `null` if no direct subclass of type [S] exists
+  ///
+  /// ### Notes
+  /// - Only direct subclasses are considered
+  ///
+  /// ### Example
+  /// ```dart
+  /// Class<Shape>().getSubClass<Circle>(); // → Class<Circle>
+  /// ```
   Class<S>? getSubClass<S>();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Interface Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets all interfaces directly implemented by this class.
-  /// 
-  /// **Note**: For a mixin, this method returns the constraints applied to the mixin.
+  /// Returns **all interfaces implemented by this class**, including those
+  /// inherited through superclasses.
+  ///
+  /// ---
   ///
   /// {@template class_get_all_interfaces}
-  /// Returns:
-  /// - List of all interfaces (including transitive)
-  /// - Empty list if no interfaces implemented
+  /// ### Returns
+  /// - An [Iterable] of all implemented interfaces (direct + transitive)
+  /// - An empty iterable if the class does not implement any interfaces
   ///
-  /// Note:
-  /// Includes both explicitly implemented and inherited interfaces.
+  /// ### Notes
+  /// - Includes interfaces declared directly on the class
+  /// - Includes interfaces inherited from superclasses
+  /// - Order is deterministic but implementation-defined
   /// {@endtemplate}
-  List<Class> getAllInterfaces();
+  Iterable<Class> getAllInterfaces();
 
-  /// Gets implemented interfaces of specific type.
-  /// 
-  /// **Note**: For a mixin, this method returns the constraints applied to the mixin.
+  /// Returns all implemented interfaces that match the given interface type [I].
+  ///
+  /// ---
   ///
   /// {@template class_get_interfaces}
-  /// Type Parameters:
+  /// ### Type Parameters
   /// - `I`: The interface type to filter for
   ///
-  /// Returns:
-  /// - List of matching interfaces
-  /// - Empty list if none found
+  /// ### Returns
+  /// - An [Iterable] of interfaces assignable to type [I]
+  /// - An empty iterable if no matching interfaces are implemented
+  ///
+  /// ### Notes
+  /// - Matching includes generic interface instantiations
+  /// - Inherited interfaces are included
   /// {@endtemplate}
-  List<Class<I>> getInterfaces<I>();
+  Iterable<Class<I>> getInterfaces<I>();
 
-  /// Gets a specific implemented interface.
-  /// 
-  /// **Note**: For a mixin, this method returns a specific constraint applied to the mixin.
+  /// Returns the implemented interface that exactly matches type [I], if present.
+  ///
+  /// ---
   ///
   /// {@template class_get_interface}
-  /// Type Parameters:
+  /// ### Type Parameters
   /// - `I`: The exact interface type to retrieve
   ///
-  /// Returns:
-  /// - The interface if implemented
-  /// - `null` if not found
+  /// ### Returns
+  /// - The matching interface declaration if implemented
+  /// - `null` if the interface is not implemented
+  ///
+  /// ### Notes
+  /// - If multiple generic instantiations exist, the most specific match
+  ///   is returned
   /// {@endtemplate}
   Class<I>? getInterface<I>();
 
-  /// Gets generic arguments from a specific implemented interface.
-  /// 
-  /// **Note**: For a mixin, this method returns a specific constraint arguments applied to the mixin.
+  /// Returns the **generic type arguments** used when implementing
+  /// the interface of type [I].
+  ///
+  /// ---
   ///
   /// {@template class_get_interface_arguments}
-  /// Type Parameters:
-  /// - `I`: The interface type to examine
+  /// ### Type Parameters
+  /// - `I`: The interface type whose generic arguments should be extracted
   ///
-  /// Returns:
-  /// - List of generic type arguments
-  /// - Empty list if interface has no generics
+  /// ### Returns
+  /// - An [Iterable] of generic type arguments
+  /// - An empty iterable if:
+  ///   - The interface is not implemented, or
+  ///   - The interface is non-generic
+  ///
+  /// ### Example
+  /// ```dart
+  /// class Repo implements Store<User> {}
+  ///
+  /// Class<Repo>()
+  ///   .getInterfaceArguments<Store>(); // → [Class<User>]
+  /// ```
   /// {@endtemplate}
-  List<Class> getInterfaceArguments<I>();
+  Iterable<Class> getInterfaceArguments<I>();
 
-  /// Gets generic arguments from all implemented interfaces.
-  /// 
-  /// **Note**: For a mixin, this method returns all constraint arguments applied to the mixin.
+  /// Returns the **generic type arguments** from all implemented interfaces.
+  ///
+  /// ---
   ///
   /// {@template class_get_all_interface_arguments}
-  /// Returns:
-  /// - Flattened list of all interface generic arguments
-  /// - Empty list if no generics exist
+  /// ### Returns
+  /// - A flattened [Iterable] of all generic arguments used by implemented interfaces
+  /// - An empty iterable if no implemented interfaces declare generics
+  ///
+  /// ### Notes
+  /// - Includes arguments from inherited interfaces
+  /// - Order is deterministic
   /// {@endtemplate}
-  List<Class> getAllInterfaceArguments();
+  Iterable<Class> getAllInterfaceArguments();
 
-  /// Gets all directly declared interfaces (non-transitive).
-  /// 
-  /// **Note**: For a mixin, this method returns all directly declared constraints applied to the mixin.
-  /// 
-  /// ------------------------------------------------------------------------------
-  /// 
-  /// ### Interface Design
+  // ---------------------------------------------------------------------------------------------------------
+  // === Mixin Constraint Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  /// Returns **all mixin constraints** applied to this mixin.
   ///
-  /// {@template class_get_all_declared_interfaces}
-  /// Returns:
-  /// - List of interfaces explicitly declared on this class
-  /// - Empty list if no interfaces declared
-  /// - Does NOT include inherited interfaces from superclasses
+  /// Mixin constraints are the interfaces or classes specified using the
+  /// `on` clause of a mixin declaration. These constraints define the
+  /// minimum required supertype(s) that a class must satisfy in order to
+  /// apply the mixin.
   ///
-  /// #### Declared vs All Interfaces
-  /// - **getDeclaredInterfaces()**: Only direct `implements` declarations
-  /// - **getAllInterfaces()**: Includes inherited interfaces from hierarchy
+  /// ---
   ///
-  /// Example:
+  /// ### Returns
+  /// - An [Iterable] of all mixin constraint types
+  /// - An empty iterable if the mixin declares no constraints
+  ///
+  /// ### Notes
+  /// - Only applicable to mixin declarations
+  /// - Order reflects the declaration order in the source
+  ///
+  /// ### Example
   /// ```dart
-  /// interface class Readable {}
-  /// interface class Writable {}
-  /// class BaseStream implements Readable {}
-  /// class FileStream extends BaseStream implements Writable {}
+  /// mixin Logger on Service, Disposable {}
   ///
-  /// final fileClass = Class.forType<FileStream>();
-  /// final declared = fileClass.getAllDeclaredInterfaces();  // [Writable]
-  /// final all = fileClass.getAllInterfaces();               // [Writable, Readable]
+  /// Class<Logger>().getAllMixinConstraints();
+  /// // → [Class<Service>, Class<Disposable>]
   /// ```
-  /// {@endtemplate}
-  /// 
-  /// ------------------------------------------------------------------------------
-  /// 
-  /// ### Mixin Design
-  /// 
-  /// {@template class_get_all_declared_constraints}
-  /// Returns:
-  /// - List of constraints explicitly declared on this class
-  /// - Empty list if no constraints declared
-  /// - Does NOT include inherited constraints from superclasses
+  Iterable<Class> getAllMixinConstraints();
+
+  /// Returns all mixin constraints that match the given constraint type [I].
   ///
-  /// #### Declared vs All constraints
-  /// - **getDeclaredInterfaces()**: Only direct `implements` declarations
-  /// - **getAllInterfaces()**: Includes inherited constraints from hierarchy
+  /// This allows filtering mixin constraints by a specific interface or
+  /// superclass type.
   ///
-  /// Example:
+  /// ---
+  ///
+  /// ### Type Parameters
+  /// - `I`: The constraint type to filter for
+  ///
+  /// ### Returns
+  /// - An [Iterable] of matching mixin constraints
+  /// - An empty iterable if no matching constraints are found
+  ///
+  /// ### Notes
+  /// - Matching includes generic instantiations
+  /// - Inherited constraints are not considered (only declared `on` clauses)
+  Iterable<Class<I>> getMixinConstraints<I>();
+
+  /// Returns the mixin constraint that exactly matches type [I], if present.
+  ///
+  /// ---
+  ///
+  /// ### Type Parameters
+  /// - `I`: The exact constraint type to retrieve
+  ///
+  /// ### Returns
+  /// - The matching constraint declaration if present
+  /// - `null` if the constraint is not declared
+  ///
+  /// ### Notes
+  /// - If multiple generic instantiations exist, the most specific match
+  ///   is returned
+  Class<I>? getMixinConstraint<I>();
+
+  /// Returns the **generic type arguments** used by the mixin constraint [I].
+  ///
+  /// This method extracts the concrete type arguments supplied to a generic
+  /// constraint in the mixin’s `on` clause.
+  ///
+  /// ---
+  ///
+  /// ### Type Parameters
+  /// - `I`: The constraint type whose generic arguments should be extracted
+  ///
+  /// ### Returns
+  /// - An [Iterable] of generic type arguments
+  /// - An empty iterable if:
+  ///   - The constraint is not declared, or
+  ///   - The constraint is non-generic
+  ///
+  /// ### Example
   /// ```dart
-  /// mixin class Readable {}
-  /// mixin class Writable {}
-  /// mixin BaseStream on Readable {}
-  /// mixin FileStream on BaseStream, Writable {}
+  /// mixin Cacheable on Store<User> {}
   ///
-  /// final fileClass = Class.forType<FileStream>();
-  /// final declared = fileClass.getAllDeclaredInterfaces();  // [Writable]
-  /// final all = fileClass.getAllInterfaces();               // [Writable, Readable]
+  /// Class<Cacheable>()
+  ///   .getMixinConstraintArguments<Store>(); // → [Class<User>]
   /// ```
-  /// {@endtemplate}
-  List<Class> getAllDeclaredInterfaces();
+  Iterable<Class> getMixinConstraintArguments<I>();
 
-  /// Gets declared interfaces of specific type (non-transitive).
-  /// 
-  /// **Note**: For a mixin, this method returns the declared constraints of a specific type applied to the mixin.
+  /// Returns the **generic type arguments** from all declared mixin constraints.
   ///
-  /// {@template class_get_declared_interfaces}
-  /// Type Parameters:
-  /// - `I`: The interface type to filter for
+  /// ---
   ///
-  /// Returns:
-  /// - List of matching declared interfaces
-  /// - Empty list if none found
-  /// - Only includes direct declarations, not inherited
-  /// {@endtemplate}
-  List<Class<I>> getDeclaredInterfaces<I>();
-
-  /// Gets a specific declared interface (non-transitive).
-  /// 
-  /// **Note**: For a mixin, this method returns specific declared constraint applied to the mixin.
+  /// ### Returns
+  /// - A flattened [Iterable] of all generic arguments used by mixin constraints
+  /// - An empty iterable if none of the constraints declare generics
   ///
-  /// {@template class_get_declared_interface}
-  /// Type Parameters:
-  /// - `I`: The exact interface type to retrieve
-  ///
-  /// Returns:
-  /// - The interface if directly declared
-  /// - `null` if not found or only inherited
-  /// {@endtemplate}
-  Class<I>? getDeclaredInterface<I>();
-
-  /// Gets generic arguments from a specific declared interface.
-  /// 
-  /// **Note**: For a mixin, this method returns the generic arguments from a specific constraint applied to the mixin.
-  ///
-  /// {@template class_get_declared_interface_arguments}
-  /// Type Parameters:
-  /// - `I`: The interface type to examine
-  ///
-  /// Returns:
-  /// - List of generic type arguments from direct declaration
-  /// - Empty list if interface has no generics or is not declared
-  /// {@endtemplate}
-  List<Class> getDeclaredInterfaceArguments<I>();
-
-  /// Gets generic arguments from all declared interfaces.
-  /// 
-  /// **Note**: For a mixin, this method returns the generic arguments from all declared constraints applied to the mixin.
-  ///
-  /// {@template class_get_all_declared_interface_arguments}
-  /// Returns:
-  /// - Flattened list of all declared interface generic arguments
-  /// - Empty list if no generics exist in declared interfaces
-  /// {@endtemplate}
-  List<Class> getAllDeclaredInterfaceArguments();
+  /// ### Notes
+  /// - Only constraints declared directly on the mixin are considered
+  /// - Order is deterministic and follows declaration order
+  Iterable<Class> getAllMixinConstraintArguments();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Mixin Information ===
   // ---------------------------------------------------------------------------------------------------------
 
-  /// Gets all mixins applied to this class.
+  /// Returns all mixins applied to this class or mixin declaration.
   ///
-  /// {@template class_get_all_mixins}
-  /// Returns:
-  /// - List of all mixins (including those from superclasses)
-  /// - Empty list if no mixins applied
-  /// {@endtemplate}
-  List<Class> getAllMixins();
+  /// This includes every mixin specified in a `with` clause, in the exact
+  /// order they appear in the source declaration.
+  ///
+  /// ---
+  ///
+  /// ### Returns
+  /// - An [Iterable] of mixin class declarations
+  /// - An empty iterable if no mixins are applied
+  ///
+  /// ### Notes
+  /// - Only mixins explicitly declared via `with` are included
+  /// - Transitive or inherited mixins are not included
+  ///
+  /// ### Example
+  /// ```dart
+  /// class MyService with Logging, Cacheable {}
+  ///
+  /// Class<MyService>().getAllMixins();
+  /// // → [Class<Logging>, Class<Cacheable>]
+  /// ```
+  Iterable<Class> getAllMixins();
 
-  /// Gets mixins of specific type applied to this class.
+  /// Returns all applied mixins that match the given mixin type [I].
   ///
-  /// {@template class_get_mixins}
-  /// Type Parameters:
+  /// ---
+  ///
+  /// ### Type Parameters
   /// - `I`: The mixin type to filter for
   ///
-  /// Returns:
-  /// - List of matching mixins
-  /// - Empty list if none found
-  /// {@endtemplate}
-  List<Class<I>> getMixins<I>();
-
-  /// Gets a specific mixin applied to this class.
+  /// ### Returns
+  /// - An [Iterable] of matching mixin declarations
+  /// - An empty iterable if no matching mixins are found
   ///
-  /// {@template class_get_mixin}
-  /// Type Parameters:
+  /// ### Notes
+  /// - Matching includes generic instantiations
+  /// - Only mixins declared directly on the target are considered
+  Iterable<Class<I>> getMixins<I>();
+
+  /// Returns the mixin that exactly matches type [I], if present.
+  ///
+  /// ---
+  ///
+  /// ### Type Parameters
   /// - `I`: The exact mixin type to retrieve
   ///
-  /// Returns:
-  /// - The mixin if applied
-  /// - `null` if not found
-  /// {@endtemplate}
+  /// ### Returns
+  /// - The matching mixin declaration
+  /// - `null` if the mixin is not applied
+  ///
+  /// ### Notes
+  /// - If multiple generic instantiations exist, the most specific match
+  ///   is returned
   Class<I>? getMixin<I>();
 
-  /// Gets generic arguments from a specific applied mixin.
+  /// Returns the **generic type arguments** supplied to the applied mixin [M].
   ///
-  /// {@template class_get_mixins_arguments}
-  /// Type Parameters:
-  /// - `M`: The mixin type to examine
+  /// This extracts the concrete generic arguments used when the mixin was
+  /// applied in the `with` clause.
   ///
-  /// Returns:
-  /// - List of generic type arguments
-  /// - Empty list if mixin has no generics
-  /// {@endtemplate}
-  List<Class> getMixinsArguments<M>();
-
-  /// Gets generic arguments from all applied mixins.
+  /// ---
   ///
-  /// {@template class_get_all_mixins_arguments}
-  /// Returns:
-  /// - Flattened list of all mixin generic arguments
-  /// - Empty list if no generics exist
-  /// {@endtemplate}
-  List<Class> getAllMixinsArguments();
-
-   /// Gets all directly declared mixins (non-transitive).
+  /// ### Type Parameters
+  /// - `M`: The mixin type whose generic arguments should be extracted
   ///
-  /// {@template class_get_all_declared_mixins}
-  /// Returns:
-  /// - List of mixins explicitly applied to this class
-  /// - Empty list if no mixins declared
-  /// - Does NOT include inherited mixins from superclasses
+  /// ### Returns
+  /// - An [Iterable] of generic type arguments
+  /// - An empty iterable if:
+  ///   - The mixin is not applied, or
+  ///   - The mixin is non-generic
   ///
-  /// ## Declared vs All Mixins
-  /// - **getDeclaredMixins()**: Only direct `with` declarations
-  /// - **getAllMixins()**: Includes inherited mixins from hierarchy
-  ///
-  /// Example:
+  /// ### Example
   /// ```dart
-  /// mixin Loggable {}
-  /// mixin Cacheable {}
-  /// class BaseService with Loggable {}
-  /// class UserService extends BaseService with Cacheable {}
+  /// class Repo with Cacheable<User> {}
   ///
-  /// final userClass = Class.forType<UserService>();
-  /// final declared = userClass.getAllDeclaredMixins();  // [Cacheable]
-  /// final all = userClass.getAllMixins();               // [Cacheable, Loggable]
+  /// Class<Repo>()
+  ///   .getMixinsArguments<Cacheable>(); // → [Class<User>]
   /// ```
-  /// {@endtemplate}
-  List<Class> getAllDeclaredMixins();
+  Iterable<Class> getMixinsArguments<M>();
 
-  /// Gets generic arguments from a specific declared mixin.
+  /// Returns the **generic type arguments** from all applied mixins.
   ///
-  /// {@template class_get_declared_mixins_arguments}
-  /// Type Parameters:
-  /// - `M`: The mixin type to examine
+  /// ---
   ///
-  /// Returns:
-  /// - List of generic type arguments from direct declaration
-  /// - Empty list if mixin has no generics or is not declared
-  /// {@endtemplate}
-  List<Class> getDeclaredMixinsArguments<M>();
-
-  /// Gets generic arguments from all declared mixins.
+  /// ### Returns
+  /// - A flattened [Iterable] of all generic arguments used by applied mixins
+  /// - An empty iterable if no applied mixins declare generics
   ///
-  /// {@template class_get_all_declared_mixins_arguments}
-  /// Returns:
-  /// - Flattened list of all declared mixin generic arguments
-  /// - Empty list if no generics exist in declared mixins
-  /// {@endtemplate}
-  List<Class> getAllDeclaredMixinsArguments();
-
-  /// Gets a specific declared mixin (non-transitive).
-  ///
-  /// {@template class_get_declared_mixin}
-  /// Type Parameters:
-  /// - `I`: The exact mixin type to retrieve
-  ///
-  /// Returns:
-  /// - The mixin if directly applied
-  /// - `null` if not found or only inherited
-  /// {@endtemplate}
-  Class<I>? getDeclaredMixin<I>();
-
-  /// Gets declared mixins of specific type (non-transitive).
-  ///
-  /// {@template class_get_declared_mixins}
-  /// Type Parameters:
-  /// - `I`: The mixin type to filter for
-  ///
-  /// Returns:
-  /// - List of matching declared mixins
-  /// - Empty list if none found
-  /// - Only includes direct declarations, not inherited
-  /// {@endtemplate}
-  List<Class<I>> getDeclaredMixins<I>();
+  /// ### Notes
+  /// - Order is deterministic and follows mixin application order
+  Iterable<Class> getAllMixinsArguments();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Annotation Information ===
@@ -1235,7 +1370,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// }
   /// ```
   /// {@endtemplate}
-  List<Annotation> getAllAnnotations();
+  Iterable<Annotation> getAllAnnotations();
   
   /// Gets a single annotation by type, if present.
   ///
@@ -1278,7 +1413,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// }
   /// ```
   /// {@endtemplate}
-  List<A> getAnnotations<A>();
+  Iterable<A> getAnnotations<A>();
   
   /// Checks if this element has a specific annotation.
   ///
@@ -1431,7 +1566,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// {@template class_get_constructors}
   /// Returns:
-  /// - List of all constructors (both generative and factory)
+  /// - Iterable of all constructors (both generative and factory)
   /// - Empty list if no constructors exist
   ///
   /// Example:
@@ -1445,7 +1580,27 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Named constructors
   /// - Factory constructors
   /// {@endtemplate}
-  List<Constructor> getConstructors();
+  Iterable<Constructor> getConstructors();
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Enum Value Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  /// Gets all enum values if this is an enum class.
+  ///
+  /// {@template class_get_enum_values}
+  /// Returns:
+  /// - Iterable of enum fields with metadata
+  /// - Empty list for non-enum types
+  ///
+  /// Example:
+  /// ```dart
+  /// enum Status { active, inactive }
+  /// final values = Class.forType<Status>().getEnumValuesAsFields();
+  /// print(values.map((e) => e.name)); // ['active', 'inactive']
+  /// ```
+  /// {@endtemplate}
+  Iterable<EnumValue> getEnumValues();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Method Information ===
@@ -1505,7 +1660,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// {@template class_get_methods}
   /// Returns:
-  /// - List of all methods (instance and static)
+  /// - Iterable of all methods (instance and static)
   /// - Empty list if no methods exist
   ///
   /// Example:
@@ -1523,13 +1678,13 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// Excludes:
   /// - Inherited methods (use [getMethods] for hierarchy traversal)
   /// {@endtemplate}
-  List<Method> getMethods();
+  Iterable<Method> getMethods();
 
   /// Gets all methods declared in this class and its hierarchy.
   ///
   /// {@template class_get_all_methods_in_hierarchy}
   /// Returns:
-  /// - List of all methods (instance and static)
+  /// - Iterable of all methods (instance and static)
   /// - Empty list if no methods exist
   ///
   /// Example:
@@ -1547,13 +1702,13 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// Excludes:
   /// - Inherited methods (use [getMethods] for hierarchy traversal)
   /// {@endtemplate}
-  List<Method> getAllMethodsInHierarchy();
+  Iterable<Method> getAllMethodsInHierarchy();
 
   /// Gets all methods that are overridden in this class.
   ///
   /// {@template class_get_overridden_methods}
   /// Returns:
-  /// - List of all methods that are overridden in this class
+  /// - Iterable of all methods that are overridden in this class
   /// - Empty list if no methods are overridden
   ///
   /// Example:
@@ -1562,7 +1717,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// overriddenMethods.forEach((m) => print(m.name));
   /// ```
   /// {@endtemplate}
-  List<Method> getOverriddenMethods();
+  Iterable<Method> getOverriddenMethods();
 
   /// Gets all methods with a specific name.
   ///
@@ -1571,7 +1726,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - [name]: The method name to filter by
   ///
   /// Returns:
-  /// - List of all overloads with this name
+  /// - Iterable of all overloads with this name
   /// - Empty list if no matches found
   ///
   /// Example:
@@ -1585,39 +1740,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// print(overloads.length); // 2
   /// ```
   /// {@endtemplate}
-  List<Method> getMethodsByName(String name);
-
-  /// Gets all enum values as [Field] if this is an enum class.
-  ///
-  /// {@template class_get_enum_values}
-  /// Returns:
-  /// - List of enum fields with metadata
-  /// - Empty list for non-enum types
-  ///
-  /// Example:
-  /// ```dart
-  /// enum Status { active, inactive }
-  /// final values = Class.forType<Status>().getEnumValuesAsFields();
-  /// print(values.map((e) => e.name)); // ['active', 'inactive']
-  /// ```
-  /// {@endtemplate}
-  List<Field> getEnumValuesAsFields();
-
-  /// Gets all enum values if this is an enum class.
-  ///
-  /// {@template class_get_enum_values}
-  /// Returns:
-  /// - List of enum fields with metadata
-  /// - Empty list for non-enum types
-  ///
-  /// Example:
-  /// ```dart
-  /// enum Status { active, inactive }
-  /// final values = Class.forType<Status>().getEnumValuesAsFields();
-  /// print(values.map((e) => e.name)); // ['active', 'inactive']
-  /// ```
-  /// {@endtemplate}
-  List<EnumValue> getEnumValues();
+  Iterable<Method> getMethodsByName(String name);
 
   // ---------------------------------------------------------------------------------------------------------
   // === Member Information ===
@@ -1643,7 +1766,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// - Fields appear before methods
   /// - Declaration order is not guaranteed
   /// {@endtemplate}
-  List<Member> getDeclaredMembers();
+  Iterable<Member> getDeclaredMembers();
 
   // ---------------------------------------------------------------------------------------------------------
   // === Instance Creation ===
@@ -1682,21 +1805,6 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
     return _Class(T.toString(), domain ?? ProtectionDomain.current(), package, link);
   }
 
-  /// Creates a Class instance for type F.
-  ///
-  /// {@template class_of}
-  /// Type Parameters:
-  /// - `F`: The class type to reflect
-  ///
-  /// Parameters:
-  /// - [domain]: Optional protection domain
-  /// - [package]: Optional package name to search with
-  ///
-  /// Returns:
-  /// - A [Class] instance for the type
-  /// {@endtemplate}
-  static Class<F> of<F>([ProtectionDomain? domain, String? package, LinkDeclaration? link]) => Class<F>(domain, package, link);
-
   /// Creates a Class instance for a runtime type.
   ///
   /// {@template class_for_type}
@@ -1712,7 +1820,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// Example:
   /// ```dart
-  /// final listClass = Class.forType(List<String>);
+  /// final listClass = Class.forType(Iterable<String>);
   /// ```
   /// {@endtemplate}
   static Class<C> forType<C>(C type, [ProtectionDomain? domain, String? package, LinkDeclaration? link]) {
@@ -1749,9 +1857,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   ///
   /// Used internally by the reflection system.
   /// {@endtemplate}
-  static Class<C> declared<C>(ClassDeclaration declaration, ProtectionDomain domain) {
-    return _Class<C>.declared(declaration, domain);
-  }
+  factory Class.declared(ClassDeclaration declaration, ProtectionDomain domain) = _Class.declared;
 
   /// Creates a Class instance from a fully qualified name.
   ///
@@ -1766,9 +1872,7 @@ abstract class Class<T> extends Source implements FieldAccess, QualifiedName, Ge
   /// Throws:
   /// - [ClassNotFoundException] if type cannot be resolved
   /// {@endtemplate}
-  static Class<C> fromQualifiedName<C>(String qualifiedName, [ProtectionDomain? domain, LinkDeclaration? link]) {
-    return _Class<C>.fromQualifiedName(qualifiedName, domain ?? ProtectionDomain.current(), link);
-  }
+  factory Class.fromQualifiedName(String qualifiedName, [ProtectionDomain? domain, LinkDeclaration? link]) = _Class.fromQualifiedName;
 
   /// Creates a Class instance for an object's runtime type.
   ///

@@ -1,6 +1,6 @@
 part of 'enum_value.dart';
 
-final class _EnumValue extends EnumValue with EqualsAndHashCode {
+final class _EnumValue extends PermissionManager with EqualsAndHashCode implements EnumValue {
   final EnumDeclaration _parent;
   final EnumFieldDeclaration _field;
   final ProtectionDomain _pd;
@@ -18,19 +18,11 @@ final class _EnumValue extends EnumValue with EqualsAndHashCode {
   Class<D> getDeclaringClass<D>() {
     checkAccess('getDeclaringClass', DomainPermission.READ_FIELDS);
 
-    return Class.declared<D>(_parent, _pd);
+    return Class<D>.declared(_parent, _pd);
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => getDeclaringClass().getVersion();
 
   @override
   EnumFieldDeclaration getFieldDeclaration() {
@@ -58,8 +50,7 @@ final class _EnumValue extends EnumValue with EqualsAndHashCode {
   @override
   dynamic getValue() {
     checkAccess('getValue', DomainPermission.READ_FIELDS);
-
-    return _field.getValue();
+    return _field.getEnumValue();
   }
 
   @override
@@ -99,4 +90,7 @@ final class _EnumValue extends EnumValue with EqualsAndHashCode {
       _field.getType(),
     ];
   }
+
+  @override
+  String toString() => "${_parent.getName()}.${_field.getName()}";
 }

@@ -145,7 +145,7 @@ abstract interface class ExecutableArgumentResolver {
   /// Match only **named parameters** of type `String`:
   /// ```dart
   /// resolver.when(
-  ///   (p) => p.isNamed && p.type == Class.of(String),
+  ///   (p) => p.isNamed && p.type == Class.forType(String),
   ///   'default',
   /// );
   /// ```
@@ -153,7 +153,7 @@ abstract interface class ExecutableArgumentResolver {
   /// Match parameters annotated with `@Inject` (hypothetical):
   /// ```dart
   /// resolver.when(
-  ///   (p) => p.metadata.any((m) => m.type == Class.of(Inject)),
+  ///   (p) => p.metadata.any((m) => m.type == Class.forType(Inject)),
   ///   myService,
   /// );
   /// ```

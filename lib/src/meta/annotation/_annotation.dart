@@ -14,7 +14,7 @@
 
 part of 'annotation.dart';
 
-class _Annotation extends Annotation {
+final class _Annotation extends PermissionManager implements Annotation {
   final AnnotationDeclaration _declaration;
   final ProtectionDomain _pd;
   
@@ -69,18 +69,11 @@ class _Annotation extends Annotation {
   @override
   Class getDeclaringClass() {
     checkAccess('getType', DomainPermission.READ_ANNOTATIONS);
-    final link = _declaration.getLinkDeclaration();
-    
-    try {
-      return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-    } catch (_) {
-      try {
-        return Class.forType(link.getPointerType(), _pd, null, link);
-      } catch (_) {
-        return Class.forType(link.getType(), _pd, null, link);
-      }
-    }
+    return LangUtils.obtainClassFromLink(_declaration.getLinkDeclaration());
   }
+
+  @override
+  Class getClass() => getDeclaringClass();
   
   @override
   ProtectionDomain getProtectionDomain() => _pd;
@@ -111,7 +104,7 @@ class _Annotation extends Annotation {
   dynamic getFieldValue(String fieldName) {
     checkAccess('getFieldValue', DomainPermission.READ_ANNOTATIONS);
     final field = _declaration.getField(fieldName);
-    return field?.getValue();
+    return field?.getAnnotationValue();
   }
   
   @override
@@ -135,7 +128,7 @@ class _Annotation extends Annotation {
     for (final fieldName in getFieldNames()) {
       final field = _declaration.getField(fieldName);
       if (field != null) {
-        values[fieldName] = field.getValue();
+        values[fieldName] = field.getAnnotationValue();
       }
     }
     
@@ -165,9 +158,12 @@ class _Annotation extends Annotation {
   }
 
   @override
-  List<Field> getFields() {
+  Iterable<Field> getFields() sync* {
     checkAccess('getFields', DomainPermission.READ_ANNOTATIONS);
-    return UnmodifiableListView(_declaration.getFields().map((f) => Field.declared(f, _declaration, _pd)));
+
+    for (final field in _declaration.getFields()) {
+      yield Field.declared(field, _declaration, _pd);
+    }
   }
 
   @override
@@ -215,13 +211,5 @@ class _Annotation extends Annotation {
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
+  Version getVersion() => getDeclaringClass().getVersion();
 }

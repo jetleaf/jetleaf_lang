@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:collection';
 
 import 'package:jetleaf_build/jetleaf_build.dart';
 
@@ -8,7 +7,6 @@ import '../../exceptions.dart';
 import '../../utils/lang_utils.dart';
 import '../../utils/method_utils.dart';
 import '../class/class_type.dart';
-import '../class_loader/default_class_loader.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
 import '../core.dart';
@@ -62,7 +60,7 @@ part '_method.dart';
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract class Method extends Executable implements Member, GenericSource {
+abstract final class Method extends Executable implements Member, GenericSource {
   @override
   MethodDeclaration getDeclaration();
 
@@ -463,7 +461,5 @@ abstract class Method extends Executable implements Member, GenericSource {
   /// }
   /// ```
   /// {@endtemplate}
-  static Method declared(MethodDeclaration declaration, ProtectionDomain domain) {
-    return _Method(declaration, domain);
-  }
+  factory Method.declared(MethodDeclaration declaration, ProtectionDomain domain, [ClassDeclaration? parent]) = _Method;
 }

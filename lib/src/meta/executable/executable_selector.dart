@@ -144,5 +144,5 @@ abstract interface class ExecutableSelector {
   ///
   /// ### Returns
   /// The selected [E] that satisfies all rules.
-  E? select<E extends Executable>(List<E> executables);
+  E? select<E extends Executable>(Iterable<E> executables);
 }

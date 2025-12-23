@@ -110,10 +110,10 @@ void main() {
       final parameters = constructor!.getParameters();
       
       expect(parameters.length, 2);
-      expect(parameters[0].getName(), 'name');
-      expect(parameters[0].getType(), String);
-      expect(parameters[1].getName(), 'age');
-      expect(parameters[1].getType(), int);
+      expect(parameters.elementAt(0).getName(), 'name');
+      expect(parameters.elementAt(0).getType(), String);
+      expect(parameters.elementAt(1).getName(), 'age');
+      expect(parameters.elementAt(1).getType(), int);
     });
     
     test('getParameterCount() returns correct count', () {
@@ -154,8 +154,8 @@ void main() {
       final types = constructor!.getParameterTypes();
       
       expect(types.length, 2);
-      expect(types[0].getSimpleName(), 'String');
-      expect(types[1].getSimpleName(), 'int');
+      expect(types.elementAt(0).getSimpleName(), 'String');
+      expect(types.elementAt(1).getSimpleName(), 'int');
     });
     
     test('newInstance() creates instance', () {

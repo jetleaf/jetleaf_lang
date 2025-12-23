@@ -15,7 +15,7 @@
 part of 'class.dart';
 
 @Generic(_Class)
-class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
+final class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   String _name;
   final String? _package;
   final ProtectionDomain _pd;
@@ -24,44 +24,25 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   late final ClassDeclaration _declaration;
   
   _Class(this._name, this._pd, this._package, this._link) {
-    final checker = _name != T.toString() ? _name : T;
-
-    ClassDeclaration? result = _name != T.toString() 
-      ? TypeDiscovery.findClassByName(_name, _package) ?? TypeDiscovery.findClassByType(T, _package)
-      : TypeDiscovery.findClassByType(T, _package) ?? TypeDiscovery.findClassByName(_name, _package);
-    result ??= _predict(checker.toString());
-
-    _declaration = result;
+    if (_name != T.toString()) {
+      try {
+        _declaration = Runtime.findClassByName(_name, _package);
+      } on ClassNotFoundException catch (_) {
+        _declaration = Runtime.findClass<T>(_package);
+      }
+    } else {
+      try {
+        _declaration = Runtime.findClass<T>(_package);
+      } on ClassNotFoundException catch (_) {
+        _declaration = Runtime.findClassByName(_name, _package);
+      }
+    }
   }
 
-  _Class.fromQualifiedName(this._name, this._pd, this._link) : _package = null {
-    ClassDeclaration? result = TypeDiscovery.findClassByQualifiedName(_name);
-
-    if (result == null && _name == "dart:mirrors.void") {
-      result = TypeDiscovery.findClassByName("void", _package) ?? TypeDiscovery.findClassByQualifiedName(Void.getQualifiedName());
-    }
-
-    if (_name == "dart:mirrors.dynamic" || _name == "dynamic") {
-      result = TypeDiscovery.findClassByName("dynamic", _package) ?? TypeDiscovery.findClassByQualifiedName(Dynamic.getQualifiedName());
-    }
-
-    result ??= _predict(_name);
-
-    _declaration = result;
-    _name = result.getName();
+  _Class.fromQualifiedName(this._name, [ProtectionDomain? pd, this._link]) : _package = null, _pd = pd ?? ProtectionDomain.current() {
+    _declaration = Runtime.findClassByQualifiedName(_name);
+    _name = _declaration.getName();
   }
-
-  ClassDeclaration _predict(String name) {
-    if (name == "dynamic") {
-      return DYNAMIC_CLASS.getClassDeclaration();
-    }
-
-    if (name == "void") {
-      return VOID_CLASS.getClassDeclaration();
-    }
-
-    throw ClassNotFoundException(name);
-  } 
 
   _Class.declared(this._declaration, this._pd) : _link = null, _name = _declaration.getName(), _package = null;
 
@@ -126,26 +107,6 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   Author? getAuthor() => super.getAuthor() ?? getAnnotation<Author>();
 
-  @override
-  List<LinkDeclaration> getTypeArgumentLinks() {
-    checkAccess("getTypeArgumentLinks", DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(_link?.getTypeArguments() ?? _declaration.getTypeArguments());
-  }
-
-  @override
-  List<Class<Object>> getTypeArguments() {
-    checkAccess("getTypeArguments", DomainPermission.READ_TYPE_INFO);
-
-    final args = <Class<Object>>[];
-
-    for (final link in getTypeArgumentLinks()) {
-      final keyDeclaration = MetaClassLoader.getFromLink(link, _pd);
-      args.add(Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link));
-    }
-
-    return UnmodifiableListView(args);
-  }
-
   // ---------------------------------------------------------------------------------------------------------
   // === Name Information ===
   // ---------------------------------------------------------------------------------------------------------
@@ -181,18 +142,30 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   }
 
   // ---------------------------------------------------------------------------------------------------------
-  // === Comparable Methods ===
+  // === Type Comparators ===
   // ---------------------------------------------------------------------------------------------------------
   
   @override
-  bool isCanonical() => getName() == getCanonicalName();
+  bool isCanonical() {
+    checkAccess("isCanonical", DomainPermission.READ_TYPE_INFO);
+
+    if (_declaration case FunctionDeclaration declaration) {
+      return declaration.getIsCanonical();
+    }
+
+    if (_declaration case RecordDeclaration declaration) {
+      return declaration.getIsCanonical();
+    }
+
+    return getName() == getCanonicalName();
+  }
 
   @override
   bool isInvokable() => !isAbstract() || getConstructors().any((c) => c.isFactory());
 
   @override
   bool isInstance(Object? obj) {
-    if (obj is FunctionClass || obj is RecordClass) return false;
+    checkAccess("isInstance", DomainPermission.READ_TYPE_INFO);
 
     if (obj == null) return false;
 
@@ -205,6 +178,14 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     }
 
     if(obj is Class) {
+      if (obj.getClassDeclaration() is FunctionDeclaration) {
+        return isAssignableFrom(obj);
+      }
+
+      if (obj.getClassDeclaration() is RecordDeclaration) {
+        return isAssignableFrom(obj);
+      }
+
       if (obj.getQualifiedName() == Dynamic.getQualifiedName() || obj == DYNAMIC_CLASS) {
         return true;
       }
@@ -268,10 +249,29 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   
   @override
   bool isAssignableFrom(Class other) {
-    if (other is FunctionClass || other is RecordClass) return false;
+    checkAccess("isAssignableFrom", DomainPermission.READ_TYPE_INFO);
 
-    if(_declaration.isAssignableFrom(other.getClassDeclaration())) {
-      return true;
+    if (_declaration is FunctionDeclaration && other.getClassDeclaration() is FunctionDeclaration) {
+      bool isAssignableFrom = true;
+      final params = getParameters();
+      final otherParams = other.getParameters();
+
+      if (params.length != otherParams.length) return false;
+
+      for (int i = 0; i < params.length; i++) {
+        final thisParam = params.elementAt(i);
+        final otherParam = otherParams.elementAt(i);
+
+        if (!thisParam.isAssignableFrom(otherParam)) {
+          isAssignableFrom = false;
+        }
+      }
+
+      return getReturnType().isAssignableFrom(other.getReturnType()) && isAssignableFrom;
+    }
+
+    if (_declaration is RecordDeclaration && other.getClassDeclaration() is RecordDeclaration) {
+      return true; // Support for assignability checks for record is not yet available.
     }
 
     return other.isAssignableTo(this);
@@ -279,10 +279,14 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
 
   @override
   bool isAssignableTo(Class other) {
-    if (other is FunctionClass || other is RecordClass) return false;
+    checkAccess("isAssignableTo", DomainPermission.READ_TYPE_INFO);
 
-    if(_declaration.isAssignableTo(other.getClassDeclaration())) {
-      return true;
+    if (_declaration is FunctionDeclaration && other.getClassDeclaration() is FunctionDeclaration) {
+      return other.isAssignableFrom(this);
+    }
+
+    if (_declaration is RecordDeclaration && other.getClassDeclaration() is RecordDeclaration) {
+      return true; // Support for assignability checks for record is not yet available.
     }
 
     if(getQualifiedName() == other.getQualifiedName()) {
@@ -302,77 +306,28 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   
   @override
   bool isSubclassOf(Class other) {
-    if (other is FunctionClass || other is RecordClass) return false;
-
-    if(this == other) {
-      return true;
+    if (_declaration is FunctionDeclaration && other.getClassDeclaration() is FunctionDeclaration) {
+      return false; // Support for sub class checks for function is not yet available.
     }
 
-    if(getQualifiedName() == other.getQualifiedName()) {
-      return true;
-    }
-    
-    final superClass = getSuperClass();
-    if (superClass == null) return false;
-
-    if(superClass == other) {
-      return true;
+    if (_declaration is RecordDeclaration && other.getClassDeclaration() is RecordDeclaration) {
+      return false; // Support for sub class checks for record is not yet available.
     }
 
-    if(superClass.getQualifiedName() == other.getQualifiedName()) {
-      return true;
-    }
+    if(this == other) return true;
 
-    if(superClass.isSubclassOf(other)) {
-      return true;
+    if(getQualifiedName() == other.getQualifiedName()) return true;
+
+    if (getSuperClass() case final superClass?) {
+      if(superClass.isSubclassOf(other)) return true;
     }
 
     final interfaces = getAllInterfaces();
     for (final interface in interfaces) {
-      if(interface.isSubclassOf(other)) {
-        return true;
-      }
+      if(interface.isSubclassOf(other)) return true;
     }
 
     return false;
-  }
-
-  @override
-  List<Object?> equalizedProperties() => [
-    _declaration.getName(),
-    _declaration.getSimpleName(),
-    _declaration.getQualifiedName(),
-    _declaration.getPackageUri(),
-    _declaration.getKind(),
-    _declaration.getDebugIdentifier(),
-    _declaration.getType(),
-    _declaration.getIsNullable(),
-    _declaration.getIsPublic(),
-    _declaration.isGeneric()
-  ];
-  
-  @override
-  String toString() => 'Class<${getName()}>:Class<${getType()}>:${getQualifiedName()}';
-
-  // =========================================== HELPER METHODS ===============================================
-
-  @override
-  List<String> getModifiers() {
-    checkAccess('getModifiers', DomainPermission.READ_TYPE_INFO);
-
-    return [
-      if (isPublic()) 'PUBLIC',
-      if (!isPublic()) 'PRIVATE',
-      if (isBase()) 'BASE',
-      if (isAbstract()) 'ABSTRACT',
-      if (isEnum()) 'ENUM',
-      if (isFinal()) 'FINAL',
-      if (isInterface()) 'INTERFACE',
-      if (isMixin()) 'MIXIN',
-      if (isRecord()) 'RECORD',
-      if (isSealed()) 'SEALED',
-      if (isClass()) 'CLASS',
-    ];
   }
 
   @override
@@ -403,11 +358,17 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     checkAccess('isBase', DomainPermission.READ_TYPE_INFO);
     return _declaration.getIsBase();
   }
+
+  @override
+  bool isClosure() {
+    checkAccess('isClosure', DomainPermission.READ_TYPE_INFO);
+    return _declaration is ClosureDeclaration;
+  }
   
   @override
   bool isEnum() {
     checkAccess('isEnum', DomainPermission.READ_TYPE_INFO);
-    return _declaration.asEnum() != null;
+    return _declaration is EnumDeclaration;
   }
   
   @override
@@ -419,7 +380,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   bool isFunction() {
     checkAccess('isFunction', DomainPermission.READ_TYPE_INFO);
-    return false;
+    return _declaration is FunctionDeclaration;
   }
   
   @override
@@ -437,7 +398,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   bool isRecord() {
     checkAccess('isRecord', DomainPermission.READ_TYPE_INFO);
-    return false;
+    return _declaration is RecordDeclaration;
   }
 
   @override
@@ -461,7 +422,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   bool isClass() {
     checkAccess('isClass', DomainPermission.READ_TYPE_INFO);
-    return true;
+    return !isEnum() || !isMixin() || !isRecord() || !isFunction() || !isClosure();
   }
 
   @override
@@ -473,7 +434,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   @override
   bool hasGenerics() {
     checkAccess('hasGenerics', DomainPermission.READ_TYPE_INFO);
-    return GenericTypeParser.isGeneric(T.toString()) || GenericTypeParser.isGeneric(_name);
+    return _declaration.isGeneric() || GenericTypeParser.isGeneric(T.toString()) || GenericTypeParser.isGeneric(_name);
   }
 
   @override
@@ -483,9 +444,9 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
       || (getTypeArgumentLinks().isNotEmpty && getTypeArgumentLinks().length == 1)
       || T.toString().startsWith("List<") || T.toString().startsWith("Iterable")
       || T is List || T is Iterable || T == List || T == Set || T == Iterable 
-      || isAssignableTo(Class.of<List>())
-      || isAssignableTo(Class.of<Set>()) 
-      || isAssignableTo(Class.of<Iterable>());
+      || isAssignableTo(Class<List>())
+      || isAssignableTo(Class<Set>()) 
+      || isAssignableTo(Class<Iterable>());
   }
 
   @override
@@ -494,8 +455,9 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     return (getTypeArgumentLinks().isNotEmpty && getTypeArgumentLinks().length >= 2) 
       || _declaration.getKind() == TypeKind.mapType
       || T == Map 
-      || isAssignableTo(Class.of<Map>()) 
-      || isAssignableTo(Class.of<MapEntry>());
+      || T == MapEntry
+      || isAssignableTo(Class<Map>()) 
+      || isAssignableTo(Class<MapEntry>());
   }
 
   @override
@@ -509,18 +471,22 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     final Type baseType = getType();
 
     // Common Dart built-ins we treat as primitives:
-    if (baseType == Class.of<bool>().getType()) return true;
-    if (baseType == Class.of<int>().getType()) return true;
-    if (baseType == Class.of<double>().getType()) return true;
-    if (baseType == Class.of<String>().getType()) return true;
-    if (baseType == Class.of<Symbol>().getType()) return true;
-    if (baseType == Class.of<Null>().getType()) return true;
+    if (baseType == Class<bool>().getType()) return true;
+    if (baseType == Class<int>().getType()) return true;
+    if (baseType == Class<double>().getType()) return true;
+    if (baseType == Class<String>().getType()) return true;
+    if (baseType == Class<Symbol>().getType()) return true;
+    if (baseType == Class<Null>().getType()) return true;
 
     // Also consider 'num' as a builtin primitive-like type
-    if (baseType == Class.of<num>().getType()) return true;
+    if (baseType == Class<num>().getType()) return true;
 
     return false;
   }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Type Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
   Type getType() {
@@ -534,33 +500,172 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     return T;
   }
 
+  // ---------------------------------------------------------------------------------------------------------
+  // === Package Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
   @override
-  Package? getPackage() {
+  Package getPackage() {
     checkAccess('getPackage', DomainPermission.READ_TYPE_INFO);
-    return _declaration.getDeclaration()?.getParentLibrary().getPackage();
+    return _declaration.getLibrary().getPackage();
   }
 
   @override
-  Version? getVersion() {
+  Version getVersion() {
     checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
 
-    if (getPackage() case final package?) {
-      return Version.parse(package.getVersion());
+    if (getAnnotation<Version>() case final version?) {
+      return version;
+    }
+    
+    return Version.parse(getPackage().getVersion());
+  }
+
+  @override
+  ProtectionDomain getProtectionDomain() => _pd;
+
+  @override
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_TYPE_INFO);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isBase()) 'BASE',
+      if (isAbstract()) 'ABSTRACT',
+      if (isEnum()) 'ENUM',
+      if (isFinal()) 'FINAL',
+      if (isInterface()) 'INTERFACE',
+      if (isMixin()) 'MIXIN',
+      if (isRecord()) 'RECORD',
+      if (isSealed()) 'SEALED',
+      if (isClass()) 'CLASS',
+    ];
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Function Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
+  Class<Object> getReturnType() {
+    checkAccess("getReturnType", DomainPermission.READ_TYPE_INFO);
+
+    if (_declaration case FunctionDeclaration declaration) {
+      return LangUtils.obtainClassFromLink(declaration.getReturnType());
+    }
+
+    return Class.fromQualifiedName(getQualifiedName(), _pd);
+  }
+
+  @override
+  bool getIsNullable() {
+    checkAccess("isNullable", DomainPermission.READ_TYPE_INFO);
+
+    if (_declaration case FunctionDeclaration declaration) {
+      return declaration.isNullable();
+    }
+
+    if (_declaration case RecordDeclaration declaration) {
+      return declaration.getIsNullable();
+    }
+
+    return false;
+  }
+
+  @override
+  Method? getMethodCall() {
+    checkAccess("getMethodCall", DomainPermission.READ_METHODS);
+
+    if (_declaration case FunctionDeclaration declaration) {
+      if (declaration.getMethodCall() case final method?) {
+        return Method.declared(method, _pd);
+      }
+    }
+    
+    return null;
+  }
+
+  @override
+  Iterable<Class<Object>> getParameters() sync* {
+    checkAccess("getParameters", DomainPermission.READ_TYPE_INFO);
+
+    if (_declaration case FunctionDeclaration declaration) {
+      final parameterDeclarations = declaration.getParameters();
+      
+      if (parameterDeclarations.isNotEmpty) {
+        for (final link in parameterDeclarations) {
+          yield LangUtils.obtainClassFromLink(link.getLinkDeclaration());
+        }
+      } else {
+        for (final link in declaration.getLinkParameters()) {
+          yield LangUtils.obtainClassFromLink(link);
+        }
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Record Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
+  RecordField? getRecordField(Object id) {
+    checkAccess("getRecordField", DomainPermission.READ_FIELDS);
+
+    if (_declaration case RecordDeclaration declaration) {
+      if (id is String) {
+        final field = declaration.getRecordField(id);
+        return field != null ? RecordField.linked(field, declaration, _pd) : null;
+      }
+
+      if (id is int) {
+        final field = declaration.getPositionalField(id);
+        return field != null ? RecordField.linked(field, declaration, _pd) : null;
+      }
     }
 
     return null;
   }
 
   @override
-  List<Class> getTypeParameters() {
-    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findTypeParameters(this));
+  Iterable<RecordField> getRecordFields() sync* {
+    checkAccess("getRecordFields", DomainPermission.READ_FIELDS);
+
+    if (_declaration case RecordDeclaration declaration) {
+      for (final field in declaration.getRecordFields()) {
+        yield RecordField.linked(field, declaration, _pd);
+      }
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Generic Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
+  List<LinkDeclaration> getTypeArgumentLinks() {
+    checkAccess("getTypeArgumentLinks", DomainPermission.READ_TYPE_INFO);
+    return UnmodifiableListView(_link?.getTypeArguments() ?? _declaration.getTypeArguments());
   }
 
   @override
-  ProtectionDomain getProtectionDomain() => _pd;
+  Iterable<Class<Object>> getTypeArguments() sync* {
+    checkAccess("getTypeArguments", DomainPermission.READ_TYPE_INFO);
+    
+    for (final link in getTypeArgumentLinks()) {
+      yield LangUtils.obtainClassFromLink(link, _pd);
+    }
+  }
 
-  // =========================================== NESTED ACCESSORS ==============================================
+  @override
+  Iterable<Class> getTypeParameters() sync* {
+    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
+    
+    for (final link in getTypeArgumentLinks()) {
+      yield LangUtils.obtainClassFromLink(link, _pd);
+    }
+  }
 
   @override
   Class<K>? keyType<K>() {
@@ -568,19 +673,19 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
 
     if (!isKeyValuePaired()) return null;
 
-    final args = _link?.getTypeArguments();
-    if (args != null && args.isNotEmpty && args.length < 2) {
-      final link = args[0];
-      final keyDeclaration = MetaClassLoader.getFromLink(link, _pd);
-      return Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
-    }
-    
-    final type = MetaClassLoader.extractKeyType(this);
-    if (MetaClassLoader.findKeyType<K>(this, type) case final key?) {
-      return key;
+    final typeArgs = _link?.getTypeArguments() ?? _declaration.getTypeArguments();
+
+    if (typeArgs.length >= 2) {
+      final link = typeArgs[0];
+
+      if (Dynamic.isDynamic<K>()) {
+        return Class.declared(LangUtils.obtainTypedClassFromLink(link, _pd).getClassDeclaration(), _pd);
+      }
+
+      return Class<K>.declared(LangUtils.obtainTypedClassFromLink(link, _pd).getClassDeclaration(), _pd);
     }
 
-    if (isKeyValuePaired() && (K.toString() == "dynamic" || K.toString() == "Object")) {
+    if (isKeyValuePaired() && (Dynamic.isDynamic<K>() || K.toString() == "Object")) {
       return Class<Object>() as Class<K>;
     }
 
@@ -591,108 +696,143 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   Class<C>? componentType<C>() {
     checkAccess('componentType', DomainPermission.READ_TYPE_INFO);
 
-    final args = _link?.getTypeArguments();
-    if (args != null && args.isNotEmpty) {
-      final link = args.length == 1 ? args[0] : args[1];
-      final component = MetaClassLoader.getFromLink(link, _pd);
-      return Class.fromQualifiedName(component.getQualifiedName(), _pd, link);
+    final typeArgs = _link?.getTypeArguments() ?? _declaration.getTypeArguments();
+    LinkDeclaration? link;
+    
+    if (typeArgs.isNotEmpty && typeArgs.length == 1) {
+      link = typeArgs.first;
+    } else if (typeArgs.length >= 2) {
+      link = typeArgs[1];
     }
 
-    final type = MetaClassLoader.extractComponentType(this);
-    if (MetaClassLoader.findComponentType<C>(this, type) case final component?) {
-      return component;
+    if (link != null) {
+      if (Dynamic.isDynamic<C>()) {
+        return Class.declared(LangUtils.obtainTypedClassFromLink(link, _pd).getClassDeclaration(), _pd);
+      }
+
+      return Class<C>.declared(LangUtils.obtainTypedClassFromLink(link, _pd).getClassDeclaration(), _pd);
     }
 
-    if (isArray() && (C.toString() == "dynamic" || C.toString() == "Object")) {
+    if (isArray() && (Dynamic.isDynamic<C>() || C.toString() == "Object")) {
       return Class<Object>() as Class<C>;
     }
 
     return null;
   }
 
-  // =========================================== SUPER CLASS METHODS ============================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Super Class Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
   Class<S>? getSuperClass<S>() {
     checkAccess('getSuperclass', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findSuperClassAs<S>(this, false);
+
+    final superLink = _declaration.getSuperClass();
+    if (superLink == null) return null;
+
+    final declaration = LangUtils.obtainClassFromLink(superLink).getClassDeclaration();
+    final superClass = Class<S>.declared(declaration, _pd);
+
+    // If S is dynamic, or the direct superclass matches, return it
+    try {
+      if (S.toString() == 'dynamic' || _linkMatches(superLink, Class<S>())) {
+        return Class<S>.declared(declaration, _pd);
+      }
+    } on ClassNotFoundException catch (_) {
+      return Class<S>.declared(declaration, _pd);
+    }
+
+    // Otherwise, walk up the hierarchy
+    return superClass.getSuperClass<S>();
   }
 
-  @override
-  Class? getDeclaredSuperClass() {
-    checkAccess('getDeclaredSuperclass', DomainPermission.READ_TYPE_INFO);
-    return MetaClassLoader.findSuperClass(this);
-  }
+  /// Compare [LinkDeclaration] with [Class] api
+  /// 
+  /// The comparison happens with these:
+  /// - [LinkDeclaration.getType] - [Class.getType]
+  /// - [LinkDeclaration.getPointerType] - [Class.getType]
+  /// - [LinkDeclaration.getPointerQualifiedName] - [Class.getQualifiedName]
+  /// - [LinkDeclaration.getType] - [Class.getOriginal]
+  /// - [LinkDeclaration.getPointerType] - [Class.getOriginal] 
+  bool _linkMatches(LinkDeclaration decl, Class check) => decl.getPointerQualifiedName() == check.getQualifiedName()
+    || decl.getType() == check.getType()
+    || decl.getPointerType() == check.getType()
+    || decl.getType() == check.getOriginal()
+    || decl.getPointerType() == check.getOriginal();
   
   @override
-  List<Class> getSuperClassArguments() {
+  Iterable<Class> getSuperClassArguments() sync* {
     checkAccess('getSuperClassArguments', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findSuperClassArguments(this));
+
+    if (_declaration.getSuperClass() case final superClass?) {
+      for (final arg in superClass.getTypeArguments()) {
+        yield LangUtils.obtainClassFromLink(arg, _pd);
+      }
+    }
   }
 
-  // =========================================== SUB CLASS METHODS ===========================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Sub Class Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Class> getSubClasses() {
+  Iterable<Class> getSubClasses() sync* {
     checkAccess('getSubClasses', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findSubclasses(this));
+    
+    for (final declaration in Runtime.getSubClasses(_declaration)) {
+      yield Class.declared(declaration, _pd);
+    }
   }
 
   @override
   Class<S>? getSubClass<S>() {
     checkAccess('getSubClass', DomainPermission.READ_TYPE_INFO);
 
-    final list = getSubClasses().where((c) => c.getQualifiedName() == Class<S>().getQualifiedName());
-    if (list.isEmpty) {
-      return null;
+    final classes = getSubClasses();
+    final check = Class<S>();
+
+    for (final cls in classes) {
+      if (cls.getQualifiedName() == check.getQualifiedName()) {
+        return Class<S>.declared(cls.getClassDeclaration(), _pd);
+      }
     }
-    return list.first as Class<S>;
+
+    return null;
   }
 
-  // ====================================== INTERFACE ACCESS METHODS ==========================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Interface Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Class> getAllInterfaces() {
+  Iterable<Class> getAllInterfaces() sync* {
     checkAccess('getInterfaces', DomainPermission.READ_TYPE_INFO);
     
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findAllConstraints(this, false));
+    for (final item in _declaration.getInterfaces()) {
+      yield LangUtils.obtainClassFromLink(item, _pd);
     }
-
-    return UnmodifiableListView(MetaClassLoader.findAllInterfaces(this, false));
   }
 
   @override
-  List<Class> getAllDeclaredInterfaces() {
-    checkAccess('getAllDeclaredInterfaces', DomainPermission.READ_TYPE_INFO);
-    
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findAllConstraints(this));
-    }
-
-    return UnmodifiableListView(MetaClassLoader.findAllInterfaces(this));
-  }
-
-  @override
-  List<Class<I>> getInterfaces<I>() {
+  Iterable<Class<I>> getInterfaces<I>() sync* {
     checkAccess('getInterfaces', DomainPermission.READ_TYPE_INFO);
     
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findConstraints<I>(this, false));
+    if (Dynamic.isDynamic<I>()) {
+      for (final item in _declaration.getInterfaces()) {
+        final cls = LangUtils.obtainClassFromLink(item, _pd);
+        yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+      }
+    } else {
+      final check = Class<I>();
+
+      for (final item in _declaration.getInterfaces()) {
+        if (_linkMatches(item, check)) {
+          final cls = LangUtils.obtainClassFromLink(item, _pd);
+          yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+        }
+      }
     }
-
-    return UnmodifiableListView(MetaClassLoader.findInterfaces<I>(this, false));
-  }
-
-  @override
-  List<Class<I>> getDeclaredInterfaces<I>() {
-    checkAccess('getDeclaredInterfaces', DomainPermission.READ_TYPE_INFO);
-    
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findConstraints<I>(this));
-    }
-
-    return UnmodifiableListView(MetaClassLoader.findInterfaces<I>(this));
   }
 
   @override
@@ -708,109 +848,194 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   }
 
   @override
-  Class<I>? getDeclaredInterface<I>() {
-    checkAccess('getDeclaredInterface', DomainPermission.READ_TYPE_INFO);
+  Iterable<Class> getInterfaceArguments<I>() sync* {
+    checkAccess('getInterfaceArguments', DomainPermission.READ_TYPE_INFO);
     
-    final list = getDeclaredInterfaces<I>();
+    if (Dynamic.isDynamic<I>()) {
+      final arguments = _declaration.getInterfaces().flatMap((i) => i.getTypeArguments());
+
+      for (final item in arguments) {
+        yield LangUtils.obtainClassFromLink(item, _pd);
+      }
+    } else {
+      final check = Class<I>();
+
+      for (final item in _declaration.getInterfaces()) {
+        if (_linkMatches(item, check)) {
+          for (final arg in item.getTypeArguments()) {
+            yield LangUtils.obtainClassFromLink(arg, _pd);
+          }
+        }
+      }
+    }
+  }
+
+  @override
+  Iterable<Class> getAllInterfaceArguments() sync* {
+    checkAccess('getAllInterfaceArguments', DomainPermission.READ_TYPE_INFO);
+    
+    final arguments = _declaration.getInterfaces().flatMap((i) => i.getTypeArguments());
+    
+    for (final item in arguments) {
+      yield LangUtils.obtainClassFromLink(item, _pd);
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Mixin Constraint Information ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
+  Iterable<Class> getAllMixinConstraints() sync* {
+    checkAccess('getMixinConstraints', DomainPermission.READ_TYPE_INFO);
+    
+    if (_declaration case MixinDeclaration declaration) {
+      for (final item in declaration.getConstraints()) {
+        yield LangUtils.obtainClassFromLink(item, _pd);
+      }
+    }
+  }
+
+  @override
+  Iterable<Class<I>> getMixinConstraints<I>() sync* {
+    checkAccess('getMixinConstraints', DomainPermission.READ_TYPE_INFO);
+    
+    if (_declaration case MixinDeclaration declaration) {
+      if (Dynamic.isDynamic<I>()) {
+        for (final item in declaration.getConstraints()) {
+          final cls = LangUtils.obtainClassFromLink(item, _pd);
+          yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+        }
+      } else {
+        final check = Class<I>();
+
+        for (final item in declaration.getConstraints()) {
+          if (_linkMatches(item, check)) {
+            final cls = LangUtils.obtainClassFromLink(item, _pd);
+            yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+          }
+        }
+      }
+    }
+  }
+
+  @override
+  Class<I>? getMixinConstraint<I>() {
+    checkAccess('getMixinConstraint', DomainPermission.READ_TYPE_INFO);
+    
+    final list = getMixinConstraints<I>();
     if (list.isEmpty) {
       return null;
     }
 
     return list.first;
   }
-  
-  @override
-  List<Class> getInterfaceArguments<I>() {
-    checkAccess('getInterfaceArguments', DomainPermission.READ_TYPE_INFO);
-    
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findConstraintArguments<I>(this, false));
-    }
 
-    return UnmodifiableListView(MetaClassLoader.findInterfaceArguments<I>(this, false));
+  @override
+  Iterable<Class> getMixinConstraintArguments<I>() sync* {
+    checkAccess('getMixinConstraintArguments', DomainPermission.READ_TYPE_INFO);
+    
+    if (_declaration case MixinDeclaration declaration) {
+      if (Dynamic.isDynamic<I>()) {
+        final arguments = declaration.getConstraints().flatMap((i) => i.getTypeArguments());
+
+        for (final item in arguments) {
+          yield LangUtils.obtainClassFromLink(item, _pd);
+        }
+      } else {
+        final check = Class<I>();
+
+        for (final item in declaration.getConstraints()) {
+          if (_linkMatches(item, check)) {
+            for (final arg in item.getTypeArguments()) {
+              yield LangUtils.obtainClassFromLink(arg, _pd);
+            }
+          }
+        }
+      }
+    }
   }
 
   @override
-  List<Class> getDeclaredInterfaceArguments<I>() {
-    checkAccess('getDeclaredInterfaceArguments', DomainPermission.READ_TYPE_INFO);
+  Iterable<Class> getAllMixinConstraintArguments() sync* {
+    checkAccess('getAllMixinConstraintArguments', DomainPermission.READ_TYPE_INFO);
     
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findConstraintArguments<I>(this));
+    if (_declaration case MixinDeclaration declaration) {
+      final arguments = declaration.getConstraints().flatMap((i) => i.getTypeArguments());
+    
+      for (final item in arguments) {
+        yield LangUtils.obtainClassFromLink(item, _pd);
+      }
     }
-
-    return UnmodifiableListView(MetaClassLoader.findInterfaceArguments<I>(this));
   }
 
-  @override
-  List<Class> getAllInterfaceArguments() {
-    checkAccess('getAllInterfaceArguments', DomainPermission.READ_TYPE_INFO);
-    
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findAllConstraintArguments(this, false));
-    }
-
-    return UnmodifiableListView(MetaClassLoader.findAllInterfaceArguments(this, false));
-  }
+  // ---------------------------------------------------------------------------------------------------------
+  // === Mixin Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Class> getAllDeclaredInterfaceArguments() {
-    checkAccess('getAllDeclaredInterfaceArguments', DomainPermission.READ_TYPE_INFO);
-    
-    if(_declaration.asMixin() != null) {
-      return UnmodifiableListView(MetaClassLoader.findAllConstraintArguments(this));
-    }
-
-    return UnmodifiableListView(MetaClassLoader.findAllInterfaceArguments(this));
-  }
-
-  // =========================================== MIXIN ACCESS METHODS ==========================================
-
-  @override
-  List<Class> getAllMixins() {
+  Iterable<Class> getAllMixins() sync* {
     checkAccess('getAllMixins', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findAllMixins(this, false));
-  }
-
-  @override
-  List<Class> getAllDeclaredMixins() {
-    checkAccess('getAllMixins', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findAllMixins(this));
+    
+    for (final item in _declaration.getMixins()) {
+      yield LangUtils.obtainClassFromLink(item, _pd);
+    }
   }
   
   @override
-  List<Class> getMixinsArguments<M>() {
+  Iterable<Class> getMixinsArguments<M>() sync* {
     checkAccess('getMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findMixinArguments<M>(this, false));
-  }
+    
+    if (Dynamic.isDynamic<M>()) {
+      final arguments = _declaration.getMixins().flatMap((i) => i.getTypeArguments());
 
-  @override
-  List<Class> getDeclaredMixinsArguments<M>() {
-    checkAccess('getDeclaredMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findMixinArguments<M>(this));
+      for (final item in arguments) {
+        yield LangUtils.obtainClassFromLink(item, _pd);
+      }
+    } else {
+      final check = Class<M>();
+
+      for (final item in _declaration.getMixins()) {
+        if (_linkMatches(item, check)) {
+          for (final arg in item.getTypeArguments()) {
+            yield LangUtils.obtainClassFromLink(arg, _pd);
+          }
+        }
+      }
+    }
   }
   
   @override
-  List<Class> getAllMixinsArguments() {
+  Iterable<Class> getAllMixinsArguments() sync* {
     checkAccess('getAllMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findAllMixinArguments(this, false));
+    
+    final arguments = _declaration.getMixins().flatMap((i) => i.getTypeArguments());
+    
+    for (final item in arguments) {
+      yield LangUtils.obtainClassFromLink(item, _pd);
+    }
   }
 
-  @override
-  List<Class> getAllDeclaredMixinsArguments() {
-    checkAccess('getAllDeclaredMixinsArguments', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findAllMixinArguments(this));
-  }
   
   @override
-  List<Class<I>> getMixins<I>() {
+  Iterable<Class<I>> getMixins<I>() sync* {
     checkAccess('getMixins', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findMixins<I>(this, false));
-  }
+    
+    if (Dynamic.isDynamic<I>()) {
+      for (final item in _declaration.getMixins()) {
+        final cls = LangUtils.obtainClassFromLink(item, _pd);
+        yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+      }
+    } else {
+      final check = Class<I>();
 
-  @override
-  List<Class<I>> getDeclaredMixins<I>() {
-    checkAccess('getDeclaredMixins', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView(MetaClassLoader.findMixins<I>(this));
+      for (final item in _declaration.getMixins()) {
+        if (_linkMatches(item, check)) {
+          final cls = LangUtils.obtainClassFromLink(item, _pd);
+          yield Class<I>.declared(cls.getClassDeclaration(), _pd);
+        }
+      }
+    }
   }
 
   @override
@@ -825,65 +1050,49 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     return list.first;
   }
 
-  @override
-  Class<I>? getDeclaredMixin<I>() {
-    checkAccess('getDeclaredMixin', DomainPermission.READ_TYPE_INFO);
-
-    final list = getDeclaredMixins<I>();
-    if (list.isEmpty) {
-      return null;
-    }
-
-    return list.first;
-  }
-
   // ---------------------------------------------------------------------------------------------------------
   // === Annotation Information ===
   // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Annotation> getAllDirectAnnotations() {
+  Iterable<Annotation> getAllDirectAnnotations() sync* {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
-    final annotations = _declaration.getAnnotations();
-    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
+    for (final annotation in _declaration.getAnnotations()) {
+      yield Annotation.declared(annotation, getProtectionDomain());
+    }
   }
 
   @override
-  List<Annotation> getAllAnnotations() {
-    checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
-    return UnmodifiableListView(_getAllAnnotations());
-  }
-
-  List<Annotation> _getAllAnnotations([Set<Class>? visited]) {
+  Iterable<Annotation> getAllAnnotations() sync* {
     checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
 
-    visited ??= <Class>{};
+    final visited = <Class>{};
 
-    // If this class has already been processed, stop to avoid cycles.
-    if (!visited.add(this)) {
-      return const [];
-    }
+    // Local generator to allow passing visited set recursively
+    Iterable<Annotation> generateAll(Class cls) sync* {
+      // Avoid cycles
+      if (!visited.add(cls)) return;
 
-    final list = <Annotation>[];
-    list.addAll(getAllDirectAnnotations());
+      // Yield direct annotations
+      for (final annotation in cls.getAllDirectAnnotations()) {
+        yield annotation;
+      }
 
-    // Superclass
-    final superClass = getSuperClass();
-    if (superClass != null && superClass is _Class) {
-      list.addAll(superClass._getAllAnnotations(visited));
-    }
+      // Yield from superclass
+      if (getSuperClass() case final superClass?) {
+        yield* generateAll(superClass);
+      }
 
-    // Interfaces
-    for (final interface in getInterfaces()) {
-      if(interface is _Class) {
-        list.addAll(interface._getAllAnnotations(visited));
+      // Yield from interfaces
+      for (final interface in cls.getInterfaces()) {
+        yield* generateAll(interface);
       }
     }
 
-    return list;
+    yield* generateAll(this);
   }
-  
+
   @override
   A? getAnnotation<A>() {
     checkAccess('getAnnotation', DomainPermission.READ_ANNOTATIONS);
@@ -899,10 +1108,15 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   }
   
   @override
-  List<A> getAnnotations<A>() {
+  Iterable<A> getAnnotations<A>() sync* {
     checkAccess('getAnnotations', DomainPermission.READ_ANNOTATIONS);
+    
     final annotations = getAllAnnotations();
-    return UnmodifiableListView(annotations.where((a) => a.matches<A>()).map((a) => a.getInstance<A>()));
+    for (final annotation in annotations) {
+      if (annotation.matches<A>()) {
+        yield annotation.getInstance<A>();
+      }
+    }
   }
 
   @override
@@ -911,102 +1125,75 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     return getAnnotation<A>() != null;
   }
 
-  // ========================================== DECLARED MEMBERS ========================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Member Information ===
+  // ---------------------------------------------------------------------------------------------------------
   
   @override
-  List<Member> getDeclaredMembers() {
+  Iterable<Member> getDeclaredMembers() sync* {
     checkAccess('getDeclaredMembers', DomainPermission.READ_TYPE_INFO);
-    return UnmodifiableListView([...getMethods(), ...getConstructors(), ...getFields()]);
+
+    yield* getMethods();
+    yield* getConstructors();
+    yield* getFields();
   }
 
-  // ============================================ FIELD METHODS ===============================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Field Information ===
+  // ---------------------------------------------------------------------------------------------------------
   
   @override
   Field? getField(String name) {
     checkAccess('getField', DomainPermission.READ_TYPE_INFO);
-
-    if (_declaration is EnumDeclaration) {
-      final field = getEnumValuesAsFields().firstWhereOrNull((f) => f.getName().equals(name));
-      if (field != null) {
-        return field;
-      }
-    }
-
     return getFields().firstWhereOrNull((f) => f.getName().equals(name));
   }
   
   @override
-  List<Field> getFields() {
+  Iterable<Field> getFields() sync* {
     checkAccess('getFields', DomainPermission.READ_FIELDS);
 
-    final fields = <Field>[..._declaration.getFields().map((field) => Field.declared(field, _declaration, _pd))];
-    
-    if (_declaration case EnumDeclaration declaration) {
-      fields.addAll(declaration.getValues().map((f) => Field.declared(f, _declaration, _pd)));
+    for (final field in _declaration.getFields()) {
+      yield Field.declared(field, _declaration, _pd);
     }
 
-    final supertype = getSuperClass();
-    if (supertype != null) {
-      fields.addAll(supertype.getFields());
+    if (getSuperClass() case final superClass?) {
+      yield* superClass.getFields();
     }
 
     final interfaces = getInterfaces();
     for (final interface in interfaces) {
-      fields.addAll(interface.getFields());
+      yield* interface.getFields();
     }
-    
-    return UnmodifiableListView(fields);
+
+    if (_declaration case EnumDeclaration enumDeclaration) {
+      for (final field in enumDeclaration.getValues()) {
+        yield Field.declared(field, _declaration, _pd);
+      }
+    }
   }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Enum Value Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Field> getEnumValuesAsFields() {
+  Iterable<EnumValue> getEnumValues() sync* {
     checkAccess('getEnumValues', DomainPermission.READ_TYPE_INFO);
 
-    if (!isEnum()) {
-      throw InvalidArgumentException('Not an enum type. Always check `isEnum` before accessing this method');
-    }
-
-    final fields = <Field>[];
-    
     if (_declaration case EnumDeclaration declaration) {
-      fields.addAll(declaration.getValues().map((f) => Field.declared(f, declaration, _pd)).toList());
+      for (final value in declaration.getValues()) {
+        yield EnumValue.declared(declaration, value, _pd);
+      }
     }
 
-    final supertype = getSuperClass();
-    if (supertype != null && supertype is _Class && supertype.isEnum()) {
-      try {
-        fields.addAll(supertype.getEnumValuesAsFields());
-      } on InvalidArgumentException catch (_) {}
+    if (getSuperClass() case final superClass?) {
+      yield* superClass.getEnumValues();
     }
-    
-    return UnmodifiableListView(fields);
   }
 
-  @override
-  List<EnumValue> getEnumValues() {
-    checkAccess('getEnumValues', DomainPermission.READ_TYPE_INFO);
-
-    if (!isEnum()) {
-      throw InvalidArgumentException('Not an enum type. Always check `isEnum` before accessing this method');
-    }
-
-    final fields = <EnumValue>[];
-    
-    if (_declaration case EnumDeclaration declaration) {
-      fields.addAll(declaration.getValues().map((f) => EnumValue.declared(declaration, f, _pd)).toList());
-    }
-
-    final supertype = getSuperClass();
-    if (supertype != null && supertype is _Class && supertype.isEnum()) {
-      try {
-        fields.addAll(supertype.getEnumValues());
-      } on InvalidArgumentException catch (_) {}
-    }
-    
-    return UnmodifiableListView(fields);
-  }
-
-  // ============================================= METHOD METHODS ==========================================
+  // ---------------------------------------------------------------------------------------------------------
+  // === Method Information ===
+  // ---------------------------------------------------------------------------------------------------------
   
   @override
   Method? getMethod(String name) {
@@ -1028,7 +1215,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
           bool matches = true;
 
           for (int i = 0; i < params.length; i++) {
-            final param = params[i];
+            final param = params.elementAt(i);
             final parameterType = parameterTypes[i];
 
             if (!param.getReturnClass().isInstance(parameterType) || param.getReturnClass() != parameterType || param.getReturnClass().getType() != parameterType.getType()) {
@@ -1048,52 +1235,81 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   }
   
   @override
-  List<Method> getMethods() {
+  Iterable<Method> getMethods() sync* {
     checkAccess('getMethods', DomainPermission.READ_METHODS);
 
-    final methods = <Method>[];
-    
-    methods.addAll(_declaration.getMethods().map((m) => Method.declared(m, _pd)).toList());
-
-    if (_declaration case MixinDeclaration mixin) {
-      methods.addAll(
-        mixin.getConstraints()
-          .map((link) => _Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getMethods())
-          .flatMap((m) => m.toList()).toList()
-      );
+    for (final method in _declaration.getMethods()) {
+      yield Method.declared(method, _pd, _declaration);
     }
-
-    final supertype = getSuperClass();
-    if (supertype != null) {
-      methods.addAll(supertype.getMethods());
+    
+    if (getSuperClass() case final superClass?) {
+      yield* superClass.getMethods();
     }
 
     final interfaces = getInterfaces();
     for (final interface in interfaces) {
-      methods.addAll(interface.getMethods());
+      yield* interface.getMethods();
     }
-
-    return UnmodifiableListView(methods);
   }
 
   @override
-  List<Method> getAllMethodsInHierarchy() {
+  Iterable<Method> getAllMethodsInHierarchy() sync* {
     checkAccess('getAllMethodsInHierarchy', DomainPermission.READ_METHODS);
     
-    final methods = _declaration.getAllMethodsInHierarchy();
-    return UnmodifiableListView(methods.map((m) => Method.declared(m, _pd)));
+    final visited = <String>{};
+
+    Iterable<Method> generateMethods(ClassDeclaration clazz) sync* {
+      final className = clazz.getQualifiedName();
+      if (!visited.add(className)) return; // avoid cycles
+
+      // Yield methods from current class
+      for (final method in clazz.getMethods()) {
+        yield Method.declared(method, _pd, clazz);
+      }
+
+      // If it's a mixin, yield methods from constraints
+      if (clazz case MixinDeclaration mixin) {
+        for (final constraint in mixin.getConstraints()) {
+          final type = Class.fromQualifiedName(constraint.getPointerQualifiedName(), ProtectionDomain.system());
+          yield* generateMethods(type.getClassDeclaration());
+        }
+      }
+
+      // Yield methods from superclass
+      final supertype = clazz.getSuperClass();
+      if (supertype != null) {
+        final superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), ProtectionDomain.system());
+        yield* generateMethods(superclass.getClassDeclaration());
+      }
+
+      // Yield methods from interfaces
+      for (final interfaceType in clazz.getInterfaces()) {
+        final type = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), ProtectionDomain.system());
+        yield* generateMethods(type.getClassDeclaration());
+      }
+
+      // Yield methods from mixins
+      for (final mixinType in clazz.getMixins()) {
+        final type = Class.fromQualifiedName(mixinType.getPointerQualifiedName(), ProtectionDomain.system());
+        if (type.isMixin()) {
+          yield* generateMethods(type.getClassDeclaration());
+        }
+      }
+    }
+
+    yield* generateMethods(_declaration);
   }
   
   @override
-  List<Method> getOverriddenMethods() {
+  Iterable<Method> getOverriddenMethods() sync* {
     checkAccess('getOverriddenMethods', DomainPermission.READ_METHODS);
-    return getMethods().where((m) => m.isOverride()).toList();
+    yield* getMethods().where((m) => m.isOverride());
   }
   
   @override
-  List<Method> getMethodsByName(String name) {
+  Iterable<Method> getMethodsByName(String name) sync* {
     checkAccess('getMethodsByName', DomainPermission.READ_METHODS);
-    return getMethods().where((m) => m.getName() == name).toList();
+    yield* getMethods().where((m) => m.getName() == name);
   }
 
   // =========================================== CONSTRUCTOR METHODS ===========================================
@@ -1118,7 +1334,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
         bool matches = true;
 
         for (int i = 0; i < params.length; i++) {
-          final param = params[i];
+          final param = params.elementAt(i);
           final parameterType = parameterTypes[i];
 
           if (!param.getReturnClass().isInstance(parameterType) || param.getReturnClass() != parameterType || param.getReturnClass().getType() != parameterType.getType()) {
@@ -1145,7 +1361,6 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     int bestScore = -1;
 
     for (final constructor in constructors) {
-      final params = constructor.getParameters();
       final positionalParams = constructor.getPositionalParameters();
       final namedParams = constructor.getNamedParameters();
 
@@ -1158,7 +1373,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
           fits = false;
           break;
         }
-        final param = positionalParams[i];
+        final param = positionalParams.elementAt(i);
         final providedType = parameterTypes[i];
 
         // Accept if providedType is assignable to param type (or exact)
@@ -1192,7 +1407,7 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
 
       // Check remaining constructor parameters (those not covered by provided positional args)
       for (int j = parameterTypes.length; j < positionalParams.length; j++) {
-        final param = positionalParams[j];
+        final param = positionalParams.elementAt(j);
         // if leftover param is required -> cannot accept
         if (param.mustBeResolved() && !param.hasDefaultValue()) {
           fits = false;
@@ -1214,6 +1429,8 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
       }
       if (!fits) continue;
 
+      final params = constructor.getParameters();
+
       // Prefer constructor with higher score, tie-break with fewer required missing params and fewer params overall
       if (score > bestScore || (score == bestScore && (best == null || params.length < best.getParameters().length))) {
         bestScore = score;
@@ -1225,10 +1442,13 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
   }
   
   @override
-  List<Constructor> getConstructors() {
+  Iterable<Constructor> getConstructors() sync* {
     checkAccess('getConstructors', DomainPermission.READ_CONSTRUCTORS);
     final constructors = _declaration.getConstructors();
-    return UnmodifiableListView(constructors.map((c) => Constructor.declared(c, _pd)));
+
+    for (final constructor in constructors) {
+      yield Constructor.declared(constructor, _pd);
+    }
   }
 
   @override
@@ -1286,62 +1506,20 @@ class _Class<T> extends Source with EqualsAndHashCode implements Class<T> {
     
     return constructor.newInstance<T>(arguments ?? {});
   }
-}
 
-/// Extensions for type hierarchy traversal
-extension ClassHierarchyExtensions on ClassDeclaration {
-  /// Get all methods from this class and its hierarchy
-  List<MethodDeclaration> getAllMethodsInHierarchy() {
-    final allMethods = <MethodDeclaration>[];
-    final visited = <String>{};
-    
-    _collectMethodsFromHierarchy(this, allMethods, visited);
-    
-    return allMethods;
-  }
+  @override
+  List<Object?> equalizedProperties() => [
+    _declaration.getName(),
+    _declaration.getSimpleName(),
+    _declaration.getQualifiedName(),
+    _declaration.getPackageUri(),
+    _declaration.getKind(),
+    _declaration.getDebugIdentifier(),
+    _declaration.getType(),
+    _declaration.getIsPublic(),
+    _declaration.isGeneric()
+  ];
   
-  /// Recursively collect methods from class hierarchy
-  void _collectMethodsFromHierarchy(ClassDeclaration clazz, List<MethodDeclaration> allMethods, Set<String> visited) {
-    final className = clazz.getQualifiedName();
-    if (visited.contains(className)) return;
-    visited.add(className);
-    
-    // Add methods from current class
-    allMethods.addAll(clazz.getMethods());
-
-    if (clazz case MixinDeclaration mixin) {
-      // Add methods from constraints
-      for (final constraint in mixin.getConstraints()) {
-        final interfaceClass = Class.fromQualifiedName(constraint.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
-        if (interfaceClass != null) {
-          _collectMethodsFromHierarchy(interfaceClass, allMethods, visited);
-        }
-      }
-    }
-    
-    // Add methods from superclass
-    final supertype = clazz.getSuperClass();
-    if (supertype != null) {
-      final superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
-      if (superclass != null) {
-        _collectMethodsFromHierarchy(superclass, allMethods, visited);
-      }
-    }
-    
-    // Add methods from interfaces
-    for (final interfaceType in clazz.getInterfaces()) {
-      final interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asClass();
-      if (interfaceClass != null) {
-        _collectMethodsFromHierarchy(interfaceClass, allMethods, visited);
-      }
-    }
-    
-    // Add methods from mixins
-    for (final mixinType in clazz.getMixins()) {
-      final mixinDeclaration = Class.fromQualifiedName(mixinType.getPointerQualifiedName(), ProtectionDomain.system()).getClassDeclaration().asMixin();
-      if (mixinDeclaration != null) {
-        allMethods.addAll(mixinDeclaration.getMethods());
-      }
-    }
-  }
+  @override
+  String toString() => 'Class<${getName()}>:Class<${getType()}>:${getQualifiedName()}';
 }

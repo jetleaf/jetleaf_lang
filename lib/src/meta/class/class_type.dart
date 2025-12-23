@@ -1,6 +1,5 @@
 import 'package:jetleaf_build/jetleaf_build.dart';
 
-import '../../exceptions.dart';
 import 'class.dart';
 import 'class_gettable.dart';
 import '../protection_domain/protection_domain.dart';
@@ -279,7 +278,7 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
   @override
   Class<T> toClass() {
     if (declaration != null) {
-      return Class.declared<T>(declaration!, pd ?? ProtectionDomain.current());
+      return Class<T>.declared(declaration!, pd ?? ProtectionDomain.current());
     }
 
     if (name != null) {
@@ -287,7 +286,7 @@ class ClassType<T> with EqualsAndHashCode implements ClassGettable {
     }
 
     if (qualifiedName != null) {
-      return Class.fromQualifiedName<T>(qualifiedName!);
+      return Class<T>.fromQualifiedName(qualifiedName!);
     }
 
     return Class<T>(pd ?? ProtectionDomain.current(), package);

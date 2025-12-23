@@ -12,8 +12,6 @@
 // 
 // 🔧 Powered by Hapnium — the Dart backend engine 🍃
 
-import 'dart:collection';
-
 import 'package:jetleaf_build/jetleaf_build.dart';
 
 import '../../commons/version.dart';
@@ -65,7 +63,7 @@ part '_field.dart';
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract class Field extends Source implements Member {
+abstract final class Field extends Source implements Member {
   /// Gets the type of the field.
   ///
   /// {@template field_get_type}
@@ -78,16 +76,6 @@ abstract class Field extends Source implements Member {
   /// ```
   /// {@endtemplate}
   Type getType();
-
-  /// Returns the field declaration if it is a field declaration, otherwise null.
-  /// 
-  /// Used when we confidently know that the declaration is a field declaration.
-  /// 
-  /// Example:
-  /// ```dart
-  /// final field = field.asField();
-  /// ```
-  FieldDeclaration? asField();
 
   /// Returns the annotation field declaration if it is an annotation field declaration, otherwise null.
   /// 
@@ -331,7 +319,7 @@ abstract class Field extends Source implements Member {
   ///   const String key = 'abc';   // ❌ not readable (const)
   /// }
   ///
-  /// final fields = Class.of(Example).getFields();
+  /// final fields = Class.forType(Example).getFields();
   /// for (final field in fields) {
   ///   print('${field.getName()}: ${field.isReadable()}');
   /// }
@@ -372,7 +360,7 @@ abstract class Field extends Source implements Member {
   ///   const String key = 'abc';   // ❌ not writable (const)
   /// }
   ///
-  /// final fields = Class.of(Example).getFields();
+  /// final fields = Class.forType(Example).getFields();
   /// for (final field in fields) {
   ///   print('${field.getName()}: ${field.isWritable()}');
   /// }
@@ -417,9 +405,7 @@ abstract class Field extends Source implements Member {
   /// }
   /// ```
   /// {@endtemplate}
-  static Field declared(Declaration declaration, Declaration parent, ProtectionDomain domain) {
-    return _Field(declaration, parent, domain);
-  }
+  factory Field.declared(FieldDeclaration declaration, Declaration parent, ProtectionDomain domain) = _Field;
 }
 
 /// {@template field_access}
@@ -479,7 +465,7 @@ abstract interface class FieldAccess {
   /// Excludes:
   /// - Inherited fields
   /// {@endtemplate}
-  List<Field> getFields();
+  Iterable<Field> getFields();
 
   /// Gets a field by its name.
   ///

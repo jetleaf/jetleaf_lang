@@ -58,7 +58,7 @@ abstract interface class ExecutableInstantiator {
   /// A configured [ExecutableInstantiator] ready to accept selectors and argument resolvers.
   /// 
   /// {@macro executable_instantiator}
-  factory ExecutableInstantiator.of(Class cls) => _ExecutableInstantiator(cls);
+  factory ExecutableInstantiator.of(Class cls) = _ExecutableInstantiator;
 
   /// Assigns a custom [ExecutableSelector] to determine which executable
   /// (constructor or method) will be used when creating instances or invoking methods.

@@ -6,6 +6,42 @@ This project follows a simple, human-readable changelog format inspired by
 
 ---
 
+## [1.1.1]
+
+This release aligns `jetleaf_lang` with the redesigned runtime and declaration model
+introduced in `jetleaf_build 1.1.0`.
+
+### Changed
+- Updated dependency: `jetleaf_build`.
+- Merged `FunctionClass` and `RecordClass` APIs into the unified `Class` API,
+  reducing surface area and improving consistency across meta abstractions.
+
+### Added
+- Introduced a lightweight garbage collection facility:
+  - `GarbageCollector`, accessible via `GC`
+  - Manual cleanup support through `GC.cleanup()` and related helpers
+
+### Removed
+- `ClassNotFoundException`,
+  `System`,
+  `SystemDetector`,
+  `SystemProperties`,
+  `StdExtension`,
+  `SystemExtension` and
+  `QualifiedName`, which are now provided by `jetleaf_build`.
+- Legacy meta abstractions:
+  - `ClassLoader`
+  - `FunctionClass`
+  - `RecordClass`
+
+### Notes
+- This release continues the transition toward a single, unified meta model for
+  all Dart language constructs.
+- Consumers using removed APIs should migrate to the `Class` abstraction and
+  rely on `jetleaf_build` for runtime-level exceptions and resolution behavior.
+
+---
+
 ## [1.1.0]
 
 ### Changed

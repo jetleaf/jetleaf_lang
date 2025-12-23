@@ -86,7 +86,7 @@ abstract interface class GenericSource {
   /// ### Returns
   /// - A list of [Class] objects representing each generic parameter.
   /// - Returns an empty list for non-generic types.
-  List<Class> getTypeParameters();
+  Iterable<Class> getTypeParameters();
 
   /// Checks if this class represents a key-value pair type.
   ///

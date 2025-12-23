@@ -1,9 +1,8 @@
-import 'dart:collection';
-
 import 'package:jetleaf_build/jetleaf_build.dart';
 
 import '../../commons/version.dart';
 import '../../exceptions.dart';
+import '../../utils/lang_utils.dart';
 import '../../utils/method_utils.dart';
 import '../annotation/annotation.dart';
 import '../class/class.dart';
@@ -52,7 +51,7 @@ part '_constructor.dart';
 /// ```
 /// {@endtemplate}
 /// {@endtemplate}
-abstract class Constructor extends Executable implements Member {
+abstract final class Constructor extends Executable implements Member {
   /// Checks if this is a factory constructor.
   ///
   /// {@template constructor_is_factory}
@@ -107,7 +106,5 @@ abstract class Constructor extends Executable implements Member {
   /// }
   /// ```
   /// {@endtemplate}
-  static Constructor declared(ConstructorDeclaration declaration, ProtectionDomain domain) {
-    return _Constructor(declaration, domain);
-  }
+  factory Constructor.declared(ConstructorDeclaration declaration, ProtectionDomain domain) = _Constructor;
 }

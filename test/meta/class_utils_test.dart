@@ -49,7 +49,7 @@ void main() {
       });
 
       test('should handle enum types', () {
-        final enumClass = Class.of<Enum>();
+        final enumClass = Class<Enum>();
         final hierarchy = ClassUtils.getClassHierarchy(enumClass);
         
         expect(hierarchy, isNotEmpty);
@@ -135,6 +135,7 @@ void main() {
         
         for (final type in collectionTypes) {
           final clazz = Class.forType(type);
+
           final hierarchy = ClassUtils.getClassHierarchy(clazz);
           
           expect(hierarchy, isNotEmpty);

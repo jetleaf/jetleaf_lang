@@ -1,6 +1,6 @@
 import 'package:jetleaf_build/jetleaf_build.dart';
-import 'package:jetleaf_lang/src/meta/protection_domain/protection_domain.dart';
 
+import '../../meta/protection_domain/protection_domain.dart';
 import '../../commons/version.dart';
 import '../class/class.dart';
 import '../core.dart';
@@ -29,7 +29,7 @@ part '_enum_value.dart';
 /// Concrete implementations typically wrap analyzer- or mirror-based metadata
 /// to unify enum reflection across build-time and runtime environments.
 /// {@endtemplate}
-abstract class EnumValue extends PermissionManager {
+abstract final class EnumValue extends PermissionManager {
   /// Gets the class that declares this enum value.
   ///
   /// {@template method_declaring_class}
@@ -204,7 +204,5 @@ abstract class EnumValue extends PermissionManager {
   /// - Protection domains allow you to restrict access when reflection is
   ///   executed under different security contexts.
   /// {@endtemplate}
-  static EnumValue declared(EnumDeclaration declaration, EnumFieldDeclaration field, [ProtectionDomain? pd]) {
-    return _EnumValue(declaration, field, pd);
-  }
+  factory EnumValue.declared(EnumDeclaration declaration, EnumFieldDeclaration field, [ProtectionDomain? pd]) = _EnumValue;
 }

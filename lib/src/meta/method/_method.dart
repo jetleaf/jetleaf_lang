@@ -14,11 +14,12 @@
 
 part of 'method.dart';
 
-class _Method extends Method with EqualsAndHashCode {
+final class _Method extends Executable with EqualsAndHashCode implements Method {
   final MethodDeclaration _declaration;
+  final ClassDeclaration? _parent;
   final ProtectionDomain _pd;
   
-  _Method(this._declaration, this._pd);
+  _Method(this._declaration, this._pd, [this._parent]);
 
   @override
   String getName() {
@@ -27,32 +28,34 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
+  ProtectionDomain getProtectionDomain() => _pd;
+
+  @override
   MethodDeclaration getDeclaration() {
     checkAccess('getDeclaration', DomainPermission.READ_METHODS);
     return _declaration;
   }
 
   @override
+  Version getVersion() => getDeclaringClass().getVersion();
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Class Accessing ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
   Class<D> getDeclaringClass<D>() {
     checkAccess('getDeclaringClass', DomainPermission.READ_METHODS);
-    final parentClass = _declaration.getParentClass();
-
-    if (parentClass == null) {
-      throw IllegalStateException('Method ${getName()} has no declaring class');
+    
+    if (_parent case final parent?) {
+      return Class<D>.declared(parent, _pd);
     }
 
-    return Class.fromQualifiedName<D>(parentClass.getPointerQualifiedName(), _pd, parentClass);
-  }
+    if (_declaration.getParentClass() case final parent?) {
+      return Class<D>.fromQualifiedName(LangUtils.obtainClassFromLink(parent).getQualifiedName(), _pd, parent);
+    }
 
-  @override
-  ProtectionDomain getProtectionDomain() => _pd;
-
-  @override
-  List<Annotation> getAllDirectAnnotations() {
-    checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
-
-    final annotations = _declaration.getAnnotations();
-    return UnmodifiableListView(annotations.map((a) => Annotation.declared(a, getProtectionDomain())));
+    throw IllegalStateException('Method ${getName()} has no declaring class');
   }
 
   @override
@@ -62,51 +65,33 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
-  Version? getVersion() {
-    checkAccess("getVersion", DomainPermission.READ_TYPE_INFO);
-
-    if (getDeclaringClass().getPackage() case final package?) {
-      return Version.parse(package.getVersion());
-    }
-
-    return null;
-  }
-
-  @override
-  List<Class> getTypeParameters() {
-    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
-
-    return UnmodifiableListView(
-      _declaration.getReturnType().getTypeArguments()
-      .map((dec) => Class.fromQualifiedName(dec.getPointerQualifiedName(), _pd, dec))
-    );
-  }
-
-  @override
   LinkDeclaration getLinkDeclaration() {
     checkAccess('getLinkDeclaration', DomainPermission.READ_METHODS);
     return _declaration.getReturnType();
   }
-  
-  @override
-  bool isKeyValuePaired() {
-    checkAccess('isKeyValuePaired', DomainPermission.READ_TYPE_INFO);
-    final args = _declaration.getReturnType().getTypeArguments();
 
-    return (args.isNotEmpty && args.length >= 2) 
-      || _declaration.getReturnType().getType() == Map 
-      || getReturnClass().isAssignableTo(Class.of<Map>()) 
-      || getReturnClass().isAssignableTo(Class.of<MapEntry>());
+  @override
+  Type getReturnType() {
+    checkAccess('getReturnType', DomainPermission.READ_METHODS);
+    return getReturnClass().getType();
   }
 
-  @override
-  bool hasGenerics() => _declaration.getReturnType().getTypeArguments().isNotEmpty;
+  // ---------------------------------------------------------------------------------------------------------
+  // === Annotation Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  bool isFunction() {
-    checkAccess('isFunction', DomainPermission.READ_METHODS);
-    return getLinkDeclaration() is FunctionLinkDeclaration;
+  Iterable<Annotation> getAllDirectAnnotations() sync* {
+    checkAccess('getAllAnnotations', DomainPermission.READ_ANNOTATIONS);
+
+    for (final annotation in _declaration.getAnnotations()) {
+      yield Annotation.declared(annotation, getProtectionDomain());
+    }
   }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Generic Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
   Class<K>? keyType<K>() {
@@ -119,8 +104,8 @@ class _Method extends Method with EqualsAndHashCode {
     } 
     
     final link = args[0];
-    final keyDeclaration = MetaClassLoader.getFromLink(link, _pd);
-    return Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
+    final keyDeclaration = LangUtils.obtainClassFromLink(link, _pd);
+    return Class<K>.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
   }
   
   @override
@@ -133,20 +118,21 @@ class _Method extends Method with EqualsAndHashCode {
     } 
     
     final link = keyType() != null ? args[1] : args[0];
-    final keyDeclaration = MetaClassLoader.getFromLink(link, _pd);
-    return Class.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
+    final keyDeclaration = LangUtils.obtainClassFromLink(link, _pd);
+    return Class<C>.fromQualifiedName(keyDeclaration.getQualifiedName(), _pd, link);
   }
 
-  @override
-  Type getReturnType() {
-    checkAccess('getReturnType', DomainPermission.READ_METHODS);
-    return getReturnClass().getType();
-  }
+  // ---------------------------------------------------------------------------------------------------------
+  // === Parameter Information ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
-  List<Parameter> getParameters() {
+  Iterable<Parameter> getParameters() sync* {
     checkAccess('getParameters', DomainPermission.READ_METHODS);
-    return UnmodifiableListView(_declaration.getParameters().map((p) => Parameter.declared(p, this, _pd)));
+
+    for (final parameter in _declaration.getParameters()) {
+      yield Parameter.declared(parameter, this, _pd);
+    }
   }
 
   @override
@@ -167,35 +153,31 @@ class _Method extends Method with EqualsAndHashCode {
     checkAccess('getParameterAt', DomainPermission.READ_METHODS);
     final parameters = getParameters();
     if (index < 0 || index >= parameters.length) return null;
-    return parameters[index];
+    return parameters.elementAt(index);
   }
 
   @override
-  List<Class> getParameterTypes() {
+  Iterable<Class> getParameterTypes() sync* {
     checkAccess('getParameterTypes', DomainPermission.READ_METHODS);
-    return UnmodifiableListView(
-      _declaration.getParameters().map((p) {
-        final link = p.getLinkDeclaration();
-        return Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link);
-      })
-    );
+
+    for (final parameter in _declaration.getParameters()) {
+      final link = parameter.getLinkDeclaration();
+      yield LangUtils.obtainClassFromLink(link);
+    }
   }
 
   @override
-  List<String> getModifiers() {
-    checkAccess('getModifiers', DomainPermission.READ_METHODS);
+  Iterable<Class> getTypeParameters() sync* {
+    checkAccess('getTypeParameters', DomainPermission.READ_TYPE_INFO);
 
-    return [
-      if (isPublic()) 'PUBLIC',
-      if (!isPublic()) 'PRIVATE',
-      if (isStatic()) 'STATIC',
-      if (isAbstract()) 'ABSTRACT',
-      if (isConst()) 'CONST',
-      if (isFactory()) 'FACTORY',
-      if (isGetter()) 'GETTER',
-      if (isSetter()) 'SETTER',
-    ];
+    for (final arg in _declaration.getReturnType().getTypeArguments()) {
+      yield LangUtils.obtainClassFromLink(arg);
+    }
   }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Method Accessors ===
+  // ---------------------------------------------------------------------------------------------------------
 
   @override
   bool isStatic() {
@@ -229,11 +211,7 @@ class _Method extends Method with EqualsAndHashCode {
   bool isAsync() {
     checkAccess('isAsync', DomainPermission.READ_METHODS);
 
-    // if (_declaration.getDartType() case final dartType?) {
-    //   if (dartType.isDartAsyncFuture || dartType.isDartAsyncFutureOr) {
-    //     return true;
-    //   }
-    // }
+    if (_declaration.isAsynchronous()) return true;
 
     final type = getReturnClass();
     return type == Class<Future>(null, PackageNames.DART) || type == Class<FutureOr>(null, PackageNames.DART);
@@ -322,6 +300,203 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
+  bool isKeyValuePaired() {
+    checkAccess('isKeyValuePaired', DomainPermission.READ_TYPE_INFO);
+    final args = _declaration.getReturnType().getTypeArguments();
+
+    return (args.isNotEmpty && args.length >= 2) 
+      || _declaration.getReturnType().getType() == Map 
+      || getReturnClass().isAssignableTo(Class<Map>()) 
+      || getReturnClass().isAssignableTo(Class<MapEntry>());
+  }
+
+  @override
+  bool hasGenerics() => _declaration.getReturnType().getTypeArguments().isNotEmpty;
+
+  @override
+  bool isFunction() {
+    checkAccess('isFunction', DomainPermission.READ_METHODS);
+    return getLinkDeclaration() is FunctionDeclaration;
+  }
+
+  @override
+  bool canAcceptArguments(Map<String, dynamic> arguments) {
+    checkAccess('canAcceptArguments', DomainPermission.READ_METHODS);
+    return MethodUtils.canAcceptArguments(arguments, getParameters());
+  }
+
+  @override
+  bool canAcceptPositionalArguments(List<dynamic> args) {
+    checkAccess('canAcceptPositionalArguments', DomainPermission.READ_METHODS);
+    return MethodUtils.canAcceptPositionalArguments(args, getParameters());
+  }
+
+  @override
+  bool canAcceptNamedArguments(Map<String, dynamic> arguments) {
+    checkAccess('canAcceptNamedArguments', DomainPermission.READ_METHODS);
+    return MethodUtils.canAcceptNamedArguments(arguments, getParameters());
+  }
+
+  @override
+  String getSignature() => _createMethodSignature(_declaration);
+
+  /// Create a method signature for comparison
+  String _createMethodSignature(MethodDeclaration method) {
+    final parameters = method.getParameters();
+    final paramSignatures = <String>[];
+    
+    for (final param in parameters) {
+      final paramName = param.getName();
+      final isOptional = param.getIsNullable();
+      final isNamed = param.getIsNamed();
+      
+      String paramSignature = param.getLinkDeclaration().getName();
+      
+      if (isNamed) {
+        paramSignature = '{$paramSignature $paramName}';
+      } else if (isOptional) {
+        paramSignature = '[$paramSignature $paramName]';
+      } else {
+        paramSignature = '$paramSignature $paramName';
+      }
+      
+      paramSignatures.add(paramSignature);
+    }
+    
+    final returnType = method.getReturnType().getName();
+    final methodName = method.getName();
+    final isGetter = method.getIsGetter();
+    final isSetter = method.getIsSetter();
+    
+    String signature = '$returnType $methodName(${paramSignatures.join(', ')})';
+    
+    if (isGetter) {
+      signature = 'get $signature';
+    } else if (isSetter) {
+      signature = 'set $signature';
+    }
+    
+    return signature;
+  }
+
+  @override
+  bool isOverride() {
+    checkAccess('isOverride', DomainPermission.READ_METHODS);
+    
+    // Static methods cannot be overridden
+    if (isStatic()) {
+      return false;
+    }
+    
+    // Constructors cannot be overridden
+    if (_declaration.getName().isEmpty || _declaration.getName() == _declaration.getParentClass()?.getName()) {
+      return false;
+    }
+    
+    // Check if this method overrides a method from superclass or interfaces
+    final overriddenMethod = _findOverriddenMethod();
+    return overriddenMethod != null;
+  }
+
+  @override
+  Method? getOverriddenMethod() {
+    checkAccess('getOverriddenMethod', DomainPermission.READ_METHODS);
+
+    // Static methods cannot be overridden
+    if (isStatic()) return null;
+
+    // Try to find overridden method
+    final overriddenDeclaration = _findOverriddenMethod();
+    if (overriddenDeclaration != null) {
+      return Method.declared(overriddenDeclaration, _pd);
+    }
+
+    return null;
+  }
+
+  /// Internal generator to traverse class/interface/mixin hierarchy
+  Iterable<MethodDeclaration> _generateOverriddenMethods(ClassDeclaration clazz, String methodName, String methodSignature, [Set<String>? visited]) sync* {
+    visited ??= <String>{};
+
+    final className = clazz.getQualifiedName();
+    if (!visited.add(className)) return; // avoid cycles
+
+    // Yield matching methods from current class
+    for (final method in clazz.getMethods()) {
+      if (method.getName() == methodName && !method.getIsStatic() && _createMethodSignature(method) == methodSignature) {
+        yield method;
+      }
+    }
+
+    // Superclass
+    if (clazz.getSuperClass() case final supertype?) {
+      try {
+        final superclass = LangUtils.obtainClassFromLink(supertype).getClassDeclaration();
+        yield* _generateOverriddenMethods(superclass, methodName, methodSignature, visited);
+      } catch (_) { /* suppress error */ }
+    }
+
+    // Interfaces
+    for (final interfaceType in clazz.getInterfaces()) {
+      try {
+        final interfaceClass = LangUtils.obtainClassFromLink(interfaceType).getClassDeclaration();
+        yield* _generateOverriddenMethods(interfaceClass, methodName, methodSignature, visited);
+      } catch (_) { /* suppress error */ }
+    }
+
+    // Mixins
+    for (final mixinType in clazz.getMixins()) {
+      try {
+        final mixinDeclaration = LangUtils.obtainClassFromLink(mixinType).getDeclaration();
+        if (mixinDeclaration case MixinDeclaration mixinDeclaration) {
+          yield* _generateOverriddenMethods(mixinDeclaration, methodName, methodSignature, visited);
+        }
+      } catch (_) { /* suppress error */ }
+    }
+  }
+
+  /// Find the first overridden method declaration
+  MethodDeclaration? _findOverriddenMethod() {
+    ClassDeclaration? parent;
+
+    if (_parent case final parentClass?) {
+      parent = parentClass;
+    } else if (_declaration.getParentClass() case final parentClass?) {
+      try {
+        parent = LangUtils.obtainClassFromLink(parentClass).getClassDeclaration();
+      } on ClassNotFoundException catch (_) {}
+    }
+    
+    if (parent == null) return null;
+
+    final methodName = _declaration.getName();
+    final methodSignature = _createMethodSignature(_declaration);
+
+    // Return the first method found in the hierarchy
+    return _generateOverriddenMethods(parent, methodName, methodSignature).firstOrNull;
+  }
+
+  @override
+  List<String> getModifiers() {
+    checkAccess('getModifiers', DomainPermission.READ_METHODS);
+
+    return [
+      if (isPublic()) 'PUBLIC',
+      if (!isPublic()) 'PRIVATE',
+      if (isStatic()) 'STATIC',
+      if (isAbstract()) 'ABSTRACT',
+      if (isConst()) 'CONST',
+      if (isFactory()) 'FACTORY',
+      if (isGetter()) 'GETTER',
+      if (isSetter()) 'SETTER',
+    ];
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // === Invocation ===
+  // ---------------------------------------------------------------------------------------------------------
+
+  @override
   dynamic invoke(Object? instance, [Map<String, dynamic>? arguments, List<dynamic> args = const []]) {
     checkAccess('invoke', DomainPermission.INVOKE_METHODS);
     
@@ -371,253 +546,6 @@ class _Method extends Method with EqualsAndHashCode {
   }
 
   @override
-  bool canAcceptArguments(Map<String, dynamic> arguments) {
-    checkAccess('canAcceptArguments', DomainPermission.READ_METHODS);
-    return MethodUtils.canAcceptArguments(arguments, getParameters());
-  }
-
-  @override
-  bool canAcceptPositionalArguments(List<dynamic> args) {
-    checkAccess('canAcceptPositionalArguments', DomainPermission.READ_METHODS);
-    return MethodUtils.canAcceptPositionalArguments(args, getParameters());
-  }
-
-  @override
-  bool canAcceptNamedArguments(Map<String, dynamic> arguments) {
-    checkAccess('canAcceptNamedArguments', DomainPermission.READ_METHODS);
-    return MethodUtils.canAcceptNamedArguments(arguments, getParameters());
-  }
-
-  @override
-  String getSignature() => _createMethodSignature(_declaration);
-
-  @override
-  bool isOverride() {
-    checkAccess('isOverride', DomainPermission.READ_METHODS);
-    
-    // Static methods cannot be overridden
-    if (isStatic()) {
-      return false;
-    }
-    
-    // Constructors cannot be overridden
-    if (_declaration.getName().isEmpty || _declaration.getName() == _declaration.getParentClass()?.getName()) {
-      return false;
-    }
-    
-    // Check if this method overrides a method from superclass or interfaces
-    final overriddenMethod = _findOverriddenMethod();
-    return overriddenMethod != null;
-  }
-
-  @override
-  Method? getOverriddenMethod() {
-    checkAccess('getOverriddenMethod', DomainPermission.READ_METHODS);
-    
-    // Static methods cannot be overridden
-    if (isStatic()) {
-      return null;
-    }
-    
-    // Find the overridden method
-    final overriddenDeclaration = _findOverriddenMethod();
-    if (overriddenDeclaration != null) {
-      return Method.declared(overriddenDeclaration, _pd);
-    }
-    
-    return null;
-  }
-
-  /// Internal method to find the overridden method declaration
-  MethodDeclaration? _findOverriddenMethod() {
-    final link = _declaration.getParentClass();
-    if (link == null) return null;
-
-    // This method declaration might be coming from [ClassDeclaration]
-    ClassDeclaration? parent;
-    try {
-      parent = Class.fromQualifiedName(link.getPointerQualifiedName(), _pd, link).getClassDeclaration();
-    } on ClassNotFoundException catch (_) { }
-
-    try {
-      if(parent == null) {
-        return null;
-      }
-    
-      final methodName = _declaration.getName();
-      final methodSignature = _createMethodSignature(_declaration);
-      
-      // Search in superclass hierarchy
-      final superclassMethod = _searchInSuperclassHierarchy(parent, methodName, methodSignature);
-      if (superclassMethod != null) {
-        return superclassMethod;
-      }
-      
-      // Search in implemented interfaces
-      final interfaceMethod = _searchInInterfaces(parent, methodName, methodSignature);
-      if (interfaceMethod != null) {
-        return interfaceMethod;
-      }
-
-      // Search in mixed-in types
-      final mixinMethod = _searchInMixins(parent, methodName, methodSignature);
-      if (mixinMethod != null) {
-        return mixinMethod;
-      }
-    } catch (_) {
-      // suppress error
-    }
-
-    return null;
-  }
-
-  /// Search for method in superclass hierarchy
-  MethodDeclaration? _searchInSuperclassHierarchy(ClassDeclaration currentClass, String methodName, String methodSignature) {
-    final supertype = currentClass.getSuperClass();
-    if (supertype == null) return null;
-    
-    ClassDeclaration? superclass;
-
-    try {
-      superclass = Class.fromQualifiedName(supertype.getPointerQualifiedName(), _pd, supertype).getClassDeclaration();
-    } catch (_) {
-      // suppress error
-    }
-
-    if (superclass == null) return null;
-    
-    // Check methods in the superclass
-    final method = _findMatchingMethod(superclass, methodName, methodSignature);
-    if (method != null) {
-      return method;
-    }
-    
-    // Recursively search in the superclass hierarchy
-    return _searchInSuperclassHierarchy(superclass, methodName, methodSignature);
-  }
-
-  /// Search for method in implemented interfaces
-  MethodDeclaration? _searchInInterfaces(ClassDeclaration currentClass, String methodName, String methodSignature) {
-    final interfaces = currentClass.getInterfaces();
-    
-    for (final interfaceType in interfaces) {
-      ClassDeclaration? interfaceClass;
-
-      try {
-        interfaceClass = Class.fromQualifiedName(interfaceType.getPointerQualifiedName(), _pd, interfaceType).getClassDeclaration();
-      } catch (_) {
-        // suppress error
-      }
-
-      if (interfaceClass != null) {
-        final method = _findMatchingMethod(interfaceClass, methodName, methodSignature);
-        if (method != null) {
-          return method;
-        }
-        
-        // Recursively search in interface hierarchy
-        final inheritedMethod = _searchInInterfaces(interfaceClass, methodName, methodSignature);
-        if (inheritedMethod != null) {
-          return inheritedMethod;
-        }
-      }
-    }
-    
-    return null;
-  }
-
-  /// Search for method in mixed-in types
-  MethodDeclaration? _searchInMixins(ClassDeclaration currentClass, String methodName, String methodSignature) {
-    final mixins = currentClass.getMixins();
-    
-    for (final mixinType in mixins) {
-      MixinDeclaration? mixinDeclaration;
-
-      try {
-        mixinDeclaration = Class.fromQualifiedName(mixinType.getPointerQualifiedName(), _pd, mixinType).getDeclaration() as MixinDeclaration;
-      } catch (_) {
-        // suppress error
-      }
-
-      if (mixinDeclaration != null) {
-        final method = _findMatchingMethodInMixin(mixinDeclaration, methodName, methodSignature);
-        if (method != null) {
-          return method;
-        }
-      }
-    }
-    
-    return null;
-  }
-
-  /// Find matching method in a class
-  MethodDeclaration? _findMatchingMethod(ClassDeclaration clazz, String methodName, String methodSignature) {
-    final methods = clazz.getMethods();
-    
-    for (final method in methods) {
-      if (method.getName() == methodName && !method.getIsStatic() && _createMethodSignature(method) == methodSignature) {
-        return method;
-      }
-    }
-    
-    return null;
-  }
-
-  /// Find matching method in a mixin
-  MethodDeclaration? _findMatchingMethodInMixin(MixinDeclaration mixin, String methodName, String methodSignature) {
-    final methods = mixin.getMethods();
-    
-    for (final method in methods) {
-      if (method.getName() == methodName && 
-          !method.getIsStatic() && 
-          _createMethodSignature(method) == methodSignature) {
-        return method;
-      }
-    }
-    
-    return null;
-  }
-
-  /// Create a method signature for comparison
-  String _createMethodSignature(MethodDeclaration method) {
-    final parameters = method.getParameters();
-    final paramSignatures = <String>[];
-    
-    for (final param in parameters) {
-      final paramName = param.getName();
-      final isOptional = param.getIsNullable();
-      final isNamed = param.getIsNamed();
-      
-      String paramSignature = param.getLinkDeclaration().getName();
-      
-      if (isNamed) {
-        paramSignature = '{$paramSignature $paramName}';
-      } else if (isOptional) {
-        paramSignature = '[$paramSignature $paramName]';
-      } else {
-        paramSignature = '$paramSignature $paramName';
-      }
-      
-      paramSignatures.add(paramSignature);
-    }
-    
-    final returnType = method.getReturnType().getName();
-    final methodName = method.getName();
-    final isGetter = method.getIsGetter();
-    final isSetter = method.getIsSetter();
-    
-    String signature = '$returnType $methodName(${paramSignatures.join(', ')})';
-    
-    if (isGetter) {
-      signature = 'get $signature';
-    } else if (isSetter) {
-      signature = 'set $signature';
-    }
-    
-    return signature;
-  }
-
-  @override
   List<Object?> equalizedProperties() {
     return [
       _declaration.getName(),
@@ -632,66 +560,4 @@ class _Method extends Method with EqualsAndHashCode {
 
   @override
   String toString() => 'Method(${getName()})';
-}
-
-/// Extensions to support method override detection
-extension MethodOverrideExtensions on MethodDeclaration {
-  /// Check if this method has the same signature as another method
-  bool hasSameSignature(MethodDeclaration other) {
-    // Check method name
-    if (getName() != other.getName()) return false;
-    
-    // Check getter/setter status
-    if (getIsGetter() != other.getIsGetter()) return false;
-    if (getIsSetter() != other.getIsSetter()) return false;
-    
-    // Check parameters
-    final thisParams = getParameters();
-    final otherParams = other.getParameters();
-    
-    if (thisParams.length != otherParams.length) return false;
-    
-    for (int i = 0; i < thisParams.length; i++) {
-      final thisParam = thisParams[i];
-      final otherParam = otherParams[i];
-      
-      // Check parameter type
-      if (thisParam.getLinkDeclaration().getName() != otherParam.getLinkDeclaration().getName()) {
-        return false;
-      }
-      
-      // Check parameter name (important for named parameters)
-      if (thisParam.getName() != otherParam.getName()) {
-        return false;
-      }
-      
-      // Check parameter modifiers
-      if (thisParam.getIsNullable() != otherParam.getIsNullable()) {
-        return false;
-      }
-      
-      if (thisParam.getIsNamed() != otherParam.getIsNamed()) {
-        return false;
-      }
-    }
-    
-    return true;
-  }
-  
-  /// Check if this method can override another method (considering covariance)
-  bool canOverride(MethodDeclaration other) {
-    // Must have same signature
-    if (!hasSameSignature(other)) return false;
-    
-    // Static methods cannot be overridden
-    if (other.getIsStatic()) return false;
-    
-    // Check return type covariance (return type can be more specific)
-    final thisReturnType = getReturnType();
-    final otherReturnType = other.getReturnType();
-    
-    // For now, we'll do exact matching, but this could be enhanced
-    // to support covariant return types
-    return thisReturnType.getName() == otherReturnType.getName();
-  }
 }
